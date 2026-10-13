@@ -1,52 +1,62 @@
-# Insta Studio
+# Social Media Studio — Frontend
 
-MVP de um simulador visual de perfis do Instagram para apresentar ideias de conteúdo. Interface em português, construída com React, TypeScript e Vite.
+Frontend React e TypeScript da plataforma. A fase 1 inclui cadastro, login, confirmação de email, recuperação de senha e validação do acesso pela API NestJS.
 
-## Rodar localmente
+## Configurar
 
-Requer Node.js 22.12+ ou 24+. Dentro desta pasta:
+Preencha `.env.local` usando `.env.example`:
+
+```dotenv
+VITE_SUPABASE_URL=https://seu-projeto.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sua-chave-publica
+VITE_API_URL=http://localhost:3001
+```
+
+Use uma chave publishable ou anon, nunca secret ou service_role. Os valores do Supabase devem corresponder ao projeto configurado no backend.
+
+Consulte o [guia de autenticação](../social-media-studio-backend/docs/autenticacao.md) para configurar confirmação de email, chaves de assinatura e redirects.
+
+## Executar
 
 ```powershell
 npm.cmd install
 npm.cmd run dev
 ```
 
-Abra http://127.0.0.1:5174. No Windows, use `npm.cmd` se a política do PowerShell bloquear `npm.ps1`.
+Abra **http://127.0.0.1:3003**. O backend deve estar disponível em `VITE_API_URL`. No PowerShell, `npm.cmd` evita bloqueios de execução do script `npm.ps1`.
 
-## O que você pode testar
+Sem configuração de autenticação, a tela permite explorar a demonstração. Reinicie o Vite depois de preencher o ambiente.
 
-- Perfil de demonstração Café Aurora com seis posts e dois carrosséis.
-- Criar, alternar, renomear e excluir projetos.
-- Editar foto, nome de usuário, nome do perfil, categoria, bio, site e números fictícios.
-- Criar posts com imagens JPG, PNG ou WebP, legendas, localização e curtidas fictícias.
-- Montar carrosséis de até dez imagens e escolher a capa pela ordem das imagens.
-- Editar ou excluir posts com confirmação.
-- Reorganizar o feed por arraste e pelas setas na aba Conteúdo.
-- Alternar entre desktop e uma prévia em moldura de celular.
-- Apresentar com os controles de edição ocultos; voltar pelo botão ou pela tecla Esc.
-- Abrir posts e navegar pelos carrosséis com botões, indicadores ou setas do teclado.
+## Rotas
 
-## Salvamento
+| Rota | Finalidade |
+| --- | --- |
+| `/` ou `/login` | Login ou página inicial após validação da sessão |
+| `/cadastro` | Cadastro e reenvio da confirmação de email |
+| `/auth/callback` | Retorno da confirmação com PKCE |
+| `/recuperar-senha` | Solicitar link de recuperação |
+| `/redefinir-senha` | Definir nova senha com sessão válida |
+| `/simulador` | Demonstração pública local do simulador existente |
 
-Projetos, textos e imagens são salvos automaticamente em IndexedDB, neste navegador e nesta origem (endereço e porta). Espere aparecer **Salvo neste navegador** antes de fechar a aba.
+O SDK Supabase gerencia e renova a sessão. O frontend envia o JWT em `GET /me` e apresenta a página inicial após reconhecimento da identidade pelo backend. Falhas temporárias da API oferecem uma nova tentativa.
 
-As imagens enviadas são convertidas para WebP, com o maior lado limitado a 1.600 pixels. Fotos de perfil têm limite de 600 pixels. Cada arquivo de entrada pode ter até 20 MB. Os materiais de demonstração são SVGs locais criados para este projeto.
+A página inicial ainda não inclui calendário e tarefas; essa ferramenta pertence à fase 3.
 
-Limpar os dados do site remove os projetos. Outro navegador, outra porta ou outro computador têm armazenamento separado. Use uma aba de edição por vez: sincronização entre abas e backup ainda não fazem parte do MVP. Em modo privado, o navegador pode descartar os dados ao encerrar a sessão.
+## Simulador preservado
 
-## Validação
+A demonstração em `/simulador` mantém perfil editável, uploads, carrosséis, legendas, ordenação do feed, prévias desktop e mobile e modo apresentação.
+
+Os projetos e imagens dessa demonstração ficam no IndexedDB deste navegador e desta origem. Ainda não estão vinculados a uma conta. Limpar os dados do site remove os projetos. A integração com projetos e Supabase Storage será feita na fase 5.
+
+As imagens são preparadas em WebP, com o maior lado limitado a 1.600 pixels (600 pixels para avatar). O limite de entrada continua em 20 MB por imagem e dez imagens por carrossel.
+
+## Verificar
 
 ```powershell
 npm.cmd run build
 npm.cmd test
 ```
 
-Os testes usam o Google Chrome instalado no computador. Para usar Chromium do Playwright, remova `channel: 'chrome'` de `playwright.config.ts` e execute `npx.cmd playwright install chromium`. Em outros sistemas, ajuste o comando do servidor de testes para `npm run dev`.
+Os testes usam o Chrome instalado e iniciam uma instância própria do Vite na porta **3103**, com configuração exclusiva de teste. Usam o SDK real com respostas locais para os serviços, sem cadastrar usuários nem enviar emails reais. Também verificam os fluxos do simulador.
 
-Os testes verificam persistência de projetos e imagens, upload e validações, edição, carrosséis, ordenação, exclusão, prévia mobile, apresentação e recuperação de uma falha de salvamento.
-
-## Escopo
-
-Esta fase funciona inteiramente no navegador. Login, assinatura, pagamento e armazenamento em nuvem ficam para a segunda fase. Não há integração de publicação com o Instagram.
-
-Os projetos têm identificadores próprios e a persistência está isolada em `src/storage.ts`, permitindo evoluir para contas e uma API sem alterar a experiência de montagem.
+O envio real de emails e a configuração do Supabase precisam ser validados depois de preencher o ambiente.
