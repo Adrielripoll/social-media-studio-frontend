@@ -17,7 +17,7 @@ export const corsHeaders = {
   "Access-Control-Allow-Origin": "http://127.0.0.1:3103",
   "Access-Control-Allow-Credentials": "true",
   "Access-Control-Allow-Headers": "Content-Type,X-CSRF-Token",
-  "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+  "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
   "Access-Control-Expose-Headers": "X-CSRF-Token",
 };
 export interface CapturedRequest {
@@ -40,20 +40,18 @@ export async function mockAuth(
   const captured: CapturedRequest[] = [];
   let csrfFailures = options.csrfFailures ?? 0;
   async function cookie(name: string, value: string) {
-    await page
-      .context()
-      .addCookies([
-        {
-          name,
-          value,
-          domain: "127.0.0.1",
-          path: "/",
-          httpOnly: true,
-          secure: false,
-          sameSite: "Lax",
-          expires: Math.floor(Date.now() / 1000) + 3600,
-        },
-      ]);
+    await page.context().addCookies([
+      {
+        name,
+        value,
+        domain: "127.0.0.1",
+        path: "/",
+        httpOnly: true,
+        secure: false,
+        sameSite: "Lax",
+        expires: Math.floor(Date.now() / 1000) + 3600,
+      },
+    ]);
   }
   async function authenticate() {
     await cookie("studio_access", "test-only-access-cookie");
@@ -138,6 +136,17 @@ export async function mockAuth(
           : 200;
       value = status === 200 ? platformUser : { message: "Falha temporária." };
       if (status === 401) await page.context().clearCookies();
+    } else if (path === "/tasks") {
+      value = {
+        today: new Intl.DateTimeFormat("sv-SE", {
+          timeZone: "America/Sao_Paulo",
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+        }).format(new Date()),
+        timeZone: "America/Sao_Paulo",
+        tasks: [],
+      };
     } else if (path === "/auth/logout" || path === "/auth/password") {
       await page.context().clearCookies();
       value =

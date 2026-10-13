@@ -48,7 +48,9 @@ A demonstração mantém perfil editável, uploads, carrosséis, legendas, orden
 
 As imagens são preparadas em WebP, limitadas a 1.600 pixels no maior lado ou 600 pixels para avatar. O limite de entrada é 20 MB por imagem e dez imagens por carrossel.
 
-Calendário e tarefas pertencem à fase 3; a integração de projetos e Storage fica para a fase 5.
+A fase 3 está implementada: a página inicial mostra hoje e um calendário mensal. O menu da data permite criar tarefas, editar apenas o título, concluir/reabrir e excluir com confirmação. A lista principal permanece em hoje. As tarefas persistem no backend, com fuso America/Sao_Paulo e criação apenas para hoje/futuro.
+
+Consulte [Calendário e tarefas](../social-media-studio-backend/docs/calendario-e-tarefas.md). A integração de projetos e Storage fica para a fase 5; a cobrança permanece independente desta entrega.
 
 ## Verificação
 
@@ -57,4 +59,4 @@ npm.cmd run build
 npm.cmd test
 ```
 
-O Playwright usa Chrome, inicia seu Vite na porta 3103 e simula a API na porta 43001. Os testes verificam cookies HttpOnly, CSRF, ausência de tokens no armazenamento JavaScript, cadastro, recuperação, restauração da sessão e o simulador. Não enviam emails nem criam contas reais.
+O Playwright usa Chrome, inicia seu Vite na porta 3103 e simula a API na porta 43001. Os testes verificam cookies HttpOnly, CSRF, ausência de tokens no armazenamento JavaScript, cadastro, recuperação, restauração da sessão, calendário/tarefas e o simulador. Não enviam emails nem criam contas reais.

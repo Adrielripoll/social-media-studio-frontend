@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
-  CalendarDays,
   LayoutGrid,
   LoaderCircle,
   LogOut,
   RefreshCw,
 } from "lucide-react";
+import TaskPlanner from "./tasks/TaskPlanner";
 import Simulator from "./App";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
 import { authConfiguration } from "./auth/config";
@@ -52,17 +52,9 @@ function Home() {
           {auth.identity?.name ? ", " + auth.identity.name.split(" ")[0] : ""}.
         </h1>
         <p className="platform-intro">
-          Bom ter você por aqui. Vamos dar espaço às suas próximas ideias.
+          Organize seu dia e dê espaço às próximas ideias.
         </p>
-        <div className="platform-welcome">
-          <span>
-            <CalendarDays size={30} />
-          </span>
-          <div>
-            <h2>Um lugar para o que vem a seguir.</h2>
-            <p>Suas ferramentas de trabalho estarão reunidas aqui.</p>
-          </div>
-        </div>
+        <TaskPlanner />
         <section className="platform-demo">
           <div>
             <span className="demo-pill">DEMONSTRAÇÃO</span>
