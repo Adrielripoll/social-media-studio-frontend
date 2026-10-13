@@ -11,6 +11,15 @@ export const user = {
   created_at: "2026-10-13T12:00:00Z",
 };
 
+export const platformUser = {
+  id: user.id,
+  email: user.email,
+  name: "Maria Silva",
+  phone: "+5511999999999",
+  createdAt: "2026-10-13T12:00:00.000Z",
+  updatedAt: "2026-10-13T12:00:00.000Z",
+};
+
 export function session() {
   const now = Math.floor(Date.now() / 1000);
   const header = Buffer.from(
@@ -98,28 +107,29 @@ export async function mockAuth(
       body: JSON.stringify(body),
     });
   });
-  await page.route("http://127.0.0.1:43001/me", async (route) => {
-    captured.push({
-      path: "/me",
-      method: route.request().method(),
-      body: null,
-      authorization: route.request().headers().authorization,
-    });
-    await route.fulfill({
-      status: options.unavailableBackend
-        ? 503
-        : options.rejectToken
-          ? 401
-          : 200,
-      headers,
-      contentType: "application/json",
-      body: JSON.stringify({
-        id: user.id,
-        email: user.email,
-        name: user.user_metadata.name,
-      }),
-    });
-  });
+  await page.route(
+    /^http:\/\/127\.0\.0\.1:43001\/(?:users\/)?me$/,
+    async (route) => {
+      captured.push({
+        path: new URL(route.request().url()).pathname,
+        method: route.request().method(),
+        body: route.request().postData()
+          ? route.request().postDataJSON()
+          : null,
+        authorization: route.request().headers().authorization,
+      });
+      await route.fulfill({
+        status: options.unavailableBackend
+          ? 503
+          : options.rejectToken
+            ? 401
+            : 200,
+        headers,
+        contentType: "application/json",
+        body: JSON.stringify(platformUser),
+      });
+    },
+  );
   return captured;
 }
 

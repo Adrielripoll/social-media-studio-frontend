@@ -1,6 +1,6 @@
 # Social Media Studio — Frontend
 
-Frontend React e TypeScript da plataforma. A fase 1 inclui cadastro, login, confirmação de email, recuperação de senha e validação do acesso pela API NestJS.
+Frontend React e TypeScript da plataforma. A fase 1 inclui cadastro, login, confirmação de email e recuperação de senha. Na fase 2, o primeiro acesso registra o perfil na API NestJS antes de abrir a página inicial.
 
 ## Configurar
 
@@ -29,18 +29,26 @@ Sem configuração de autenticação, a tela permite explorar a demonstração. 
 
 ## Rotas
 
-| Rota | Finalidade |
-| --- | --- |
-| `/` ou `/login` | Login ou página inicial após validação da sessão |
-| `/cadastro` | Cadastro e reenvio da confirmação de email |
-| `/auth/callback` | Retorno da confirmação com PKCE |
-| `/recuperar-senha` | Solicitar link de recuperação |
-| `/redefinir-senha` | Definir nova senha com sessão válida |
-| `/simulador` | Demonstração pública local do simulador existente |
+| Rota               | Finalidade                                        |
+| ------------------ | ------------------------------------------------- |
+| `/` ou `/login`    | Login ou página inicial após validação da sessão  |
+| `/cadastro`        | Cadastro e reenvio da confirmação de email        |
+| `/auth/callback`   | Retorno da confirmação com PKCE                   |
+| `/recuperar-senha` | Solicitar link de recuperação                     |
+| `/redefinir-senha` | Definir nova senha com sessão válida              |
+| `/simulador`       | Demonstração pública local do simulador existente |
 
-O SDK Supabase gerencia e renova a sessão. O frontend envia o JWT em `GET /me` e apresenta a página inicial após reconhecimento da identidade pelo backend. Falhas temporárias da API oferecem uma nova tentativa.
+O SDK Supabase gerencia e renova a sessão. O frontend envia o JWT em POST /users/me, sem dados de perfil no corpo, e apresenta a página inicial com o usuário persistido devolvido pelo backend. A operação é idempotente e também acontece ao restaurar ou renovar a sessão. Falhas temporárias da API oferecem uma nova tentativa e preservam a sessão. Consulte [Banco e usuários](../social-media-studio-backend/docs/banco-e-usuarios.md) para configurar o Postgres e executar as migrations.
 
 A página inicial ainda não inclui calendário e tarefas; essa ferramenta pertence à fase 3.
+
+## Cadastro com celular
+
+O cadastro solicita nome, email, celular brasileiro com DDD e senha. Aceita números como `(11) 99999-9999` e `+55 (11) 99999-9999`, normaliza para `+5511999999999` e envia o valor em `options.data.phone` ao Supabase.
+
+O celular é um dado de contato sem verificação por SMS. O login continua por email e senha e contas antigas sem celular seguem funcionando. A validação confere o formato, não a existência do número.
+
+Os [templates de email](../social-media-studio-backend/docs/supabase/email-templates/README.md) estão preparados para aplicar no painel do Supabase. Os refinos gerais de UX/UI ficaram registrados para o futuro.
 
 ## Simulador preservado
 

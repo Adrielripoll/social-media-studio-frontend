@@ -44,10 +44,23 @@ const titles = {
   ],
 };
 
+function normalizeMobilePhone(value: string): string | null {
+  const input = value.trim();
+  if (!/^\+?[\d\s().-]+$/.test(input)) return null;
+  const digits = input.replace(/\D/g, "");
+  const hasCountryCode = digits.length === 13 && digits.startsWith("55");
+  if (input.startsWith("+") && !hasCountryCode) return null;
+  const nationalNumber = hasCountryCode ? digits.slice(2) : digits;
+  return /^[1-9]{2}9\d{8}$/.test(nationalNumber)
+    ? "+55" + nationalNumber
+    : null;
+}
+
 export default function AuthPages({ mode }: { mode: Mode }) {
   const auth = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const [visible, setVisible] = useState(false);
@@ -64,6 +77,13 @@ export default function AuthPages({ mode }: { mode: Mode }) {
       setError("Informe seu nome.");
       return;
     }
+    const mobilePhone = mode === "signup" ? normalizeMobilePhone(phone) : null;
+    if (mode === "signup" && !mobilePhone) {
+      setError(
+        "Informe um celular brasileiro com DDD e 9 dígitos. Exemplo: (11) 99999-9999.",
+      );
+      return;
+    }
     if (mode === "reset" && password !== confirmation) {
       setError("As senhas precisam ser iguais.");
       return;
@@ -75,7 +95,7 @@ export default function AuthPages({ mode }: { mode: Mode }) {
           email: email.trim(),
           password,
           options: {
-            data: { name: name.trim() },
+            data: { name: name.trim(), phone: mobilePhone },
             emailRedirectTo: window.location.origin + "/auth/callback",
           },
         });
@@ -228,6 +248,22 @@ export default function AuthPages({ mode }: { mode: Mode }) {
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder="voce@exemplo.com"
+                  disabled={busy}
+                />
+              </label>
+            )}
+            {mode === "signup" && (
+              <label className="field">
+                <span>Celular (com DDD)</span>
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  required
+                  maxLength={25}
+                  value={phone}
+                  onChange={(event) => setPhone(event.target.value)}
+                  placeholder="(11) 99999-9999"
                   disabled={busy}
                 />
               </label>

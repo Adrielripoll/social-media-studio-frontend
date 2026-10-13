@@ -2,13 +2,13 @@ import { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
-import { ApiError, getCurrentIdentity } from "./api";
-import type { AuthenticatedIdentity } from "./api";
+import { ApiError, registerCurrentUser } from "./api";
+import type { PlatformUser } from "./api";
 
 interface AuthState {
   session: Session | null;
   sessionLoading: boolean;
-  identity: AuthenticatedIdentity | null;
+  identity: PlatformUser | null;
   verifying: boolean;
   error: string;
   retry: () => void;
@@ -19,7 +19,7 @@ const AuthContext = createContext<AuthState | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
-  const [identity, setIdentity] = useState<AuthenticatedIdentity | null>(null);
+  const [identity, setIdentity] = useState<PlatformUser | null>(null);
   const [verifying, setVerifying] = useState(false);
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
@@ -75,7 +75,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIdentity(null);
     setError("");
     setVerifying(true);
-    void getCurrentIdentity(token, controller.signal)
+    void registerCurrentUser(token, controller.signal)
       .then((user) => {
         if (!controller.signal.aborted) setIdentity(user);
       })
@@ -84,6 +84,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (reason instanceof ApiError && reason.status === 401) {
           setError("Sua sessão não foi aceita. Faça login novamente.");
           await supabase?.auth.signOut({ scope: "local" });
+        } else if (reason instanceof ApiError && reason.status === 400) {
+          setError(reason.message);
         } else {
           setError("Não foi possível conectar ao seu espaço. Tente novamente.");
         }
