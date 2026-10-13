@@ -1,70 +1,60 @@
 # Social Media Studio — Frontend
 
-Frontend React e TypeScript da plataforma. A fase 1 inclui cadastro, login, confirmação de email e recuperação de senha. Na fase 2, o primeiro acesso registra o perfil na API NestJS antes de abrir a página inicial.
+Frontend React e TypeScript da plataforma. A autenticação usa a API NestJS, com sessão em cookies HttpOnly gerenciada pelo backend.
 
-## Configurar
+## Configurar e executar
 
-Preencha `.env.local` usando `.env.example`:
+O frontend precisa apenas de VITE_API_URL no arquivo de ambiente usado pelo Vite:
 
 ```dotenv
-VITE_SUPABASE_URL=https://seu-projeto.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sua-chave-publica
-VITE_API_URL=http://localhost:3001
+VITE_API_URL=http://127.0.0.1:3001
 ```
-
-Use uma chave publishable ou anon, nunca secret ou service_role. Os valores do Supabase devem corresponder ao projeto configurado no backend.
-
-Consulte o [guia de autenticação](../social-media-studio-backend/docs/autenticacao.md) para configurar confirmação de email, chaves de assinatura e redirects.
-
-## Executar
 
 ```powershell
 npm.cmd install
 npm.cmd run dev
 ```
 
-Abra **http://127.0.0.1:3003**. O backend deve estar disponível em `VITE_API_URL`. No PowerShell, `npm.cmd` evita bloqueios de execução do script `npm.ps1`.
+Abra http://127.0.0.1:3003. No servidor de desenvolvimento, acessos por localhost são redirecionados para o hostname local configurado em VITE_API_URL, preservando a rota e a porta. Use o mesmo hostname na API e no frontend. Consulte o [guia de autenticação](../social-media-studio-backend/docs/autenticacao.md) para configurar o Supabase no backend, os emails e as URLs de retorno.
 
-Sem configuração de autenticação, a tela permite explorar a demonstração. Reinicie o Vite depois de preencher o ambiente.
+A API deve estar disponível antes de testar login. O frontend usa credentials=include e envia um token CSRF nas operações de escrita.
+
+## Sessão
+
+O SDK Supabase foi removido do frontend. JWT e refresh token são cookies HttpOnly; não são lidos pelo JavaScript nem persistidos no localStorage ou sessionStorage.
+
+Login e cadastro são enviados ao NestJS. O backend integra com Supabase Auth, valida os tokens e cuida da renovação. O frontend consulta GET /auth/session e registra/recupera o perfil por POST /users/me antes de abrir a página inicial.
+
+O perfil da plataforma e o token CSRF ficam em memória. As chaves legadas de sessão são removidas ao carregar a aplicação.
 
 ## Rotas
 
-| Rota               | Finalidade                                        |
-| ------------------ | ------------------------------------------------- |
-| `/` ou `/login`    | Login ou página inicial após validação da sessão  |
-| `/cadastro`        | Cadastro e reenvio da confirmação de email        |
-| `/auth/callback`   | Retorno da confirmação com PKCE                   |
-| `/recuperar-senha` | Solicitar link de recuperação                     |
-| `/redefinir-senha` | Definir nova senha com sessão válida              |
-| `/simulador`       | Demonstração pública local do simulador existente |
+| Rota             | Função                                    |
+| ---------------- | ----------------------------------------- |
+| / ou /login      | Login ou página inicial                   |
+| /cadastro        | Cadastro com nome, email, celular e senha |
+| /auth/callback   | Retorno da confirmação pelo backend       |
+| /recuperar-senha | Solicitar recuperação                     |
+| /redefinir-senha | Definir senha com uma sessão válida       |
+| /simulador       | Demonstração pública local do feed        |
 
-O SDK Supabase gerencia e renova a sessão. O frontend envia o JWT em POST /users/me, sem dados de perfil no corpo, e apresenta a página inicial com o usuário persistido devolvido pelo backend. A operação é idempotente e também acontece ao restaurar ou renovar a sessão. Falhas temporárias da API oferecem uma nova tentativa e preservam a sessão. Consulte [Banco e usuários](../social-media-studio-backend/docs/banco-e-usuarios.md) para configurar o Postgres e executar as migrations.
+O celular brasileiro é normalizado para +55DDDNÚMERO. O backend valida os dados novamente; o celular é contato sem confirmação por SMS.
 
-A página inicial ainda não inclui calendário e tarefas; essa ferramenta pertence à fase 3.
+Os emails apontam primeiro para a API. Abra os links no navegador em que solicitou o cadastro ou a recuperação. Os [templates](../social-media-studio-backend/docs/supabase/email-templates/README.md) devem ser publicados no painel do Supabase.
 
-## Cadastro com celular
+## Demonstração do feed
 
-O cadastro solicita nome, email, celular brasileiro com DDD e senha. Aceita números como `(11) 99999-9999` e `+55 (11) 99999-9999`, normaliza para `+5511999999999` e envia o valor em `options.data.phone` ao Supabase.
+A demonstração mantém perfil editável, uploads, carrosséis, legendas, ordenação, visualização desktop/mobile e apresentação. Os projetos e imagens ficam no IndexedDB deste navegador e ainda não estão associados a uma conta.
 
-O celular é um dado de contato sem verificação por SMS. O login continua por email e senha e contas antigas sem celular seguem funcionando. A validação confere o formato, não a existência do número.
+As imagens são preparadas em WebP, limitadas a 1.600 pixels no maior lado ou 600 pixels para avatar. O limite de entrada é 20 MB por imagem e dez imagens por carrossel.
 
-Os [templates de email](../social-media-studio-backend/docs/supabase/email-templates/README.md) estão preparados para aplicar no painel do Supabase. Os refinos gerais de UX/UI ficaram registrados para o futuro.
+Calendário e tarefas pertencem à fase 3; a integração de projetos e Storage fica para a fase 5.
 
-## Simulador preservado
-
-A demonstração em `/simulador` mantém perfil editável, uploads, carrosséis, legendas, ordenação do feed, prévias desktop e mobile e modo apresentação.
-
-Os projetos e imagens dessa demonstração ficam no IndexedDB deste navegador e desta origem. Ainda não estão vinculados a uma conta. Limpar os dados do site remove os projetos. A integração com projetos e Supabase Storage será feita na fase 5.
-
-As imagens são preparadas em WebP, com o maior lado limitado a 1.600 pixels (600 pixels para avatar). O limite de entrada continua em 20 MB por imagem e dez imagens por carrossel.
-
-## Verificar
+## Verificação
 
 ```powershell
 npm.cmd run build
 npm.cmd test
 ```
 
-Os testes usam o Chrome instalado e iniciam uma instância própria do Vite na porta **3103**, com configuração exclusiva de teste. Usam o SDK real com respostas locais para os serviços, sem cadastrar usuários nem enviar emails reais. Também verificam os fluxos do simulador.
-
-O envio real de emails e a configuração do Supabase precisam ser validados depois de preencher o ambiente.
+O Playwright usa Chrome, inicia seu Vite na porta 3103 e simula a API na porta 43001. Os testes verificam cookies HttpOnly, CSRF, ausência de tokens no armazenamento JavaScript, cadastro, recuperação, restauração da sessão e o simulador. Não enviam emails nem criam contas reais.

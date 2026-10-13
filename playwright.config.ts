@@ -19,8 +19,6 @@ export default defineConfig({
     url: "http://127.0.0.1:3103",
     reuseExistingServer: false,
     env: {
-      VITE_SUPABASE_URL: "http://127.0.0.1:54321",
-      VITE_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test-only",
       VITE_API_URL: "http://127.0.0.1:43001",
     },
     timeout: 30_000,

@@ -1,4 +1,6 @@
+import { ApiError } from "./api";
 export function authErrorMessage(error: unknown) {
+  if (error instanceof ApiError) return error.message;
   const code =
     error && typeof error === "object" && "code" in error ? error.code : "";
   switch (code) {

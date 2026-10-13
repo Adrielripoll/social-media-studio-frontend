@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "./AuthContext";
 import { authErrorMessage } from "./errors";
-import { supabase } from "./supabase";
+import { apiRequest } from "./api";
 import AuthShell from "./AuthShell";
 
 type Mode = "login" | "signup" | "forgot" | "reset" | "callback";
@@ -71,7 +71,7 @@ export default function AuthPages({ mode }: { mode: Mode }) {
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (!supabase || busy) return;
+    if (busy) return;
     setError("");
     if (mode === "signup" && name.trim().length < 2) {
       setError("Informe seu nome.");
@@ -91,33 +91,34 @@ export default function AuthPages({ mode }: { mode: Mode }) {
     setBusy(true);
     try {
       if (mode === "signup") {
-        const result = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-          options: {
-            data: { name: name.trim(), phone: mobilePhone },
-            emailRedirectTo: window.location.origin + "/auth/callback",
+        const result = await apiRequest<{ requiresEmailConfirmation: boolean }>(
+          "/auth/signup",
+          {
+            method: "POST",
+            body: {
+              email: email.trim(),
+              password,
+              name: name.trim(),
+              phone: mobilePhone,
+            },
           },
-        });
-        if (result.error) throw result.error;
+        );
+        if (!result.requiresEmailConfirmation) {
+          await auth.refreshSession();
+          return;
+        }
         setSuccess(true);
       } else if (mode === "forgot") {
-        const result = await supabase.auth.resetPasswordForEmail(email.trim(), {
-          redirectTo: window.location.origin + "/redefinir-senha",
+        await apiRequest("/auth/recover", {
+          method: "POST",
+          body: { email: email.trim() },
         });
-        if (result.error) throw result.error;
         setSuccess(true);
       } else if (mode === "reset") {
-        const result = await supabase.auth.updateUser({ password });
-        if (result.error) throw result.error;
-        await auth.signOut();
+        await auth.updatePassword(password);
         setSuccess(true);
       } else {
-        const result = await supabase.auth.signInWithPassword({
-          email: email.trim(),
-          password,
-        });
-        if (result.error) throw result.error;
+        await auth.signIn(email.trim(), password);
       }
     } catch (reason) {
       setError(authErrorMessage(reason));
@@ -127,16 +128,14 @@ export default function AuthPages({ mode }: { mode: Mode }) {
   }
 
   async function resend() {
-    if (!supabase || busy) return;
+    if (busy) return;
     setBusy(true);
     setError("");
     try {
-      const result = await supabase.auth.resend({
-        type: "signup",
-        email: email.trim(),
-        options: { emailRedirectTo: window.location.origin + "/auth/callback" },
+      await apiRequest("/auth/resend", {
+        method: "POST",
+        body: { email: email.trim() },
       });
-      if (result.error) throw result.error;
       setResent(true);
     } catch (reason) {
       setError(authErrorMessage(reason));
@@ -144,8 +143,8 @@ export default function AuthPages({ mode }: { mode: Mode }) {
       setBusy(false);
     }
   }
-  const callbackFailed = mode === "callback" && !auth.session;
-  const resetUnavailable = mode === "reset" && !auth.session && !success;
+  const callbackFailed = mode === "callback" && !auth.authenticated;
+  const resetUnavailable = mode === "reset" && !auth.authenticated && !success;
   const loginUpdated =
     new URLSearchParams(window.location.search).get("password_updated") === "1";
   const [eyebrow, title, description] = titles[mode];
@@ -206,8 +205,9 @@ export default function AuthPages({ mode }: { mode: Mode }) {
       ) : callbackFailed ? (
         <div className="auth-notice">
           <p>
-            Você pode entrar se já confirmou o email. Caso o link tenha
-            expirado, solicite outro na tela de cadastro.
+            Você pode entrar se já confirmou o email. Abra o link no navegador
+            em que iniciou o cadastro. Caso ele tenha expirado, solicite outro
+            na tela de cadastro.
           </p>
           <a className="button primary auth-submit" href="/login">
             Ir para o login

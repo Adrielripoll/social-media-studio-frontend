@@ -121,7 +121,7 @@ function AuthContent() {
       </AuthShell>
     );
   if (path === "/redefinir-senha") return <AuthPages mode="reset" />;
-  if (auth.session && !auth.identity) {
+  if (auth.authenticated && !auth.identity) {
     return (
       <AuthShell>
         {accessError ? (
