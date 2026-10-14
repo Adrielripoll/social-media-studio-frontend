@@ -1,3 +1,4 @@
+import Workspace from "./workspace/Workspace";
 import { useEffect, useState } from "react";
 import {
   ArrowRight,
@@ -45,7 +46,7 @@ function Home() {
           Sair
         </button>
       </header>
-      <main className="platform-content">
+      <Workspace>
         <span className="auth-eyebrow">SEU ESPAÇO CRIATIVO</span>
         <h1>
           Bem-vindo
@@ -61,7 +62,7 @@ function Home() {
             <h2>Experimente o simulador de feed.</h2>
             <p>
               Monte um perfil fictício e explore suas ideias. A demonstração
-              salva os projetos apenas neste navegador.
+              salva os feeds apenas neste navegador.
             </p>
           </div>
           <a className="button secondary" href="/simulador">
@@ -87,7 +88,7 @@ function Home() {
             {error}
           </p>
         )}
-      </main>
+      </Workspace>
     </div>
   );
 }

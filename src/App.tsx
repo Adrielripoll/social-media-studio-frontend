@@ -35,7 +35,7 @@ export default function App() {
     loadWorkspace().then(stored => {
       if (cancelled) return;
       if (stored && (stored.version !== 1 || !Array.isArray(stored.projects) || !stored.projects.length)) {
-        setLoadError('Não foi possível reconhecer os projetos salvos. Os dados foram preservados.');
+        setLoadError('Não foi possível reconhecer os feeds salvos. Os dados foram preservados.');
         return;
       }
       const loaded = stored ?? initialWorkspace();
@@ -57,7 +57,7 @@ export default function App() {
       if (generation === saveGeneration.current) {
         setSaveStatus('error');
         setSaveError(error instanceof DOMException && error.name === 'QuotaExceededError'
-          ? 'O espaço deste navegador acabou. Remova imagens ou projetos e tente salvar novamente.'
+          ? 'O espaço deste navegador acabou. Remova imagens ou feeds e tente salvar novamente.'
           : 'Não foi possível salvar. Mantenha esta aba aberta e tente novamente.');
       }
     });
@@ -116,11 +116,11 @@ export default function App() {
     <div className={'app ' + (presentation ? 'is-presenting' : '')}>
       <header className="app-header">
         <a href="/" className="brand" aria-label="Insta Studio"><span className="brand-icon"><Camera size={22} /></span><span>insta<span className="brand-light">studio</span></span><span className="beta-badge">BETA</span></a>
-        {!presentation && <div className="project-switcher"><FolderOpen size={16} /><select aria-label="Projeto atual" value={project.id} disabled={avatarBusy} onChange={event => {
+        {!presentation && <div className="project-switcher"><FolderOpen size={16} /><select aria-label="Feed atual" value={project.id} disabled={avatarBusy} onChange={event => {
           const id = event.target.value; setWorkspace(current => current ? { ...current, activeProjectId: id } : current);
           setViewerId(null); setAvatarError('');
         }}>{workspace.projects.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select>
-          <button className="icon-button" aria-label="Criar projeto" disabled={avatarBusy} onClick={() => { setNewTitle(''); setDialog('newProject'); }}><Plus size={18} /></button></div>}
+          <button className="icon-button" aria-label="Criar feed" disabled={avatarBusy} onClick={() => { setNewTitle(''); setDialog('newProject'); }}><Plus size={18} /></button></div>}
         <div className="header-right">{status}{presentation && <button className="button secondary" onClick={() => setPresentation(false)}><ArrowLeft size={16} />Voltar à edição</button>}</div>
       </header>
 
@@ -132,7 +132,7 @@ export default function App() {
 
         <div className="studio-layout">
           {!presentation && <aside className="editor-panel">
-            <div className="editor-heading"><div><span className="eyebrow">PROJETO</span><h2>{project.title}</h2></div><SlidersHorizontal size={18} /></div>
+            <div className="editor-heading"><div><span className="eyebrow">FEED</span><h2>{project.title}</h2></div><SlidersHorizontal size={18} /></div>
             <div className="editor-tabs" role="tablist" aria-label="Editor">
               <button role="tab" id="profile-tab" aria-controls="profile-editor" aria-selected={section === 'profile'} className={section === 'profile' ? 'active' : ''} onClick={() => setSection('profile')}><SlidersHorizontal size={15} />Perfil</button>
               <button role="tab" id="posts-tab" aria-controls="posts-editor" aria-selected={section === 'posts'} className={section === 'posts' ? 'active' : ''} onClick={() => setSection('posts')}><Images size={15} />Conteúdo<span className="tab-count">{posts.length}</span></button>
@@ -141,7 +141,7 @@ export default function App() {
               <div className="avatar-editor"><Avatar src={profile.avatar} name={profile.name} /><div><button className="text-button" disabled={avatarBusy} onClick={() => avatarInput.current?.click()}>{avatarBusy ? <LoaderCircle className="spin" size={14} /> : <Upload size={14} />}Trocar foto</button><span>JPG, PNG ou WebP</span>{profile.avatar && <button className="remove-avatar" disabled={avatarBusy} onClick={() => updateProfile('avatar', '')}>Remover foto</button>}</div>
                 <input ref={avatarInput} type="file" accept="image/jpeg,image/png,image/webp" className="visually-hidden" aria-label="Selecionar foto do perfil" disabled={avatarBusy} onChange={event => void changeAvatar(event.target.files?.[0])} /></div>
               {avatarError && <p className="form-error" role="alert">{avatarError}</p>}
-              <label className="field"><span>Nome do projeto</span><input value={project.title} maxLength={60} onChange={event => updateProject(current => ({ ...current, title: event.target.value }))} placeholder="Ex.: Cliente · Campanha de outubro" /></label>
+              <label className="field"><span>Nome do feed</span><input value={project.title} maxLength={60} onChange={event => updateProject(current => ({ ...current, title: event.target.value }))} placeholder="Ex.: Cliente · Campanha de outubro" /></label>
               <label className="field"><span id="username-label">Nome de usuário</span><div className="input-with-prefix"><span aria-hidden="true">@</span><input aria-labelledby="username-label" value={profile.username} maxLength={30} onChange={event => updateProfile('username', event.target.value.replace(/[^a-zA-Z0-9._]/g, '').toLowerCase())} placeholder="sua.marca" /></div></label>
               <label className="field"><span>Nome do perfil</span><input value={profile.name} maxLength={64} onChange={event => updateProfile('name', event.target.value)} /></label>
               <label className="field"><span>Categoria</span><input value={profile.category} maxLength={60} onChange={event => updateProfile('category', event.target.value)} placeholder="Ex.: Cafeteria" /></label>
@@ -149,7 +149,7 @@ export default function App() {
               <label className="field"><span>Site</span><input value={profile.website} maxLength={200} onChange={event => updateProfile('website', event.target.value)} placeholder="suamarca.com.br" /></label>
               <div className="form-row"><label className="field"><span>Seguidores</span><input type="number" min="0" max="999999999" value={profile.followers} onChange={event => updateProfile('followers', Math.min(999999999, Math.max(0, Math.trunc(Number(event.target.value)))))} /></label>
                 <label className="field"><span>Seguindo</span><input type="number" min="0" max="999999999" value={profile.following} onChange={event => updateProfile('following', Math.min(999999999, Math.max(0, Math.trunc(Number(event.target.value)))))} /></label></div>
-              <button className="delete-project" disabled={avatarBusy} onClick={() => setDialog('deleteProject')}><Trash2 size={14} />Excluir projeto</button>
+              <button className="delete-project" disabled={avatarBusy} onClick={() => setDialog('deleteProject')}><Trash2 size={14} />Excluir feed</button>
             </div> : <div className="editor-content content-editor" id="posts-editor" role="tabpanel" aria-labelledby="posts-tab">
               <p className="section-intro">A ordem aqui é a ordem do feed. Arraste ou use as setas para organizar.</p>
               <button className="add-content" onClick={() => openComposer()}><ImagePlus size={19} />Adicionar publicação<Plus size={16} /></button>
@@ -184,13 +184,13 @@ export default function App() {
         {!presentation && <footer className="app-footer"><span>Feito para dar forma às suas ideias.</span><span>Simulação independente · Dados salvos apenas neste navegador</span></footer>}
       </main>
 
-      {dialog === 'newProject' && <Dialog title="Um novo projeto, novas ideias" onClose={() => setDialog(null)} className="small-dialog"><form onSubmit={event => {
+      {dialog === 'newProject' && <Dialog title="Um novo feed, novas ideias" onClose={() => setDialog(null)} className="small-dialog"><form onSubmit={event => {
         event.preventDefault();
         if (!newTitle.trim()) return;
         const created = newProject(newTitle.trim());
         setWorkspace(current => current ? { ...current, activeProjectId: created.id, projects: [...current.projects, created] } : current);
         setSection('profile'); setAvatarError(''); setDialog(null);
-      }}><p className="dialog-intro">Crie um perfil fictício para uma marca ou campanha.</p><label className="field"><span>Nome do projeto</span><input autoFocus required maxLength={60} value={newTitle} placeholder="Ex.: Studio Flora" onChange={event => setNewTitle(event.target.value)} /></label><div className="dialog-actions"><button type="button" className="button secondary" onClick={() => setDialog(null)}>Cancelar</button><button type="submit" className="button primary" disabled={!newTitle.trim()}><Plus size={16} />Criar projeto</button></div></form></Dialog>}
+      }}><p className="dialog-intro">Crie um perfil fictício para uma marca ou campanha.</p><label className="field"><span>Nome do feed</span><input autoFocus required maxLength={60} value={newTitle} placeholder="Ex.: Studio Flora" onChange={event => setNewTitle(event.target.value)} /></label><div className="dialog-actions"><button type="button" className="button secondary" onClick={() => setDialog(null)}>Cancelar</button><button type="submit" className="button primary" disabled={!newTitle.trim()}><Plus size={16} />Criar feed</button></div></form></Dialog>}
 
       {dialog === 'composer' && <PostComposer post={editingPost} onClose={() => setDialog(null)} onSave={post => {
         updateProject(current => ({ ...current, posts: editingPost ? current.posts.map(item => item.id === post.id ? post : item) : [post, ...current.posts] }));
@@ -199,11 +199,11 @@ export default function App() {
 
       {viewedPost && <PostViewer key={viewedPost.id} post={viewedPost} profile={profile} mode={mode} presentation={presentation} onClose={() => setViewerId(null)} onEdit={() => openComposer(viewedPost)} onDelete={() => { setViewerId(null); setDeletePostId(viewedPost.id); }} />}
 
-      {deletePostId && <Dialog title="Excluir esta publicação?" onClose={() => setDeletePostId(null)} className="small-dialog"><p className="dialog-intro">A publicação e suas imagens serão removidas deste projeto.</p><div className="dialog-actions"><button className="button secondary" onClick={() => setDeletePostId(null)}>Cancelar</button><button className="button danger-button" onClick={() => {
+      {deletePostId && <Dialog title="Excluir esta publicação?" onClose={() => setDeletePostId(null)} className="small-dialog"><p className="dialog-intro">A publicação e suas imagens serão removidas deste feed.</p><div className="dialog-actions"><button className="button secondary" onClick={() => setDeletePostId(null)}>Cancelar</button><button className="button danger-button" onClick={() => {
         updateProject(current => ({ ...current, posts: current.posts.filter(post => post.id !== deletePostId) })); setDeletePostId(null);
       }}>Excluir publicação</button></div></Dialog>}
 
-      {dialog === 'deleteProject' && <Dialog title="Excluir este projeto?" onClose={() => setDialog(null)} className="small-dialog"><p className="dialog-intro">O projeto <strong>{project.title}</strong> e todas as suas publicações serão removidos deste navegador.</p><div className="dialog-actions"><button className="button secondary" onClick={() => setDialog(null)}>Cancelar</button><button className="button danger-button" onClick={() => {
+      {dialog === 'deleteProject' && <Dialog title="Excluir este feed?" onClose={() => setDialog(null)} className="small-dialog"><p className="dialog-intro">O feed <strong>{project.title}</strong> e todas as suas publicações serão removidos deste navegador.</p><div className="dialog-actions"><button className="button secondary" onClick={() => setDialog(null)}>Cancelar</button><button className="button danger-button" onClick={() => {
         setWorkspace(current => {
           if (!current) return current;
           const remaining = current.projects.filter(item => item.id !== current.activeProjectId);
@@ -211,7 +211,7 @@ export default function App() {
           return { ...current, projects: remaining, activeProjectId: remaining[0].id };
         });
         setAvatarError(''); setDialog(null);
-      }}>Excluir projeto</button></div></Dialog>}
+      }}>Excluir feed</button></div></Dialog>}
     </div>
   );
 }

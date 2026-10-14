@@ -2,7 +2,7 @@ import type { Project, Workspace } from './types';
 
 export const uid = () => crypto.randomUUID();
 
-export function newProject(title = 'Novo projeto'): Project {
+export function newProject(title = 'Novo feed'): Project {
   return {
     id: uid(), title,
     profile: { username: 'sua.marca', name: 'Sua marca', category: 'Marca',

@@ -26,10 +26,10 @@ async function png(page: Page, color = '#ec6d56') {
 }
 
 async function createProject(page: Page, name = 'Studio Flora') {
-  await page.getByRole('button', { name: 'Criar projeto', exact: true }).click();
+  await page.getByRole('button', { name: 'Criar feed', exact: true }).click();
   const dialog = page.getByRole('dialog');
-  await dialog.getByLabel('Nome do projeto', { exact: true }).fill(name);
-  await dialog.getByRole('button', { name: 'Criar projeto', exact: true }).click();
+  await dialog.getByLabel('Nome do feed', { exact: true }).fill(name);
+  await dialog.getByRole('button', { name: 'Criar feed', exact: true }).click();
   await expect(page.getByRole('heading', { name, exact: true })).toBeVisible();
 }
 
@@ -51,20 +51,20 @@ test('demonstração, imagens locais e navegação no carrossel', async ({ page 
   await expect(viewer).not.toBeVisible();
 });
 
-test('projetos separados, edição ao vivo e persistência após recarregar', async ({ page }) => {
+test('feeds separados, edição ao vivo e persistência após recarregar', async ({ page }) => {
   await createProject(page);
   await page.getByLabel('Nome de usuário', { exact: true }).fill('studio.flora');
   await page.getByLabel('Nome do perfil', { exact: true }).fill('Flora · design');
   await page.getByLabel(/^Bio/).fill('Identidade visual para marcas que florescem. 🌷');
   await expect(page.locator('.profile-bio')).toContainText('Identidade visual');
   await expect(page.getByText('Salvo neste navegador', { exact: true })).toBeVisible();
-  const selectedId = await page.getByLabel('Projeto atual').inputValue();
+  const selectedId = await page.getByLabel('Feed atual').inputValue();
   await page.reload();
   await expect(page.getByLabel('Nome do perfil', { exact: true })).toHaveValue('Flora · design');
   await expect(page.locator('.grid-post')).toHaveCount(0);
-  await page.getByLabel('Projeto atual').selectOption({ label: 'Café Aurora' });
+  await page.getByLabel('Feed atual').selectOption({ label: 'Café Aurora' });
   await expect(page.locator('.grid-post')).toHaveCount(6);
-  await page.getByLabel('Projeto atual').selectOption(selectedId);
+  await page.getByLabel('Feed atual').selectOption(selectedId);
   await expect(page.getByLabel('Nome de usuário', { exact: true })).toHaveValue('studio.flora');
   await expect(page.locator('.grid-post')).toHaveCount(0);
 });
@@ -167,12 +167,12 @@ test('falha de salvamento mantém alterações e permite tentar novamente', asyn
   await expect(page.getByLabel('Nome do perfil', { exact: true })).toHaveValue('Alteração preservada');
 });
 
-test('excluir último projeto mantém a aplicação utilizável', async ({ page }) => {
-  await page.getByRole('button', { name: 'Excluir projeto', exact: true }).click();
-  await page.getByRole('dialog').getByRole('button', { name: 'Excluir projeto', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Novo projeto', exact: true })).toBeVisible();
+test('excluir último feed mantém a aplicação utilizável', async ({ page }) => {
+  await page.getByRole('button', { name: 'Excluir feed', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Excluir feed', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Novo feed', exact: true })).toBeVisible();
   await expect(page.locator('.grid-post')).toHaveCount(0);
   await expect(page.getByText('Salvo neste navegador', { exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Novo projeto', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Novo feed', exact: true })).toBeVisible();
 });
