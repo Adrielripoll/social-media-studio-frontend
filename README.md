@@ -44,13 +44,13 @@ Os emails apontam primeiro para a API. Abra os links no navegador em que solicit
 
 ## Demonstração do feed
 
-A demonstração mantém perfil editável, uploads, carrosséis, legendas, ordenação, visualização desktop/mobile e apresentação. Os projetos e imagens ficam no IndexedDB deste navegador e ainda não estão associados a uma conta.
+A demonstração mantém perfil editável, uploads, carrosséis, legendas, ordenação, visualização desktop/mobile e apresentação. Os feeds e imagens ficam no IndexedDB deste navegador e ainda não estão associados a uma conta.
 
 As imagens são preparadas em WebP, limitadas a 1.600 pixels no maior lado ou 600 pixels para avatar. O limite de entrada é 20 MB por imagem e dez imagens por carrossel.
 
 A fase 3 está implementada: a página inicial mostra hoje e um calendário mensal. O menu da data permite criar tarefas, editar apenas o título, concluir/reabrir e excluir com confirmação. A lista principal permanece em hoje. As tarefas persistem no backend, com fuso America/Sao_Paulo e criação apenas para hoje/futuro.
 
-Consulte [Calendário e tarefas](../social-media-studio-backend/docs/calendario-e-tarefas.md). A integração de projetos e Storage fica para a fase 5; a cobrança permanece independente desta entrega.
+Consulte [Calendário e tarefas](../social-media-studio-backend/docs/calendario-e-tarefas.md). A integração de feeds e Storage fica para a fase 5; a cobrança permanece independente desta entrega.
 
 ## Verificação
 
@@ -60,3 +60,5 @@ npm.cmd test
 ```
 
 O Playwright usa Chrome, inicia seu Vite na porta 3103 e simula a API na porta 43001. Os testes verificam cookies HttpOnly, CSRF, ausência de tokens no armazenamento JavaScript, cadastro, recuperação, restauração da sessão, calendário/tarefas e o simulador. Não enviam emails nem criam contas reais.
+
+A fase 4 mantém clientes e calendário ativos. Projetos da conta estão desativados. No simulador, cada perfil é apresentado como um feed independente; o armazenamento local existente permanece compatível. Feeds da conta com cliente opcional serão integrados na fase 5; dashboards e agrupamento por campanha ficam para o futuro. Consulte [Clientes e recursos independentes](../social-media-studio-backend/docs/clientes-e-projetos.md).

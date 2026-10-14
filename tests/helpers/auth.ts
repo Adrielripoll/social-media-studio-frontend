@@ -136,6 +136,10 @@ export async function mockAuth(
           : 200;
       value = status === 200 ? platformUser : { message: "Falha temporária." };
       if (status === 401) await page.context().clearCookies();
+    } else if (path === "/clients") {
+      value = { clients: [] };
+    } else if (path === "/projects") {
+      value = { projects: [] };
     } else if (path === "/tasks") {
       value = {
         today: new Intl.DateTimeFormat("sv-SE", {
