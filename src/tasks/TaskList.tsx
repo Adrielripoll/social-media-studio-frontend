@@ -1,7 +1,7 @@
-import { useState } from "react";
-import { Check, Pencil, Trash2, X } from "lucide-react";
+import { useId, useState } from "react";
+import { Check, ChevronDown, ChevronUp, Pencil, Trash2, X } from "lucide-react";
 import type { Task } from "./api";
-import { formatTaskDate } from "./dates";
+import { formatTaskDate, formatTaskAddedDate } from "./dates";
 
 interface TaskListProps {
   tasks: Task[];
@@ -10,6 +10,29 @@ interface TaskListProps {
   onEdit: (task: Task, title: string) => Promise<boolean>;
   onDelete: (task: Task) => Promise<boolean>;
   empty: string;
+  visibleLimit?: number;
+  referenceDate?: string;
+}
+function TaskTitle({
+  task,
+  referenceDate,
+}: {
+  task: Task;
+  referenceDate?: string;
+}) {
+  return (
+    <span className="task-title">
+      {task.title}
+      {referenceDate && task.scheduledDate < referenceDate && (
+        <>
+          {" "}
+          <span className="task-added-date">
+            (Adicionado em: {formatTaskAddedDate(task.createdAt)})
+          </span>
+        </>
+      )}
+    </span>
+  );
 }
 function TaskItem({
   task,
@@ -17,7 +40,8 @@ function TaskItem({
   onComplete,
   onEdit,
   onDelete,
-}: Omit<TaskListProps, "tasks" | "empty"> & { task: Task }) {
+  referenceDate,
+}: Omit<TaskListProps, "tasks" | "empty" | "visibleLimit"> & { task: Task }) {
   const [editing, setEditing] = useState(false);
   const [removing, setRemoving] = useState(false);
   const [title, setTitle] = useState(task.title);
@@ -75,7 +99,7 @@ function TaskItem({
             {task.completedAt && <Check size={13} />}
           </span>
         </label>
-        <span className="task-title">{task.title}</span>
+        <TaskTitle task={task} referenceDate={referenceDate} />
         <div className="task-item-actions">
           <button
             className="task-icon-button"
@@ -130,6 +154,8 @@ function TaskItem({
   );
 }
 export default function TaskList(props: TaskListProps) {
+  const [expanded, setExpanded] = useState(false);
+  const listId = useId();
   if (!props.tasks.length) return <p className="task-empty">{props.empty}</p>;
   const tasks = [...props.tasks].sort(
     (a, b) =>
@@ -137,14 +163,60 @@ export default function TaskList(props: TaskListProps) {
       a.createdAt.localeCompare(b.createdAt) ||
       a.id.localeCompare(b.id),
   );
+  const limit = props.visibleLimit ?? tasks.length;
+  const canExpand = tasks.length > limit;
+  const collapsed = canExpand && !expanded;
+  const visibleTasks = collapsed ? tasks.slice(0, limit) : tasks;
   return (
-    <ul className="task-list" aria-label="Lista de tarefas">
-      {tasks.map((task) => (
-        <TaskItem key={task.id} task={task} {...props} />
-      ))}
-    </ul>
+    <div className="task-list-container">
+      <ul id={listId} className="task-list" aria-label="Lista de tarefas">
+        {visibleTasks.map((task) => (
+          <TaskItem key={task.id} task={task} {...props} />
+        ))}
+      </ul>
+      {collapsed && (
+        <div className="task-list-preview" aria-hidden="true">
+          {tasks.slice(limit, limit + 2).map((task) => (
+            <div
+              key={task.id}
+              className={
+                "task-preview-item" +
+                (task.completedAt ? " task-completed" : "")
+              }
+            >
+              <span
+                className={
+                  "task-preview-dot" + (task.completedAt ? " is-completed" : "")
+                }
+              >
+                {task.completedAt && <Check size={13} />}
+              </span>
+              <TaskTitle task={task} referenceDate={props.referenceDate} />
+            </div>
+          ))}
+        </div>
+      )}
+      {canExpand && (
+        <button
+          type="button"
+          className="task-show-more"
+          aria-expanded={expanded}
+          aria-controls={listId}
+          disabled={props.busy}
+          onClick={() => setExpanded((value) => !value)}
+        >
+          {expanded ? "Mostrar menos" : "Mostrar mais"}
+          {expanded ? (
+            <ChevronUp size={16} aria-hidden="true" />
+          ) : (
+            <ChevronDown size={16} aria-hidden="true" />
+          )}
+        </button>
+      )}
+    </div>
   );
 }
+
 export function TaskDateHeading({ date }: { date: string }) {
   return <span className="task-date-label">{formatTaskDate(date)}</span>;
 }

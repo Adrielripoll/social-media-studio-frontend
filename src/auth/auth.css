@@ -538,3 +538,15 @@
     flex-direction: column;
   }
 }
+
+.session-loading {
+  min-height: 100dvh;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  padding: 24px;
+  background: #f8f8f5;
+  color: #9d927e;
+  font-size: 13px;
+}

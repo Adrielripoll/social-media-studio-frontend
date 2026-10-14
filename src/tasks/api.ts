@@ -18,6 +18,9 @@ export function listTasks(from: string, to: string, signal?: AbortSignal) {
     signal,
   });
 }
+export function listTodayTasks(signal?: AbortSignal) {
+  return apiRequest<TaskRange>("/tasks/today", { signal });
+}
 export function createTask(title: string, scheduledDate: string) {
   return apiRequest<Task>("/tasks", {
     method: "POST",

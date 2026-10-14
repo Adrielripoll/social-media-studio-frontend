@@ -92,6 +92,15 @@ function Home() {
   );
 }
 
+function SessionLoading() {
+  return (
+    <div className="session-loading" role="status" aria-live="polite">
+      <LoaderCircle className="spin" size={24} aria-hidden="true" />
+      <span>Carregando seu espaço…</span>
+    </div>
+  );
+}
+
 function AuthContent() {
   const auth = useAuth();
   const [exitError, setExitError] = useState("");
@@ -105,45 +114,28 @@ function AuthContent() {
       setExitError(authErrorMessage(reason));
     }
   }
-  if (auth.sessionLoading)
-    return (
-      <AuthShell>
-        <LoaderCircle className="spin" size={24} />
-        <h2 className="auth-loading-title">Abrindo seu espaço…</h2>
-      </AuthShell>
-    );
+  if (auth.sessionLoading) return <SessionLoading />;
   if (path === "/redefinir-senha") return <AuthPages mode="reset" />;
-  if (auth.authenticated && !auth.identity) {
+  if (auth.authenticated !== false && !auth.identity) {
+    if (!accessError) return <SessionLoading />;
     return (
       <AuthShell>
-        {accessError ? (
-          <>
-            <span className="auth-eyebrow">VAMOS TENTAR NOVAMENTE</span>
-            <h2>Seu espaço aguarda você.</h2>
-            <p className="auth-message error" role="alert">
-              {accessError}
-            </p>
-            <button
-              className="button primary auth-submit"
-              onClick={auth.retry}
-              disabled={auth.verifying}
-            >
-              <RefreshCw size={16} />
-              Tentar novamente
-            </button>
-            <button
-              className="auth-link-button"
-              onClick={() => void backToLogin()}
-            >
-              Voltar ao login
-            </button>
-          </>
-        ) : (
-          <>
-            <LoaderCircle className="spin" size={24} />
-            <h2 className="auth-loading-title">Preparando seu espaço…</h2>
-          </>
-        )}
+        <span className="auth-eyebrow">VAMOS TENTAR NOVAMENTE</span>
+        <h2>Seu espaço aguarda você.</h2>
+        <p className="auth-message error" role="alert">
+          {accessError}
+        </p>
+        <button
+          className="button primary auth-submit"
+          onClick={auth.retry}
+          disabled={auth.verifying}
+        >
+          <RefreshCw size={16} />
+          Tentar novamente
+        </button>
+        <button className="auth-link-button" onClick={() => void backToLogin()}>
+          Voltar ao login
+        </button>
       </AuthShell>
     );
   }

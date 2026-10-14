@@ -31,6 +31,7 @@ export async function mockTasks(
   };
   const requests: {
     method: string;
+    path: string;
     body: Record<string, unknown> | null;
     csrf?: string;
     cookie?: string;
@@ -50,6 +51,7 @@ export async function mockTasks(
       : null;
     requests.push({
       method: request.method(),
+      path: url.pathname,
       body,
       csrf: headers["x-csrf-token"],
       cookie: headers.cookie,
@@ -68,8 +70,18 @@ export async function mockTasks(
         value = {
           today: state.today,
           timeZone: "America/Sao_Paulo",
-          tasks: state.tasks.filter(
-            (item) => item.scheduledDate >= from && item.scheduledDate <= to,
+          tasks: state.tasks.filter((item) =>
+            url.pathname === "/tasks/today"
+              ? item.scheduledDate === state.today ||
+                (item.scheduledDate < state.today &&
+                  (!item.completedAt ||
+                    new Intl.DateTimeFormat("sv-SE", {
+                      timeZone: "America/Sao_Paulo",
+                      year: "numeric",
+                      month: "2-digit",
+                      day: "2-digit",
+                    }).format(new Date(item.completedAt)) === state.today))
+              : item.scheduledDate >= from && item.scheduledDate <= to,
           ),
         };
       }

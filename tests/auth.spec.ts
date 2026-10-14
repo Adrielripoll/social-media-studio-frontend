@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Route } from "@playwright/test";
 import {
   apiUrl,
   corsHeaders,
@@ -375,5 +375,107 @@ test("cadastro informa quando o celular já pertence a uma conta", async ({
   );
   await expect(
     page.getByRole("heading", { name: "Vamos criar sua conta?" }),
+  ).toBeVisible();
+});
+
+test("restaura a sessão sem exibir o layout ou formulário de login durante o carregamento", async ({
+  page,
+}) => {
+  await mockAuth(page);
+  await login(page);
+  await expect(
+    page.getByRole("heading", { name: "Bem-vindo, Maria." }),
+  ).toBeVisible();
+  let releaseSession!: () => void;
+  let releaseProfile!: () => void;
+  const session = new Promise<void>((resolve) => {
+    releaseSession = resolve;
+  });
+  const profile = new Promise<void>((resolve) => {
+    releaseProfile = resolve;
+  });
+  await page.route(apiUrl + "/auth/session", async (route) => {
+    await session;
+    await route.fulfill({
+      status: 200,
+      headers: corsHeaders,
+      contentType: "application/json",
+      body: JSON.stringify({ authenticated: true }),
+    });
+  });
+  await page.route(apiUrl + "/users/me", async (route) => {
+    if (route.request().method() === "OPTIONS") return route.fallback();
+    await profile;
+    await route.fulfill({
+      status: 200,
+      headers: corsHeaders,
+      contentType: "application/json",
+      body: JSON.stringify(platformUser),
+    });
+  });
+  await page.addInitScript(() => {
+    const state = window as typeof window & { loginLayoutAppeared: boolean };
+    state.loginLayoutAppeared = false;
+    new MutationObserver(() => {
+      if (document.querySelector(".auth-layout"))
+        state.loginLayoutAppeared = true;
+    }).observe(document, { childList: true, subtree: true });
+  });
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await expect(page.getByRole("status")).toContainText("Carregando seu espaço");
+  await expect(page.locator(".auth-layout")).toHaveCount(0);
+  await expect(page.getByLabel("Senha", { exact: true })).toHaveCount(0);
+  const profileRequest = page.waitForRequest(
+    (request) =>
+      request.url().endsWith("/users/me") && request.method() === "POST",
+  );
+  releaseSession();
+  await profileRequest;
+  await expect(page.locator(".session-loading")).toBeVisible();
+  await expect(page.locator(".auth-layout")).toHaveCount(0);
+  releaseProfile();
+  await expect(
+    page.getByRole("heading", { name: "Bem-vindo, Maria." }),
+  ).toBeVisible();
+  expect(
+    await page.evaluate(
+      () =>
+        (window as typeof window & { loginLayoutAppeared: boolean })
+          .loginLayoutAppeared,
+    ),
+  ).toBe(false);
+});
+
+test("falha na consulta inicial da sessão oferece repetir sem assumir que o usuário está desconectado", async ({
+  page,
+}) => {
+  await mockAuth(page);
+  await login(page);
+  await expect(
+    page.getByRole("heading", { name: "Bem-vindo, Maria." }),
+  ).toBeVisible();
+  const rejectSession = async (route: Route) => {
+    await route.fulfill({
+      status: 503,
+      headers: corsHeaders,
+      contentType: "application/json",
+      body: JSON.stringify({ message: "Indisponível" }),
+    });
+  };
+  await page.route(apiUrl + "/auth/session", rejectSession);
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "Tentar novamente", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Entre no seu espaço." }),
+  ).toHaveCount(0);
+  await expect(page.getByLabel("Senha", { exact: true })).toHaveCount(0);
+  await page.unroute(apiUrl + "/auth/session", rejectSession);
+  await page
+    .getByRole("button", { name: "Tentar novamente", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Bem-vindo, Maria." }),
   ).toBeVisible();
 });

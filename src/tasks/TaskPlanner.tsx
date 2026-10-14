@@ -15,6 +15,7 @@ import {
   deleteTask,
   editTask,
   listTasks,
+  listTodayTasks,
 } from "./api";
 import type { Task } from "./api";
 import {
@@ -23,6 +24,7 @@ import {
   monthRange,
   shiftMonth,
   todayDate,
+  taskDateFromTimestamp,
 } from "./dates";
 import TaskList, { TaskDateHeading } from "./TaskList";
 import "./tasks.css";
@@ -101,32 +103,20 @@ export default function TaskPlanner() {
     setError("");
     async function load() {
       try {
-        const response = await listTasks(
-          range.from,
-          range.to,
-          controller.signal,
-        );
+        const [response, current] = await Promise.all([
+          listTasks(range.from, range.to, controller.signal),
+          listTodayTasks(controller.signal),
+        ]);
         if (
           !Array.isArray(response.tasks) ||
-          !/^\d{4}-\d{2}-\d{2}$/.test(response.today)
+          !Array.isArray(current.tasks) ||
+          !/^\d{4}-\d{2}-\d{2}$/.test(current.today)
         )
           throw new ApiError(502);
-        const current =
-          response.today >= range.from && response.today <= range.to
-            ? response.tasks.filter(
-                (task) => task.scheduledDate === response.today,
-              )
-            : (
-                await listTasks(
-                  response.today,
-                  response.today,
-                  controller.signal,
-                )
-              ).tasks;
         if (controller.signal.aborted) return;
         setMonthTasks(response.tasks);
-        setTodayTasks(current);
-        setToday(response.today);
+        setTodayTasks(current.tasks);
+        setToday(current.today);
       } catch (reason) {
         if (!controller.signal.aborted)
           setError(
@@ -202,7 +192,14 @@ export default function TaskPlanner() {
       ),
     );
     setTodayTasks((tasks) =>
-      replace(tasks, !!task && task.scheduledDate === today),
+      replace(
+        tasks,
+        !!task &&
+          (task.scheduledDate === today ||
+            (task.scheduledDate < today &&
+              (!task.completedAt ||
+                taskDateFromTimestamp(task.completedAt) === today))),
+      ),
     );
   }
   async function mutate(
@@ -281,7 +278,10 @@ export default function TaskPlanner() {
         )}
         <TaskList
           {...actions}
+          key={today}
           tasks={todayTasks}
+          visibleLimit={6}
+          referenceDate={today}
           empty={
             loading
               ? "Preparando seu dia…"

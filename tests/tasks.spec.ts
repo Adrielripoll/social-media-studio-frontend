@@ -193,11 +193,7 @@ test("navega entre meses e anos mantendo as tarefas de hoje", async ({
   await expect(
     calendar(page).getByRole("heading", { name: "outubro de 2026" }),
   ).toBeVisible();
-  expect(
-    requests.some(
-      (item) => item.from === "2026-10-13" && item.to === "2026-10-13",
-    ),
-  ).toBe(true);
+  expect(requests.some((item) => item.path === "/tasks/today")).toBe(true);
 });
 
 test("datas passadas permitem consultar tarefas e bloqueiam novas criações", async ({
@@ -266,4 +262,77 @@ test("calendário e menu funcionam no mobile sem rolagem horizontal", async ({
       .getByRole("dialog")
       .getByText("Tarefa mobile", { exact: true }),
   ).toBeVisible();
+});
+
+test("herda pendências de meses anteriores e exibe a data de criação no fuso de São Paulo", async ({
+  page,
+}) => {
+  const previous = task("Pendência antiga", "2026-09-12");
+  previous.createdAt = "2026-09-12T02:30:00.000Z";
+  const finished = task("Concluída anteriormente", "2026-09-12", true);
+  finished.completedAt = "2026-09-13T15:00:00.000Z";
+  await mockTasks(page, [
+    previous,
+    finished,
+    task("De hoje"),
+    task("Futura", "2026-10-14"),
+  ]);
+  await login(page);
+  await expect(today(page).getByText("Pendência antiga")).toBeVisible();
+  await expect(
+    today(page).getByText("(Adicionado em: 11/09/2026)", { exact: true }),
+  ).toBeVisible();
+  await expect(today(page).getByText("Concluída anteriormente")).toHaveCount(0);
+  await expect(today(page).getByText("Futura", { exact: true })).toHaveCount(0);
+  await calendar(page).getByRole("button", { name: "Próximo mês" }).click();
+  await expect(today(page).getByText("Pendência antiga")).toBeVisible();
+});
+
+test("mantém herdada concluída em hoje, atualiza o calendário original e deixa de herdá-la no próximo dia", async ({
+  page,
+}) => {
+  const previous = task("Pendência herdada", "2026-10-12");
+  previous.createdAt = "2026-10-12T12:00:00.000Z";
+  const { state } = await mockTasks(page, [previous]);
+  await login(page);
+  await today(page)
+    .getByRole("checkbox", { name: "Concluir Pendência herdada" })
+    .click();
+  await expect(
+    today(page).getByRole("checkbox", { name: "Reabrir Pendência herdada" }),
+  ).toBeChecked();
+  await expect(
+    today(page).getByText("(Adicionado em: 12/10/2026)", { exact: true }),
+  ).toBeVisible();
+  const menu = await openDate(page, "12 de outubro de 2026");
+  await expect(
+    menu.getByRole("checkbox", { name: "Reabrir Pendência herdada" }),
+  ).toBeChecked();
+  expect(state.tasks[0].scheduledDate).toBe("2026-10-12");
+  expect(state.tasks).toHaveLength(1);
+  await page.reload();
+  await expect(
+    today(page).getByRole("checkbox", { name: "Reabrir Pendência herdada" }),
+  ).toBeChecked();
+  await today(page)
+    .getByRole("checkbox", { name: "Reabrir Pendência herdada" })
+    .click();
+  await expect(
+    today(page).getByRole("checkbox", { name: "Concluir Pendência herdada" }),
+  ).not.toBeChecked();
+  await today(page)
+    .getByRole("checkbox", { name: "Concluir Pendência herdada" })
+    .click();
+  await expect(
+    today(page).getByRole("checkbox", { name: "Reabrir Pendência herdada" }),
+  ).toBeChecked();
+  state.today = "2026-10-14";
+  await page.clock.setFixedTime(new Date("2026-10-14T15:00:00Z"));
+  await page.reload();
+  await expect(
+    today(page).getByText(
+      "Seu dia está livre. Adicione uma tarefa para começar.",
+    ),
+  ).toBeVisible();
+  await expect(today(page).getByText("Pendência herdada")).toHaveCount(0);
 });

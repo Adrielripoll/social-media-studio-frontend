@@ -37,3 +37,21 @@ export function formatMonth(month: string) {
     year: "numeric",
   }).format(new Date(month + "-01T12:00:00Z"));
 }
+
+export function formatTaskAddedDate(timestamp: string) {
+  return new Intl.DateTimeFormat("pt-BR", {
+    timeZone: TASK_TIME_ZONE,
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(timestamp));
+}
+
+export function taskDateFromTimestamp(timestamp: string) {
+  return new Intl.DateTimeFormat("sv-SE", {
+    timeZone: TASK_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(timestamp));
+}

@@ -136,7 +136,7 @@ export async function mockAuth(
           : 200;
       value = status === 200 ? platformUser : { message: "Falha temporária." };
       if (status === 401) await page.context().clearCookies();
-    } else if (path === "/tasks") {
+    } else if (path === "/tasks" || path === "/tasks/today") {
       value = {
         today: new Intl.DateTimeFormat("sv-SE", {
           timeZone: "America/Sao_Paulo",

@@ -4,7 +4,7 @@ import { ApiError, apiRequest, registerCurrentUser, resetCsrf } from "./api";
 import type { PlatformUser } from "./api";
 
 interface AuthState {
-  authenticated: boolean;
+  authenticated: boolean | null;
   sessionLoading: boolean;
   identity: PlatformUser | null;
   verifying: boolean;
@@ -18,7 +18,7 @@ interface AuthState {
 const AuthContext = createContext<AuthState | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [authenticated, setAuthenticated] = useState(false);
+  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
   const [sessionLoading, setSessionLoading] = useState(true);
   const [identity, setIdentity] = useState<PlatformUser | null>(null);
   const [verifying, setVerifying] = useState(false);

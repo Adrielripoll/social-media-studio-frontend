@@ -475,3 +475,61 @@
     margin-left: 28px;
   }
 }
+
+.task-list-preview {
+  max-height: 54px;
+  overflow: hidden;
+  border-top: 1px solid #f0eee8;
+  mask-image: linear-gradient(to bottom, rgb(0 0 0 / 65%), transparent);
+  pointer-events: none;
+  user-select: none;
+}
+.task-preview-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 11px 0;
+}
+.task-preview-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid #d4c9b5;
+  border-radius: 50%;
+}
+.task-preview-dot.is-completed {
+  background: #719a78;
+  border-color: #719a78;
+  color: #fff;
+}
+.task-show-more {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: #967a52;
+  padding: 10px;
+  font: inherit;
+  font-size: 12px;
+}
+.task-show-more:hover {
+  background: #faf5eb;
+}
+@media (max-width: 600px) {
+  .task-preview-item {
+    gap: 8px;
+  }
+}
+
+.task-added-date {
+  font-size: 11px;
+  color: #a69d8b;
+  white-space: nowrap;
+}
