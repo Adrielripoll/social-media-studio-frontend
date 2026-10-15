@@ -1,0 +1,342 @@
+@font-face {
+  font-family: "Manrope Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url("@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2")
+    format("woff2");
+}
+@font-face {
+  font-family: "Space Grotesk Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 300 700;
+  src: url("@fontsource-variable/space-grotesk/files/space-grotesk-latin-wght-normal.woff2")
+    format("woff2");
+}
+
+/* The dashboard is the first surface of the new visual direction. */
+body.dashboard-experience,
+.dashboard-page,
+.dashboard-library,
+.dashboard-theme-dialog,
+.dashboard-import-dialog {
+  --accent: #6650dc;
+  --accent-hover: #5039bf;
+  --focus: #7961ed;
+  --text-primary: #1a2039;
+  --text-secondary: #616981;
+  --muted: #65708a;
+  --surface: #fff;
+  --surface-soft: #f4f5fc;
+  --canvas: #f0f2f9;
+  --line: #e4e7f2;
+  --control-border: #bcc3db;
+  --radius-card: 20px;
+  --radius-control: 11px;
+  --shadow-card: 0 5px 24px rgb(43 46 93 / 4%);
+  --success: #157259;
+  --success-surface: #e9f8f1;
+  --danger: #b23257;
+  --danger-surface: #fff0f4;
+  --dashboard-heading-font: "Space Grotesk Variable", sans-serif;
+  font-family: "Manrope Variable", sans-serif;
+  color: var(--text-primary);
+}
+body.dashboard-experience .platform-home {
+  background:
+    radial-gradient(ellipse at 95% 4%, #e9e5fc 0, transparent 38%),
+    var(--canvas);
+}
+body.dashboard-experience .platform-header {
+  border-bottom: 1px solid var(--line);
+  background: #fff;
+}
+body.dashboard-experience .platform-layout {
+  max-width: 1660px;
+  grid-template-columns: 228px minmax(0, 1fr);
+}
+body.dashboard-experience .workspace-sidebar {
+  border-right-color: var(--line);
+  background: #ffffffd9;
+  padding: 30px 16px;
+}
+body.dashboard-experience .workspace-nav-button {
+  font-size: 12px;
+  font-weight: 600;
+  padding: 13px 14px;
+  border-radius: 12px;
+}
+body.dashboard-experience .workspace-nav-button.is-active {
+  color: #5b43ce;
+  background: linear-gradient(100deg, #eee9ff, #f4f2ff);
+  box-shadow: inset 3px 0 #8d70f5;
+}
+body.dashboard-experience .workspace-nav-button:hover,
+body.dashboard-experience .workspace-client-link:hover {
+  background: #f0edfc;
+  color: #5b43ce;
+}
+body.dashboard-experience .workspace-sidebar-heading {
+  font-size: 9px;
+  letter-spacing: 1.4px;
+  color: #69728b;
+}
+body.dashboard-experience .platform-layout > .workspace-content {
+  max-width: none;
+  padding: 30px 34px 48px;
+}
+:is(
+    .dashboard-page,
+    .dashboard-library,
+    .dashboard-theme-dialog,
+    .dashboard-import-dialog
+  )
+  :is(h1, h2, h3, h4) {
+  font-family: var(--dashboard-heading-font);
+  font-weight: 600;
+  letter-spacing: -0.4px;
+}
+:is(
+    .dashboard-page,
+    .dashboard-library,
+    .dashboard-theme-dialog,
+    .dashboard-import-dialog
+  )
+  .button {
+  min-height: 44px;
+  border-radius: 11px;
+  font:
+    600 12px "Manrope Variable",
+    sans-serif;
+  padding: 12px 17px;
+  transition:
+    background 0.18s,
+    box-shadow 0.18s,
+    transform 0.18s;
+}
+:is(
+    .dashboard-page,
+    .dashboard-library,
+    .dashboard-theme-dialog,
+    .dashboard-import-dialog
+  )
+  .button.primary {
+  color: #fff;
+  border: 1px solid transparent;
+  background: linear-gradient(115deg, #7258ed, #5e45d3);
+  box-shadow: 0 4px 12px #6e4ad328;
+}
+:is(
+    .dashboard-page,
+    .dashboard-library,
+    .dashboard-theme-dialog,
+    .dashboard-import-dialog
+  )
+  .button.primary:hover:not(:disabled) {
+  background: linear-gradient(115deg, #6046da, #4e36bd);
+  box-shadow: 0 6px 18px #6e4ad338;
+}
+:is(
+    .dashboard-page,
+    .dashboard-library,
+    .dashboard-theme-dialog,
+    .dashboard-import-dialog
+  )
+  .button.secondary {
+  background: #fff;
+  border: 1px solid var(--line);
+  color: var(--text-primary);
+}
+:is(
+    .dashboard-page,
+    .dashboard-library,
+    .dashboard-theme-dialog,
+    .dashboard-import-dialog
+  )
+  .button.secondary:hover:not(:disabled) {
+  background: var(--surface-soft);
+  border-color: #bdb3e4;
+}
+:is(.dashboard-page, .dashboard-library) .text-button {
+  color: #646b85;
+  font-weight: 600;
+  font-size: 12px;
+}
+:is(
+    .dashboard-page,
+    .dashboard-library,
+    .dashboard-theme-dialog,
+    .dashboard-import-dialog
+  )
+  :is(input, select, textarea) {
+  font-family: inherit;
+  color: var(--text-primary);
+  border-color: var(--control-border);
+  border-radius: 10px;
+}
+:is(
+    .dashboard-page,
+    .dashboard-library,
+    .dashboard-theme-dialog,
+    .dashboard-import-dialog
+  )
+  :is(button, summary, input, select, textarea):focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+:is(.dashboard-theme-dialog, .dashboard-import-dialog) {
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  box-shadow: 0 28px 90px #151b3e40;
+}
+:is(.dashboard-theme-dialog, .dashboard-import-dialog)::backdrop {
+  background: #181c3f70;
+  backdrop-filter: blur(5px);
+}
+:is(.dashboard-theme-dialog, .dashboard-import-dialog) .dialog-heading h2 {
+  font-size: 24px;
+}
+.dashboard-hero {
+  --text-secondary: #c1c6df;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: 24px;
+  background: #181d39;
+  color: #fff;
+  background-image:
+    radial-gradient(ellipse at 98% 5%, #8355bf70, transparent 48%),
+    radial-gradient(ellipse at 70% 120%, #395fd177, transparent 55%),
+    linear-gradient(115deg, #151b30, #28254e);
+  box-shadow: 0 16px 30px #20244315;
+  border: 1px solid #ffffff14;
+}
+.dashboard-hero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  width: 350px;
+  height: 350px;
+  border-radius: 50%;
+  border: 1px solid #c3b5ff16;
+  right: -65px;
+  top: -160px;
+  box-shadow:
+    0 0 0 35px #b9a8ff06,
+    0 0 0 70px #b9a8ff04,
+    0 0 0 105px #b9a8ff03;
+}
+.dashboard-hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font:
+    600 10px "Manrope Variable",
+    sans-serif;
+  color: #d7cbff;
+  letter-spacing: 1.7px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.dashboard-hero :is(h1, h2) {
+  color: #fff;
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+}
+.dashboard-hero-profile {
+  color: #c1c6df;
+  font-size: 12px;
+  line-height: 1.7;
+  margin-top: 16px;
+}
+.dashboard-hero .button.primary {
+  background: linear-gradient(110deg, #c2aeff, #a994f7);
+  color: #211c42;
+  border: 1px solid #dfd4ff7a;
+  box-shadow: 0 4px 20px #9470ef22;
+}
+.dashboard-hero .button.primary:hover:not(:disabled) {
+  background: #d2c3ff;
+  color: #211c42;
+}
+.dashboard-hero .button.secondary {
+  background: #ffffff0c;
+  border-color: #ffffff30;
+  color: #f2efff;
+}
+.dashboard-hero .button.secondary:hover:not(:disabled) {
+  background: #ffffff20;
+  border-color: #ffffff70;
+  color: #fff;
+}
+.dashboard-hero .button:disabled {
+  opacity: 0.5;
+}
+.dashboard-eyebrow {
+  color: #756291;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+.dashboard-presenting .workspace-sidebar,
+.dashboard-presenting .platform-header .platform-signout {
+  display: none;
+}
+body.dashboard-presenting .platform-layout {
+  display: block;
+}
+body.dashboard-presenting .platform-layout > .workspace-content {
+  max-width: 1400px;
+  margin-inline: auto;
+  padding: 30px 36px 50px;
+}
+@media (max-width: 1100px) {
+  body.dashboard-experience .platform-layout {
+    grid-template-columns: 190px minmax(0, 1fr);
+  }
+  body.dashboard-experience .platform-layout > .workspace-content {
+    padding-inline: 24px;
+  }
+}
+@media (max-width: 600px) {
+  body.dashboard-experience .platform-layout {
+    display: block;
+  }
+  body.dashboard-experience .workspace-sidebar {
+    padding: 8px 16px 12px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    background: #fff;
+  }
+  body.dashboard-experience .workspace-nav-button {
+    font-size: 10px;
+    padding: 9px 0;
+  }
+  body.dashboard-experience .workspace-nav-button.is-active {
+    box-shadow: none;
+  }
+  body.dashboard-experience .platform-layout > .workspace-content {
+    padding: 22px 14px 40px;
+  }
+  body.dashboard-presenting .platform-layout > .workspace-content {
+    padding: 20px 14px 40px;
+  }
+  .dashboard-hero {
+    border-radius: 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(
+      .dashboard-page,
+      .dashboard-library,
+      .dashboard-theme-dialog,
+      .dashboard-import-dialog
+    )
+    * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

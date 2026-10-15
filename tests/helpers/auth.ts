@@ -82,7 +82,9 @@ export async function mockAuth(
     const saved = await page.context().cookies(apiUrl);
     const access = saved.some((item) => item.name === "studio_access");
     const refresh = saved.some((item) => item.name === "studio_refresh");
-    if (path === "/auth/csrf") {
+    if (path === "/dashboards") {
+      value = { dashboards: [] };
+    } else if (path === "/auth/csrf") {
       await cookie("studio_csrf", "test-csrf-token");
       value = { csrfToken: "test-csrf-token" };
     } else if (path === "/auth/login") {
@@ -155,8 +157,7 @@ export async function mockAuth(
       };
     } else if (path === "/auth/logout" || path === "/auth/password") {
       await page.context().clearCookies();
-      value =
-        path === "/auth/logout" ? { authenticated: false } : { updated: true };
+      value = path === "/auth/logout" ? { authenticated: false } : { updated: true };
     }
     await route.fulfill({
       status,

@@ -1,9 +1,12 @@
+import DashboardLibrary from "../dashboards/DashboardLibrary";
+import DashboardDetail from "../dashboards/DashboardDetail";
 import { workspaceView, workspaceUrl } from "./navigation";
 import type { WorkspaceView as View } from "./navigation";
 import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import {
   CalendarDays,
+  BarChart3,
   ChevronDown,
   LayoutGrid,
   LoaderCircle,
@@ -72,7 +75,11 @@ function ClientForm({
         )}
         <div className="workspace-form-actions">
           <button className="button primary" disabled={busy}>
-            {busy ? "Salvando…" : client ? "Salvar alterações" : "Criar cliente"}
+            {busy
+              ? "Salvando…"
+              : client
+                ? "Salvar alterações"
+                : "Criar cliente"}
           </button>
           <button
             type="button"
@@ -90,6 +97,12 @@ function ClientForm({
 export default function Workspace({ children }: { children: ReactNode }) {
   const [clients, setClients] = useState<Client[]>([]);
   const [view, setView] = useState<View>(workspaceView);
+  const dashboardExperience =
+    view.kind === "dashboards" || view.kind === "dashboard";
+  useEffect(() => {
+    document.body.classList.toggle("dashboard-experience", dashboardExperience);
+    return () => document.body.classList.remove("dashboard-experience");
+  }, [dashboardExperience]);
   const [clientsExpanded, setClientsExpanded] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -98,6 +111,9 @@ export default function Workspace({ children }: { children: ReactNode }) {
   const [editor, setEditor] = useState<{ client?: Client } | null>(null);
   const [removal, setRemoval] = useState<Client | null>(null);
   const writing = useRef(false);
+  const dashboardDirty = useRef(false);
+  const currentView = useRef(view);
+  currentView.current = view;
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
@@ -123,12 +139,26 @@ export default function Workspace({ children }: { children: ReactNode }) {
   }, [reload]);
   function navigate(next: View) {
     if (writing.current) return;
+    if (
+      dashboardDirty.current &&
+      !window.confirm("Descartar as alterações não salvas do dashboard?")
+    )
+      return;
+    dashboardDirty.current = false;
     setView(next);
     setClientsExpanded(false);
     window.history.pushState(null, "", workspaceUrl(next));
   }
   useEffect(() => {
     function restoreView() {
+      if (
+        dashboardDirty.current &&
+        !window.confirm("Descartar as alterações não salvas do dashboard?")
+      ) {
+        window.history.pushState(null, "", workspaceUrl(currentView.current));
+        return;
+      }
+      dashboardDirty.current = false;
       if (!writing.current) {
         setView(workspaceView());
         setClientsExpanded(false);
@@ -176,13 +206,19 @@ export default function Workspace({ children }: { children: ReactNode }) {
       setClients((old) => old.filter((client) => client.id !== removal.id));
       if (view.kind === "client" && view.id === removal.id) {
         setView({ kind: "clients" });
-        window.history.replaceState(null, "", workspaceUrl({ kind: "clients" }));
+        window.history.replaceState(
+          null,
+          "",
+          workspaceUrl({ kind: "clients" }),
+        );
       }
       setRemoval(null);
     });
   }
   const selectedClient =
-    view.kind === "client" ? clients.find((client) => client.id === view.id) : null;
+    view.kind === "client"
+      ? clients.find((client) => client.id === view.id)
+      : null;
   const visibleClients = view.kind === "client" ? [] : clients;
   const disabled = busy || loading;
   function clientActions(client: Client) {
@@ -216,7 +252,8 @@ export default function Workspace({ children }: { children: ReactNode }) {
         <nav aria-label="Navegação do espaço de trabalho">
           <button
             className={
-              "workspace-nav-button" + (view.kind === "home" ? " is-active" : "")
+              "workspace-nav-button" +
+              (view.kind === "home" ? " is-active" : "")
             }
             disabled={busy}
             onClick={() => navigate({ kind: "home" })}
@@ -227,7 +264,8 @@ export default function Workspace({ children }: { children: ReactNode }) {
           </button>
           <button
             className={
-              "workspace-nav-button" + (view.kind === "clients" ? " is-active" : "")
+              "workspace-nav-button" +
+              (view.kind === "clients" ? " is-active" : "")
             }
             disabled={busy}
             onClick={() => navigate({ kind: "clients" })}
@@ -238,7 +276,8 @@ export default function Workspace({ children }: { children: ReactNode }) {
           </button>
           <button
             className={
-              "workspace-nav-button" + (view.kind === "feeds" ? " is-active" : "")
+              "workspace-nav-button" +
+              (view.kind === "feeds" ? " is-active" : "")
             }
             disabled={busy}
             onClick={() => navigate({ kind: "feeds" })}
@@ -246,6 +285,24 @@ export default function Workspace({ children }: { children: ReactNode }) {
           >
             <LayoutGrid size={17} />
             Feeds
+          </button>
+          <button
+            className={
+              "workspace-nav-button" +
+              (view.kind === "dashboards" || view.kind === "dashboard"
+                ? " is-active"
+                : "")
+            }
+            disabled={busy}
+            onClick={() => navigate({ kind: "dashboards" })}
+            aria-current={
+              view.kind === "dashboards" || view.kind === "dashboard"
+                ? "page"
+                : undefined
+            }
+          >
+            <BarChart3 size={17} />
+            Dashboards
           </button>
           <div className="workspace-sidebar-heading">
             <span className="workspace-clients-label">SEUS CLIENTES</span>
@@ -269,7 +326,9 @@ export default function Workspace({ children }: { children: ReactNode }) {
           </div>
           <div
             id="workspace-clients-list"
-            className={"workspace-clients-list" + (clientsExpanded ? " is-expanded" : "")}
+            className={
+              "workspace-clients-list" + (clientsExpanded ? " is-expanded" : "")
+            }
           >
             {loading ? (
               <p className="workspace-muted" role="status">
@@ -277,7 +336,9 @@ export default function Workspace({ children }: { children: ReactNode }) {
               </p>
             ) : (
               clients.length === 0 && (
-                <p className="workspace-muted">Seus clientes aparecerão aqui.</p>
+                <p className="workspace-muted">
+                  Seus clientes aparecerão aqui.
+                </p>
               )
             )}
             {clients.map((client) => (
@@ -285,12 +346,16 @@ export default function Workspace({ children }: { children: ReactNode }) {
                 <button
                   className={
                     "workspace-client-link" +
-                    (view.kind === "client" && view.id === client.id ? " is-active" : "")
+                    (view.kind === "client" && view.id === client.id
+                      ? " is-active"
+                      : "")
                   }
                   disabled={busy}
                   onClick={() => navigate({ kind: "client", id: client.id })}
                   aria-current={
-                    view.kind === "client" && view.id === client.id ? "page" : undefined
+                    view.kind === "client" && view.id === client.id
+                      ? "page"
+                      : undefined
                   }
                 >
                   <Users size={14} />
@@ -317,6 +382,26 @@ export default function Workspace({ children }: { children: ReactNode }) {
         )}
         {view.kind === "home" ? (
           children
+        ) : view.kind === "dashboards" ? (
+          <DashboardLibrary
+            onOpen={(id) => navigate({ kind: "dashboard", id })}
+          />
+        ) : view.kind === "dashboard" ? (
+          <DashboardDetail
+            key={view.id}
+            id={view.id}
+            clients={clients}
+            onDirtyChange={(value) => {
+              dashboardDirty.current = value;
+            }}
+            onBack={() =>
+              navigate(
+                view.clientId
+                  ? { kind: "client", id: view.clientId }
+                  : { kind: "dashboards" },
+              )
+            }
+          />
         ) : view.kind === "feeds" ? (
           <FeedLibrary />
         ) : (
@@ -324,7 +409,9 @@ export default function Workspace({ children }: { children: ReactNode }) {
             <header
               className="workspace-page-heading"
               role={selectedClient ? "article" : undefined}
-              aria-label={selectedClient ? "Cliente " + selectedClient.name : undefined}
+              aria-label={
+                selectedClient ? "Cliente " + selectedClient.name : undefined
+              }
             >
               <div>
                 <span className="task-eyebrow">SEU ESPAÇO DE TRABALHO</span>
@@ -348,17 +435,20 @@ export default function Workspace({ children }: { children: ReactNode }) {
                 Carregando…
               </p>
             )}
-            {!loading && !error && view.kind === "client" && !selectedClient && (
-              <div className="workspace-empty">
-                <p>Este cliente não está disponível no seu espaço.</p>
-                <button
-                  className="button secondary"
-                  onClick={() => navigate({ kind: "clients" })}
-                >
-                  Ver clientes
-                </button>
-              </div>
-            )}
+            {!loading &&
+              !error &&
+              view.kind === "client" &&
+              !selectedClient && (
+                <div className="workspace-empty">
+                  <p>Este cliente não está disponível no seu espaço.</p>
+                  <button
+                    className="button secondary"
+                    onClick={() => navigate({ kind: "clients" })}
+                  >
+                    Ver clientes
+                  </button>
+                </div>
+              )}
             <div className="workspace-cards">
               {!loading &&
                 !error &&
@@ -383,7 +473,23 @@ export default function Workspace({ children }: { children: ReactNode }) {
               ))}
             </div>
             {selectedClient && (
-              <FeedLibrary key={selectedClient.id} clientId={selectedClient.id} />
+              <>
+                <FeedLibrary
+                  key={selectedClient.id}
+                  clientId={selectedClient.id}
+                />
+                <DashboardLibrary
+                  key={"dashboards-" + selectedClient.id}
+                  clientId={selectedClient.id}
+                  onOpen={(id) =>
+                    navigate({
+                      kind: "dashboard",
+                      id,
+                      clientId: selectedClient.id,
+                    })
+                  }
+                />
+              </>
             )}
           </section>
         )}
@@ -417,7 +523,9 @@ export default function Workspace({ children }: { children: ReactNode }) {
             <p>
               Excluir <strong>{removal.name}</strong>?
             </p>
-            <p className="workspace-muted">Esta ação remove o cliente da sua conta.</p>
+            <p className="workspace-muted">
+              Esta ação remove o cliente da sua conta.
+            </p>
             {error && (
               <p className="workspace-error" role="alert">
                 {error}

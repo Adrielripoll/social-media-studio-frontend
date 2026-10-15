@@ -1,14 +1,30 @@
 export type WorkspaceView =
-  { kind: "home" | "clients" | "feeds" } | { kind: "client"; id: string };
+  | { kind: "home" | "clients" | "feeds" | "dashboards" }
+  | { kind: "client"; id: string }
+  | { kind: "dashboard"; id: string; clientId?: string };
 
 export function workspaceView(search = window.location.search): WorkspaceView {
   const params = new URLSearchParams(search);
   const client = params.get("client");
+  const dashboard = params.get("dashboard");
+  if (dashboard)
+    return { kind: "dashboard", id: dashboard, ...(client ? { clientId: client } : {}) };
   if (client) return { kind: "client", id: client };
   const view = params.get("view");
-  return { kind: view === "clients" || view === "feeds" ? view : "home" };
+  return {
+    kind: view === "clients" || view === "feeds" || view === "dashboards" ? view : "home",
+  };
 }
 export function workspaceUrl(view: WorkspaceView) {
+  if (view.kind === "dashboard")
+    return (
+      "/?" +
+      new URLSearchParams({
+        view: "dashboards",
+        dashboard: view.id,
+        ...(view.clientId ? { client: view.clientId } : {}),
+      })
+    );
   if (view.kind === "client") return "/?" + new URLSearchParams({ client: view.id });
   return view.kind === "home" ? "/" : "/?view=" + view.kind;
 }
