@@ -68,21 +68,32 @@ async function getCsrf() {
 
 export async function apiRequest<T>(
   path: string,
-  options: { method?: string; body?: unknown; signal?: AbortSignal } = {},
+  options: {
+    method?: string;
+    body?: unknown;
+    signal?: AbortSignal;
+    timeoutMs?: number;
+  } = {},
   retry = true,
 ): Promise<T> {
   const method = options.method ?? "GET";
   const headers: Record<string, string> = {};
-  if (options.body !== undefined) headers["Content-Type"] = "application/json";
+  if (options.body !== undefined && !(options.body instanceof FormData))
+    headers["Content-Type"] = "application/json";
   if (!["GET", "HEAD", "OPTIONS"].includes(method))
     headers["X-CSRF-Token"] = await getCsrf();
-  const signals = [AbortSignal.timeout(15_000)];
+  const signals = [AbortSignal.timeout(options.timeoutMs ?? 15_000)];
   if (options.signal) signals.push(options.signal);
   const response = await fetch(authConfiguration.apiUrl + path, {
     method,
     credentials: "include",
     headers,
-    body: options.body === undefined ? undefined : JSON.stringify(options.body),
+    body:
+      options.body === undefined
+        ? undefined
+        : options.body instanceof FormData
+          ? options.body
+          : JSON.stringify(options.body),
     signal: AbortSignal.any(signals),
   });
   const nextCsrf = response.headers.get("X-CSRF-Token");

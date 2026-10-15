@@ -42,6 +42,6 @@ export default defineConfig(({ mode }) => {
   const apiUrl = env.VITE_API_URL?.trim() || "http://127.0.0.1:3001";
   return {
     plugins: [localAuthOrigin(apiUrl), react()],
-    server: { port: 3003, strictPort: true },
+    server: { host: "0.0.0.0", port: 3003, strictPort: true },
   };
 });

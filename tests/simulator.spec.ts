@@ -8,7 +8,7 @@ test.beforeEach(async ({ page }) => {
   page.on('response', response => {
     if (response.status() >= 400) browserErrors.push(response.status() + ' ' + response.url());
   });
-  await page.goto('/simulador');
+  await page.goto('/demonstracao');
   await expect(page.getByRole('heading', { name: 'Ideias que ganham um feed.' })).toBeVisible();
   await expect(page.getByText('Salvo neste navegador', { exact: true })).toBeVisible();
 });

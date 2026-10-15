@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import {
   CalendarDays,
+  LayoutGrid,
   LoaderCircle,
   Pencil,
   Plus,
@@ -14,7 +15,9 @@ import { ApiError } from "../auth/api";
 import { listClients, saveClient, deleteClient } from "./api";
 import type { Client } from "./api";
 import "./workspace.css";
-type View = { kind: "home" | "clients" } | { kind: "client"; id: string };
+import FeedLibrary from "../feeds/FeedLibrary";
+type View =
+  { kind: "home" | "clients" | "feeds" } | { kind: "client"; id: string };
 function sortClients(items: Client[]) {
   return [...items].sort(
     (a, b) => a.name.localeCompare(b.name, "pt-BR") || a.id.localeCompare(b.id),
@@ -200,6 +203,18 @@ export default function Workspace({ children }: { children: ReactNode }) {
             <Users size={17} />
             Clientes
           </button>
+          <button
+            className={
+              "workspace-nav-button" +
+              (view.kind === "feeds" ? " is-active" : "")
+            }
+            disabled={busy}
+            onClick={() => navigate({ kind: "feeds" })}
+            aria-current={view.kind === "feeds" ? "page" : undefined}
+          >
+            <LayoutGrid size={17} />
+            Feeds
+          </button>
           <div className="workspace-sidebar-heading">
             <span>SEUS CLIENTES</span>
             <button
@@ -260,22 +275,25 @@ export default function Workspace({ children }: { children: ReactNode }) {
         )}
         {view.kind === "home" ? (
           children
+        ) : view.kind === "feeds" ? (
+          <FeedLibrary />
         ) : (
           <section aria-label="Gerenciar clientes" className="workspace-page">
             <header className="workspace-page-heading">
               <div>
                 <span className="task-eyebrow">SEU ESPAÇO DE TRABALHO</span>
                 <h1>{selectedClient?.name ?? "Clientes"}</h1>
-                <p>Organize os clientes que você atende.</p>
               </div>
-              <button
-                className="button primary"
-                disabled={disabled}
-                onClick={() => openEditor()}
-              >
-                <Plus size={16} />
-                Cadastrar cliente
-              </button>
+              {view.kind === "clients" && (
+                <button
+                  className="button primary"
+                  disabled={disabled}
+                  onClick={() => openEditor()}
+                >
+                  <Plus size={16} />
+                  Cadastrar cliente
+                </button>
+              )}
             </header>
             {loading && (
               <p className="workspace-muted" role="status">
@@ -323,6 +341,12 @@ export default function Workspace({ children }: { children: ReactNode }) {
                 </article>
               ))}
             </div>
+            {selectedClient && (
+              <FeedLibrary
+                key={selectedClient.id}
+                clientId={selectedClient.id}
+              />
+            )}
           </section>
         )}
       </main>

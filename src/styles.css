@@ -14,3 +14,25 @@
 @media(max-width:960px){.app-header{gap:20px}.project-switcher{padding-left:20px}.project-switcher select{max-width:180px}.save-status span{display:none}.studio-layout{grid-template-columns:245px minmax(0,1fr);gap:16px}.preview-canvas{padding:12px}.instagram-nav{display:none}.profile-header{grid-template-columns:75px minmax(0,1fr);gap:10px;padding:25px 13px}.profile-avatar{width:70px;height:70px}.profile-title{flex-wrap:wrap;gap:8px;margin-bottom:15px}.profile-title h2{font-size:16px}.profile-stats{gap:10px;font-size:9px}.profile-bio{font-size:10px}.preview-toolbar{padding:12px}.mode-toggle button{padding:6px}.page-heading h1{font-size:23px}.heading-actions{gap:7px}.heading-actions .button{font-size:10px;padding:9px 11px}.editor-heading{padding-top:19px}.form-row{gap:8px}.phone-frame{border-width:6px;border-radius:35px}.phone-status{padding:0 18px}.mobile .profile-stats{gap:7px}.app-footer{font-size:8px}.is-presenting .profile-header{padding-left:20px;padding-right:20px;grid-template-columns:130px minmax(0,1fr)}}
 @media(max-width:740px){.app-header{height:auto;min-height:72px;padding:15px 18px;flex-wrap:wrap;gap:14px}.brand{font-size:20px;gap:9px}.brand-icon{width:33px;height:33px;border-radius:10px}.project-switcher{order:3;flex:1;max-width:none;padding-left:0;border-left:0;border-top:1px solid var(--line);padding-top:8px}.project-switcher select{flex:1;max-width:none}.header-right{gap:9px}.header-right .button{min-height:33px;font-size:10px;padding:7px 10px}.main{padding:24px 16px 20px}.page-heading{align-items:flex-start;flex-direction:column;gap:4px;margin-bottom:20px}.page-heading h1{font-size:26px}.page-heading p{font-size:11px}.heading-actions{width:100%;padding-top:12px}.heading-actions .button{font-size:11px;flex:1}.studio-layout{display:flex;flex-direction:column;gap:20px}.editor-panel{width:100%;height:auto;min-height:0}.editor-content{max-height:450px;padding:20px}.editor-heading{padding:18px 20px}.editor-note{display:none}.avatar-editor{margin-bottom:20px}.field>span{font-size:11px}.field input,.field textarea{font-size:12px}.preview-panel{width:100%}.preview-toolbar{padding:12px 14px}.preview-label strong{font-size:10px}.mode-toggle button{padding:6px 8px}.preview-canvas{height:auto;min-height:380px;padding:12px}.profile-header{grid-template-columns:80px minmax(0,1fr);padding:24px 14px 20px;gap:14px}.profile-stats{font-size:9px;gap:10px;flex-wrap:wrap}.profile-title{gap:9px}.profile-title h2{font-size:16px}.profile-bio{font-size:10px}.preview-footer{padding:12px 13px;font-size:8px;line-height:1.5}.preview-count{display:none}.mode-mobile{padding:22px 16px}.phone-frame{width:338px}.app-footer{flex-direction:column;gap:8px;font-size:8px}.viewer-dialog:not(.viewer-mobile) .viewer-body{display:flex;flex-direction:column}.viewer-media{max-height:440px}.viewer-caption{max-height:200px}.dialog-inner{padding:20px}.dialog-heading h2{font-size:17px}.save-warning{padding:12px 16px;font-size:10px;flex-wrap:wrap}.is-presenting .main{padding:20px 12px}.is-presenting .preview-canvas{padding:14px;min-height:380px}.is-presenting .profile-header{padding:24px 14px 20px;grid-template-columns:80px minmax(0,1fr);gap:14px}.is-presenting .mobile .profile-header{padding:10px 15px 15px;grid-template-columns:75px minmax(0,1fr);gap:11px}.is-presenting .post-grid{padding:0 11px 11px}.is-presenting .mobile .post-grid{padding:0}.is-presenting .mode-mobile{padding:20px 13px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+.editor-fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.editor-heading, .editor-tabs, .editor-note { flex-shrink: 0; }
+
+.feed-header { gap: 24px; }
+.platform-header.has-error { flex-wrap: wrap; }
+.platform-header-error { flex-basis: 100%; order: 4; }
+.feed-loading-screen { min-height: calc(100dvh - 90px); }
+@media (max-width: 740px) {
+  .feed-header { flex-wrap: wrap; gap: 14px; }
+  .feed-header .project-switcher { flex-basis: 100%; }
+  .feed-header .header-right { gap: 9px; }
+}

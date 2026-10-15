@@ -17,7 +17,7 @@ export const corsHeaders = {
   "Access-Control-Allow-Origin": "http://127.0.0.1:3103",
   "Access-Control-Allow-Credentials": "true",
   "Access-Control-Allow-Headers": "Content-Type,X-CSRF-Token",
-  "Access-Control-Allow-Methods": "GET,POST,PATCH,DELETE,OPTIONS",
+  "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
   "Access-Control-Expose-Headers": "X-CSRF-Token",
 };
 export interface CapturedRequest {
@@ -136,12 +136,13 @@ export async function mockAuth(
           : 200;
       value = status === 200 ? platformUser : { message: "Falha temporária." };
       if (status === 401) await page.context().clearCookies();
-    } else if (path === "/tasks" || path === "/tasks/today") {
     } else if (path === "/clients") {
       value = { clients: [] };
+    } else if (path === "/feeds") {
+      value = { feeds: [] };
     } else if (path === "/projects") {
       value = { projects: [] };
-    } else if (path === "/tasks") {
+    } else if (path === "/tasks" || path === "/tasks/today") {
       value = {
         today: new Intl.DateTimeFormat("sv-SE", {
           timeZone: "America/Sao_Paulo",

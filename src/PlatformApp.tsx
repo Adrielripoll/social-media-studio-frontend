@@ -1,51 +1,23 @@
+import PlatformHeader from "./components/PlatformHeader";
 import Workspace from "./workspace/Workspace";
 import { useEffect, useState } from "react";
-import {
-  ArrowRight,
-  LayoutGrid,
-  LoaderCircle,
-  LogOut,
-  RefreshCw,
-} from "lucide-react";
+import { ArrowRight, LayoutGrid, LoaderCircle, RefreshCw } from "lucide-react";
 import TaskPlanner from "./tasks/TaskPlanner";
 import Simulator from "./App";
 import { AuthProvider, useAuth } from "./auth/AuthContext";
 import { authConfiguration } from "./auth/config";
 import AuthPages from "./auth/AuthPages";
-import AuthShell, { StudioBrand } from "./auth/AuthShell";
+import AuthShell from "./auth/AuthShell";
 import { authErrorMessage } from "./auth/errors";
 
 function Home() {
   const auth = useAuth();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
   useEffect(() => {
     window.history.replaceState(null, "", "/");
   }, []);
-  async function logout() {
-    setBusy(true);
-    setError("");
-    try {
-      await auth.signOut();
-    } catch (reason) {
-      setError(authErrorMessage(reason));
-    } finally {
-      setBusy(false);
-    }
-  }
   return (
     <div className="platform-home">
-      <header className="platform-header">
-        <StudioBrand />
-        <button
-          className="button secondary"
-          disabled={busy}
-          onClick={() => void logout()}
-        >
-          <LogOut size={15} />
-          Sair
-        </button>
-      </header>
+      <PlatformHeader onSignOut={auth.signOut} />
       <Workspace>
         <span className="auth-eyebrow">SEU ESPAÇO CRIATIVO</span>
         <h1>
@@ -58,16 +30,16 @@ function Home() {
         <TaskPlanner />
         <section className="platform-demo">
           <div>
-            <span className="demo-pill">DEMONSTRAÇÃO</span>
-            <h2>Experimente o simulador de feed.</h2>
+            <span className="demo-pill">FEED STUDIO</span>
+            <h2>Dê forma às suas ideias.</h2>
             <p>
-              Monte um perfil fictício e explore suas ideias. A demonstração
-              salva os feeds apenas neste navegador.
+              Monte perfis fictícios e organize suas publicações. Seus feeds
+              ficam salvos na sua conta.
             </p>
           </div>
           <a className="button secondary" href="/simulador">
             <LayoutGrid size={16} />
-            Abrir demonstração
+            Abrir meus feeds
             <ArrowRight size={16} />
           </a>
         </section>
@@ -83,11 +55,6 @@ function Home() {
             Acesso confirmado
           </span>
         </div>
-        {error && (
-          <p className="auth-message error" role="alert">
-            {error}
-          </p>
-        )}
       </Workspace>
     </div>
   );
@@ -140,7 +107,12 @@ function AuthContent() {
       </AuthShell>
     );
   }
-  if (auth.identity) return <Home />;
+  if (auth.identity)
+    return path === "/simulador" ? (
+      <Simulator key={auth.identity.id} onSignOut={auth.signOut} />
+    ) : (
+      <Home />
+    );
   if (path === "/cadastro") return <AuthPages mode="signup" />;
   if (path === "/recuperar-senha") return <AuthPages mode="forgot" />;
   if (path === "/auth/callback") return <AuthPages mode="callback" />;
@@ -148,7 +120,7 @@ function AuthContent() {
 }
 
 export default function PlatformApp() {
-  if (window.location.pathname === "/simulador") return <Simulator />;
+  if (window.location.pathname === "/demonstracao") return <Simulator demo />;
   if (!authConfiguration.configured)
     return (
       <AuthShell>
@@ -158,7 +130,7 @@ export default function PlatformApp() {
           O acesso estará disponível em breve. Enquanto isso, você pode explorar
           a demonstração.
         </p>
-        <a className="button primary auth-submit" href="/simulador">
+        <a className="button primary auth-submit" href="/demonstracao">
           Explorar demonstração
           <ArrowRight size={17} />
         </a>

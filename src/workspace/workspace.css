@@ -257,3 +257,125 @@
     flex-direction: column;
   }
 }
+
+.feed-create-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin: 20px 0;
+}
+.field select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid var(--border, #ddd);
+  border-radius: 8px;
+  background: white;
+  font: inherit;
+}
+
+.feed-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+}
+.feed-card-header > div {
+  min-width: 0;
+}
+.feed-card-header h3 {
+  font-size: 17px;
+  margin: 7px 0;
+  overflow-wrap: anywhere;
+}
+.feed-card-header > .button {
+  flex-shrink: 0;
+}
+.feed-preview-cards {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
+  align-items: start;
+}
+.workspace-feed-card {
+  display: block;
+}
+.feed-card-preview {
+  width: 100%;
+  max-width: 360px;
+  margin: 18px auto 0;
+  border: 1px solid #ebe8e1;
+  border-radius: 9px;
+  overflow: hidden;
+  background: #fff;
+}
+.feed-preview-profile {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 15px;
+}
+.feed-preview-profile .avatar {
+  width: 42px;
+  height: 42px;
+}
+.feed-preview-profile .avatar > span {
+  font-size: 17px;
+}
+.feed-preview-profile > div:last-child {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.feed-preview-profile strong {
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.feed-preview-profile span {
+  font-size: 11px;
+  color: #827765;
+  overflow-wrap: anywhere;
+}
+.feed-preview-profile small {
+  font-size: 10px;
+  color: #a39b8e;
+}
+.feed-preview-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  border-top: 1px solid #efede7;
+}
+.feed-preview-post {
+  position: relative;
+  aspect-ratio: 3/4;
+  background: #f3f1eb;
+  overflow: hidden;
+}
+.feed-preview-post img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.feed-preview-carousel {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  color: #fff;
+  filter: drop-shadow(0 1px 2px #0008);
+}
+.feed-preview-loading,
+.feed-preview-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 150px;
+  padding: 24px 15px;
+  text-align: center;
+  color: #ada18d;
+}
+.feed-preview-loading span {
+  font-size: 11px;
+}
+.feed-preview-empty .text-button {
+  font-size: 11px;
+}
