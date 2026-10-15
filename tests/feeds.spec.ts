@@ -302,7 +302,7 @@ test("mantém seleção do feed ao recarregar e permite concluir uma exclusão p
   await expect(
     page.getByRole("heading", { name: "Segundo", exact: true }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Voltar ao início" }).click();
+  await page.getByRole("link", { name: "Voltar ao espaço de trabalho" }).click();
   await page
     .getByRole("navigation")
     .getByRole("button", { name: "Feeds", exact: true })

@@ -23,7 +23,7 @@
   font-size: 9px;
   letter-spacing: 1.4px;
   font-weight: 650;
-  color: #aa9475;
+  color: var(--text-secondary);
   margin-bottom: 9px;
 }
 .task-card-heading h2,
@@ -36,7 +36,7 @@
 .task-date-label {
   display: block;
   font-size: 11px;
-  color: #918c82;
+  color: var(--text-secondary);
   margin-top: 8px;
   text-transform: capitalize;
 }
@@ -109,12 +109,12 @@
 }
 .task-completed .task-title {
   text-decoration: line-through;
-  color: #a29c90;
+  color: var(--text-secondary);
 }
 .task-completed-note {
   display: block;
   font-size: 9px;
-  color: #829782;
+  color: var(--text-secondary);
   margin: 3px 0 0 32px;
 }
 .task-item-actions {
@@ -126,10 +126,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #8d877c;
+  color: var(--text-secondary);
   background: none;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--radius-control);
   padding: 6px;
   cursor: pointer;
   flex-shrink: 0;
@@ -151,14 +151,14 @@
 .task-empty {
   font-size: 12px;
   line-height: 1.8;
-  color: #a6a094;
+  color: var(--text-secondary);
   padding: 14px 0;
 }
 .task-loading {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #9d927e;
+  color: var(--text-secondary);
   font-size: 11px;
   margin: 8px 0;
 }
@@ -190,7 +190,7 @@
   font-size: 20px;
 }
 .task-calendar-heading h2 svg {
-  color: #a99473;
+  color: var(--text-secondary);
   flex-shrink: 0;
 }
 .task-calendar-navigation {
@@ -210,7 +210,7 @@
 }
 .task-calendar-week {
   margin: 24px 0 12px;
-  color: #a79c86;
+  color: var(--text-secondary);
   font-size: 10px;
   text-align: center;
 }
@@ -240,7 +240,7 @@
 .task-calendar-day.is-today {
   border-color: #e3ac8e;
   background: #fff2e9;
-  color: #bd7253;
+  color: var(--text-secondary);
   font-weight: 700;
 }
 .task-calendar-day.is-selected {
@@ -248,7 +248,7 @@
   outline-offset: 0;
 }
 .task-calendar-day.is-past {
-  color: #b6b0a4;
+  color: var(--text-secondary);
   background: #fdfcf9;
 }
 .task-calendar-day:disabled {
@@ -262,18 +262,18 @@
   height: 15px;
   padding: 0 4px;
   border-radius: 10px;
-  color: #a36a47;
+  color: var(--text-secondary);
   background: #f5e6d7;
   font-size: 8px;
   line-height: 1;
 }
 .task-day-dot.all-done {
-  color: #59865e;
+  color: var(--text-secondary);
   background: #e6efe3;
 }
 .task-calendar-note {
   font-size: 10px;
-  color: #aaa190;
+  color: var(--text-secondary);
   margin-top: 18px;
   text-align: center;
 }
@@ -288,7 +288,7 @@
   padding: 22px;
   background: #fff;
   border: 1px solid #e4d7bf;
-  border-radius: 13px;
+  border-radius: var(--radius-card);
   box-shadow: 0 12px 40px #6d563728;
   display: flex;
   flex-direction: column;
@@ -322,8 +322,8 @@
   width: 100%;
   background: #faf5eb;
   border: 1px dashed #dcccb1;
-  color: #967a52;
-  border-radius: 8px;
+  color: var(--text-secondary);
+  border-radius: var(--radius-control);
   padding: 11px;
   font: inherit;
   font-size: 12px;
@@ -335,7 +335,7 @@
 }
 .task-past-note {
   font-size: 10px;
-  color: #a69d8b;
+  color: var(--text-secondary);
   margin-top: 10px;
   text-align: center;
 }
@@ -352,7 +352,7 @@
 .task-edit-form label {
   display: grid;
   gap: 6px;
-  color: #8b7c65;
+  color: var(--text-secondary);
   font-size: 11px;
 }
 .task-add-form input,
@@ -360,7 +360,7 @@
   width: 100%;
   border: 1px solid #e3dccc;
   background: #fffefa;
-  border-radius: 7px;
+  border-radius: var(--radius-control);
   padding: 10px 11px;
   color: #4e473c;
   font: inherit;
@@ -387,7 +387,7 @@
   gap: 10px;
   padding: 12px;
   margin-top: 10px;
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   background: #fff4ee;
   font-size: 11px;
   flex-wrap: wrap;
@@ -512,9 +512,9 @@
   gap: 6px;
   width: 100%;
   border: 0;
-  border-radius: 8px;
+  border-radius: var(--radius-control);
   background: transparent;
-  color: #967a52;
+  color: var(--text-secondary);
   padding: 10px;
   font: inherit;
   font-size: 12px;
@@ -530,6 +530,6 @@
 
 .task-added-date {
   font-size: 11px;
-  color: #a69d8b;
+  color: var(--text-secondary);
   white-space: nowrap;
 }

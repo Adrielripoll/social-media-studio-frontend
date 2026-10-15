@@ -1,3 +1,4 @@
+import StudioImage from "./StudioImage";
 import { useState, useRef } from "react";
 import {
   ImagePlus,
@@ -53,15 +54,11 @@ export default function PostComposer({
       try {
         for (const file of files)
           added.push(
-            prepareImage
-              ? await prepareImage(file)
-              : { url: await readImage(file) },
+            prepareImage ? await prepareImage(file) : { url: await readImage(file) },
           );
       } catch (reason) {
         if (discardMedia)
-          await discardMedia(
-            added.flatMap((item) => (item.id ? [item.id] : [])),
-          );
+          await discardMedia(added.flatMap((item) => (item.id ? [item.id] : [])));
         throw reason;
       }
       for (const item of added) if (item.id) addedMedia.current.add(item.id);
@@ -99,6 +96,7 @@ export default function PostComposer({
       title={post ? "Editar publicação" : "Nova publicação"}
       onClose={busy ? () => {} : close}
       className="composer-dialog"
+      busy={busy}
     >
       <form
         onSubmit={(event) => {
@@ -124,9 +122,7 @@ export default function PostComposer({
           multiple
           accept="image/jpeg,image/png,image/webp"
           aria-label="Selecionar imagens da publicação"
-          onChange={(event) =>
-            void addImages(Array.from(event.target.files ?? []))
-          }
+          onChange={(event) => void addImages(Array.from(event.target.files ?? []))}
           disabled={busy}
         />
         <button
@@ -145,11 +141,7 @@ export default function PostComposer({
             void addImages(Array.from(event.dataTransfer.files));
           }}
         >
-          {busy ? (
-            <LoaderCircle className="spin" size={30} />
-          ) : (
-            <ImagePlus size={30} />
-          )}
+          {busy ? <LoaderCircle className="spin" size={30} /> : <ImagePlus size={30} />}
           <strong>
             {busy
               ? "Preparando imagens…"
@@ -168,13 +160,11 @@ export default function PostComposer({
           <div className="image-strip">
             {images.map((image, index) => (
               <div className="image-thumb" key={index}>
-                <img
+                <StudioImage
                   src={image}
                   alt={"Imagem " + (index + 1) + " do carrossel"}
                 />
-                <span className="thumb-order">
-                  {index === 0 ? "Capa" : index + 1}
-                </span>
+                <span className="thumb-order">{index === 0 ? "Capa" : index + 1}</span>
                 <button
                   type="button"
                   className="thumb-remove"
@@ -186,12 +176,8 @@ export default function PostComposer({
                       addedMedia.current.delete(id);
                       if (discardMedia) void discardMedia([id]);
                     }
-                    setMediaIds((current) =>
-                      current.filter((_, i) => i !== index),
-                    );
-                    setImages((current) =>
-                      current.filter((_, i) => i !== index),
-                    );
+                    setMediaIds((current) => current.filter((_, i) => i !== index));
+                    setImages((current) => current.filter((_, i) => i !== index));
                   }}
                 >
                   <X size={13} />
@@ -199,9 +185,7 @@ export default function PostComposer({
                 <div className="thumb-arrows">
                   <button
                     type="button"
-                    aria-label={
-                      "Mover imagem " + (index + 1) + " para a esquerda"
-                    }
+                    aria-label={"Mover imagem " + (index + 1) + " para a esquerda"}
                     disabled={index === 0 || busy}
                     onClick={() => move(index, -1)}
                   >
@@ -209,9 +193,7 @@ export default function PostComposer({
                   </button>
                   <button
                     type="button"
-                    aria-label={
-                      "Mover imagem " + (index + 1) + " para a direita"
-                    }
+                    aria-label={"Mover imagem " + (index + 1) + " para a direita"}
                     disabled={index === images.length - 1 || busy}
                     onClick={() => move(index, 1)}
                   >

@@ -148,6 +148,7 @@ test("funciona no mobile sem rolagem horizontal", async ({ page }) => {
   const parent = client("Nome muito comprido para conferir a quebra de linha");
   await mockWorkspace(page, [parent]);
   await login(page);
+  await nav(page).getByRole("button", { name: "Seus clientes", exact: true }).click();
   await nav(page)
     .getByRole("button", { name: parent.name, exact: true })
     .click();

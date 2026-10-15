@@ -1,3 +1,4 @@
+import { feedEditorUrl } from "../workspace/navigation";
 import FeedCardPreview from "./FeedCardPreview";
 import { useEffect, useState } from "react";
 import { LayoutGrid, Plus, RefreshCw } from "lucide-react";
@@ -17,9 +18,7 @@ export default function FeedLibrary({ clientId }: { clientId?: string }) {
     void listFeeds(controller.signal)
       .then((value) => {
         if (!controller.signal.aborted)
-          setFeeds(
-            value.filter((feed) => !clientId || feed.clientId === clientId),
-          );
+          setFeeds(value.filter((feed) => !clientId || feed.clientId === clientId));
       })
       .catch((reason) => {
         if (!controller.signal.aborted)
@@ -40,12 +39,15 @@ export default function FeedLibrary({ clientId }: { clientId?: string }) {
     setError("");
     try {
       const feed = await createFeed("Novo feed", clientId ?? null);
-      window.location.assign("/simulador?feed=" + feed.id);
+      window.location.assign(
+        feedEditorUrl(
+          feed.id,
+          clientId ? { kind: "client", id: clientId } : { kind: "feeds" },
+        ),
+      );
     } catch (reason) {
       setError(
-        reason instanceof ApiError
-          ? reason.message
-          : "Não foi possível criar o feed.",
+        reason instanceof ApiError ? reason.message : "Não foi possível criar o feed.",
       );
       setBusy(false);
     }
@@ -59,11 +61,7 @@ export default function FeedLibrary({ clientId }: { clientId?: string }) {
         </div>
       </header>
       <div className="feed-create-actions">
-        <button
-          className="button primary"
-          disabled={busy}
-          onClick={() => void create()}
-        >
+        <button className="button primary" disabled={busy} onClick={() => void create()}>
           <Plus size={16} />
           {busy ? "Criando…" : "Criar feed"}
         </button>
@@ -84,14 +82,10 @@ export default function FeedLibrary({ clientId }: { clientId?: string }) {
       {!loading && !error && !feeds.length && (
         <p className="workspace-empty">Nenhum feed criado ainda.</p>
       )}
-      <div
-        className={"workspace-cards" + (clientId ? " feed-preview-cards" : "")}
-      >
+      <div className={"workspace-cards" + (clientId ? " feed-preview-cards" : "")}>
         {feeds.map((feed) => (
           <article
-            className={
-              "workspace-card" + (clientId ? " workspace-feed-card" : "")
-            }
+            className={"workspace-card" + (clientId ? " workspace-feed-card" : "")}
             key={feed.id}
             aria-label={"Feed " + feed.name}
           >
@@ -125,7 +119,10 @@ export default function FeedLibrary({ clientId }: { clientId?: string }) {
               ) : (
                 <a
                   className="button secondary"
-                  href={"/simulador?feed=" + feed.id}
+                  href={feedEditorUrl(
+                    feed.id,
+                    clientId ? { kind: "client", id: clientId } : { kind: "feeds" },
+                  )}
                 >
                   <LayoutGrid size={16} />
                   Abrir feed

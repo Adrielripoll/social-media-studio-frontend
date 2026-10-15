@@ -30,14 +30,12 @@ export default function PlatformHeader({
     }
   }
   return (
-    <header
-      className={"platform-header " + className + (error ? " has-error" : "")}
-    >
+    <header className={"platform-header " + className + (error ? " has-error" : "")}>
       <StudioBrand />
       {children}
       {onSignOut && (
         <button
-          className="button secondary"
+          className="button secondary platform-signout"
           disabled={busy || disabled}
           onClick={() => void logout()}
         >

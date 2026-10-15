@@ -13,13 +13,7 @@ interface TaskListProps {
   visibleLimit?: number;
   referenceDate?: string;
 }
-function TaskTitle({
-  task,
-  referenceDate,
-}: {
-  task: Task;
-  referenceDate?: string;
-}) {
+function TaskTitle({ task, referenceDate }: { task: Task; referenceDate?: string }) {
   return (
     <span className="task-title">
       {task.title}
@@ -90,14 +84,10 @@ function TaskItem({
             type="checkbox"
             checked={!!task.completedAt}
             disabled={busy}
-            aria-label={
-              (task.completedAt ? "Reabrir " : "Concluir ") + task.title
-            }
+            aria-label={(task.completedAt ? "Reabrir " : "Concluir ") + task.title}
             onChange={() => void onComplete(task)}
           />
-          <span aria-hidden="true">
-            {task.completedAt && <Check size={13} />}
-          </span>
+          <span aria-hidden="true">{task.completedAt && <Check size={13} />}</span>
         </label>
         <TaskTitle task={task} referenceDate={referenceDate} />
         <div className="task-item-actions">
@@ -123,9 +113,7 @@ function TaskItem({
           </button>
         </div>
       </div>
-      {task.completedAt && (
-        <span className="task-completed-note">Concluída</span>
-      )}
+      {task.completedAt && <span className="task-completed-note">Concluída</span>}
       {removing && (
         <div
           className="task-delete-confirm"
@@ -134,7 +122,7 @@ function TaskItem({
         >
           <p>Excluir esta tarefa?</p>
           <button
-            className="button danger"
+            className="button danger-button"
             disabled={busy}
             onClick={() => void onDelete(task)}
           >
@@ -180,14 +168,11 @@ export default function TaskList(props: TaskListProps) {
             <div
               key={task.id}
               className={
-                "task-preview-item" +
-                (task.completedAt ? " task-completed" : "")
+                "task-preview-item" + (task.completedAt ? " task-completed" : "")
               }
             >
               <span
-                className={
-                  "task-preview-dot" + (task.completedAt ? " is-completed" : "")
-                }
+                className={"task-preview-dot" + (task.completedAt ? " is-completed" : "")}
               >
                 {task.completedAt && <Check size={13} />}
               </span>

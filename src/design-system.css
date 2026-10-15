@@ -1,0 +1,839 @@
+:root {
+  --brand-coral: #ed6d56;
+  --accent: #b94732;
+  --accent-hover: #983a29;
+  --text-primary: #292828;
+  --text-secondary: #696357;
+  --muted: #70685b;
+  --surface: #fff;
+  --surface-soft: #fbf8f2;
+  --canvas: #f7f7f5;
+  --line: #ded9ce;
+  --control-border: #968b7c;
+  --danger: #ae382d;
+  --danger-surface: #fff2ec;
+  --success: #406541;
+  --success-surface: #f2f7ec;
+  --focus: #b94732;
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-dialog: 16px;
+  --shadow-card: 0 2px 8px rgb(60 47 29 / 4%);
+  --shadow-dialog: 0 16px 48px rgb(60 47 29 / 16%);
+}
+
+/* Shared controls. The simulated Instagram retains its own type scale. */
+.button {
+  min-height: 44px;
+  font-size: var(--text-sm);
+  padding: 10px 16px;
+  border-radius: var(--radius-control);
+}
+.button.danger-button {
+  background: var(--danger);
+  color: #fff;
+}
+.button.danger-button:hover:not(:disabled) {
+  background: #8f2e25;
+}
+.button.primary {
+  background: var(--accent);
+}
+.button.primary:hover:not(:disabled) {
+  background: var(--accent-hover);
+}
+.icon-button,
+.task-icon-button {
+  min-width: 44px;
+  min-height: 44px;
+  flex-shrink: 0;
+}
+.text-button,
+.remove-avatar,
+.auth-back,
+.auth-link-button {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--accent);
+}
+.auth-inline-link,
+.auth-switch a {
+  color: var(--accent);
+  font-size: var(--text-sm);
+}
+.auth-inline-link {
+  padding-block: 4px;
+  text-decoration: underline;
+}
+.auth-link-button {
+  justify-content: center;
+}
+.field > span,
+.auth-form .field > span,
+.workspace-form label,
+.task-add-form label,
+.task-edit-form label {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+.field input,
+.field textarea,
+.field select,
+.auth-form .field input,
+.dialog .field input,
+.dialog .field textarea,
+.workspace-form input,
+.workspace-form select,
+.task-add-form input,
+.task-edit-form input {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  border-color: var(--control-border);
+  border-radius: var(--radius-control);
+}
+.field input,
+.field select,
+.dialog .field input,
+.workspace-form input,
+.workspace-form select,
+.task-add-form input,
+.task-edit-form input {
+  min-height: 44px;
+}
+.field input::placeholder,
+.field textarea::placeholder {
+  color: var(--muted);
+}
+.field > span small {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+input[aria-invalid="true"] {
+  border-color: var(--danger);
+}
+.field-error {
+  color: var(--danger) !important;
+  font-size: var(--text-sm) !important;
+  line-height: 1.5;
+}
+button:focus-visible,
+a:focus-visible,
+[role="tabpanel"]:focus-visible,
+.task-check input:focus-visible + span,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+.workspace-form input:focus-visible,
+.task-add-form input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  box-shadow: none;
+}
+.auth-description,
+.auth-switch,
+.auth-success p,
+.auth-notice p,
+.auth-story-copy p,
+.platform-intro,
+.platform-demo p,
+.workspace-muted,
+.workspace-page-heading p,
+.workspace-empty,
+.task-title,
+.task-empty,
+.task-loading,
+.task-add-button,
+.task-show-more,
+.dialog-intro,
+.form-error,
+.auth-message,
+.workspace-error,
+.task-error {
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+.auth-eyebrow,
+.task-eyebrow,
+.eyebrow,
+.page-heading .eyebrow,
+.workspace-card-label,
+.workspace-sidebar-heading,
+.task-calendar-note,
+.task-date-label,
+.task-added-date,
+.task-completed-note,
+.task-past-note,
+.auth-footer,
+.auth-story-footer,
+.platform-account,
+.editor-note,
+.task-progress,
+.avatar-editor > div:not(.avatar) > span {
+  font-size: var(--text-xs);
+}
+.auth-description,
+.auth-switch,
+.auth-footer,
+.auth-story-footer,
+.platform-intro,
+.platform-demo p,
+.platform-account,
+.workspace-muted,
+.workspace-page-heading p,
+.workspace-empty,
+.task-empty,
+.task-loading,
+.task-date-label,
+.task-added-date,
+.task-completed-note,
+.task-calendar-note,
+.task-past-note,
+.dialog-intro,
+.editor-note,
+.avatar-editor > div:not(.avatar) > span {
+  color: var(--text-secondary);
+}
+.auth-message.error,
+.workspace-error,
+.task-error {
+  color: var(--danger);
+  background: var(--danger-surface);
+  border: 1px solid #e6b8b0;
+  border-radius: var(--radius-control);
+}
+.auth-message.success {
+  color: var(--success);
+  background: var(--success-surface);
+}
+.workspace-card,
+.task-today-card,
+.task-calendar-card {
+  border-color: var(--line);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-6);
+}
+.dialog {
+  border-radius: var(--radius-dialog);
+  box-shadow: var(--shadow-dialog);
+}
+.dialog-inner {
+  padding: var(--space-6);
+}
+.dialog-heading {
+  gap: var(--space-3);
+}
+.dialog-actions,
+.workspace-form-actions,
+.task-form-actions {
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+.dialog-actions .button,
+.workspace-form-actions .button,
+.task-form-actions .button,
+.task-delete-confirm .button {
+  font-size: var(--text-sm);
+  min-height: 44px;
+  white-space: normal;
+}
+.task-item-line {
+  align-items: center;
+  gap: var(--space-2);
+}
+.task-check {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.task-check > span {
+  border-color: var(--control-border);
+}
+.task-check input:checked + span {
+  background: var(--success);
+  border-color: var(--success);
+}
+.task-check input {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+.task-item-actions {
+  gap: var(--space-1);
+}
+.task-completed-note {
+  margin-left: 52px;
+}
+.task-completed .task-title {
+  color: var(--text-secondary);
+}
+.task-title {
+  font-size: var(--text-sm);
+}
+.task-calendar-heading,
+.task-card-heading {
+  flex-wrap: wrap;
+}
+.task-calendar-navigation {
+  margin-left: auto;
+  gap: var(--space-1);
+}
+.task-today-button {
+  min-height: 44px;
+  font-size: var(--text-sm);
+}
+.task-calendar-week {
+  font-size: var(--text-xs);
+}
+.task-day-dot {
+  font-size: 10px;
+}
+.task-show-more,
+.task-add-button {
+  min-height: 44px;
+}
+.task-preview-item {
+  padding-left: 12px;
+}
+
+.workspace-sidebar .is-active,
+.workspace-nav-button:hover,
+.workspace-client-link:hover {
+  color: var(--accent);
+}
+.editor-tabs button,
+.mode-toggle button {
+  color: var(--text-secondary);
+}
+.editor-tabs button.active {
+  color: var(--accent);
+}
+.mode-toggle button.active {
+  color: var(--text-primary);
+}
+.task-calendar-day.is-today {
+  color: var(--accent);
+}
+.task-calendar-day.is-selected {
+  outline-color: var(--focus);
+}
+.task-day-dot.all-done {
+  color: var(--success);
+}
+.post-list-actions .icon-button.danger {
+  color: var(--danger);
+}
+.session-loading {
+  font-size: var(--text-sm);
+}
+
+/* Compact navigation and a single client heading. */
+.workspace-nav-button,
+.workspace-client-link {
+  min-height: 44px;
+  font-size: var(--text-sm);
+}
+.workspace-clients-list {
+  display: grid;
+  gap: var(--space-2);
+}
+.workspace-clients-toggle {
+  display: none;
+}
+.workspace-page-heading .workspace-card-actions {
+  display: flex;
+}
+.workspace-page-heading h2 {
+  font-size: 24px;
+}
+.feed-card-header {
+  flex-wrap: wrap;
+}
+.feed-card-header > div {
+  flex: 1 1 180px;
+}
+.feed-card-header h3 {
+  font-size: 18px;
+}
+.feed-card-header .button {
+  margin-left: auto;
+}
+
+/* A full preview reserves the same space during loading, empty and error states. */
+.feed-card-preview {
+  position: relative;
+  border-radius: var(--radius-card);
+}
+.feed-card-preview::before {
+  content: "";
+  display: block;
+  padding-top: calc(133.333% + 112px);
+}
+.feed-preview-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+.feed-preview-profile {
+  flex: 0 0 112px;
+  min-height: 0;
+  padding: var(--space-3);
+  overflow: hidden;
+}
+.feed-preview-profile strong {
+  font-size: var(--text-sm);
+}
+.feed-preview-profile span,
+.feed-preview-profile small {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+.feed-preview-profile > div:last-child {
+  flex: 1;
+}
+.feed-preview-profile > div:last-child > span {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.feed-preview-grid {
+  flex: 1;
+  min-height: 0;
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+.feed-preview-post {
+  aspect-ratio: auto;
+  min-height: 0;
+}
+.feed-preview-empty {
+  flex: 1;
+  min-height: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+.feed-preview-empty .text-button {
+  font-size: var(--text-sm);
+}
+.feed-preview-loading {
+  align-items: stretch;
+  padding: 0;
+  gap: 0;
+}
+.preview-skeleton-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #ece7de;
+}
+.preview-skeleton-line {
+  display: block;
+  height: 12px;
+  width: 75%;
+  border-radius: 4px;
+  background: #ece7de;
+}
+.preview-skeleton-line + .preview-skeleton-line {
+  width: 50%;
+  margin-top: 8px;
+}
+.preview-skeleton-tile {
+  background: #ece7de;
+}
+.image-fallback {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  text-align: center;
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+.post-list-thumb .image-fallback > span,
+.image-thumb .image-fallback > span {
+  display: none;
+}
+
+/* Feed editing controls use the platform scale, independently of the preview. */
+.editor-panel {
+  height: clamp(440px, calc(100dvh - 300px), 760px);
+  min-height: 0;
+}
+.editor-heading h2 {
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+.editor-tabs button {
+  min-height: 48px;
+  font-size: var(--text-sm);
+}
+.tab-count {
+  font-size: var(--text-xs);
+}
+.avatar-editor .remove-avatar {
+  font-size: var(--text-xs);
+}
+.delete-project {
+  min-height: 44px;
+  font-size: var(--text-sm);
+  color: var(--danger);
+}
+.post-list-copy strong,
+.post-list-copy p {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+.post-list-actions {
+  flex-wrap: wrap;
+}
+.post-list-actions .icon-button {
+  width: 44px;
+  height: 44px;
+  color: var(--text-secondary);
+}
+.preview-label strong,
+.mode-toggle button {
+  font-size: var(--text-sm);
+}
+.mode-toggle button {
+  min-height: 44px;
+}
+.preview-subtitle,
+.preview-footer,
+.app-footer {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+.image-thumb {
+  width: 128px;
+  height: 160px;
+}
+.thumb-remove {
+  width: 44px;
+  height: 44px;
+}
+.thumb-arrows button {
+  width: 44px;
+  height: 44px;
+}
+.carousel-arrow {
+  width: 44px;
+  height: 44px;
+}
+.carousel-dots {
+  position: static;
+  transform: none;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0;
+}
+.carousel-dots button {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-control);
+  background: transparent;
+  display: grid;
+  place-items: center;
+}
+.carousel-dots button::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #737373;
+}
+.carousel-dots button.active {
+  background: transparent;
+}
+.carousel-dots button.active::before {
+  background: #1877b3;
+}
+.viewer-reactions .icon-button {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+/* Flexible header: the selector never pushes its create button outside the viewport. */
+.feed-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  gap: var(--space-4);
+}
+.feed-header .project-switcher {
+  min-width: 0;
+  max-width: 340px;
+  padding-left: var(--space-4);
+}
+.project-switcher select {
+  min-width: 0;
+  width: 0;
+  max-width: none;
+  flex: 1;
+  min-height: 44px;
+  font-size: var(--text-sm);
+}
+.project-switcher .icon-button {
+  width: 44px;
+  height: 44px;
+}
+.feed-header .header-right {
+  min-width: 0;
+  margin-left: auto;
+}
+.save-status {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+.save-status span {
+  display: inline;
+}
+.save-status.saved svg {
+  color: var(--success);
+}
+.save-status.error {
+  color: var(--danger);
+}
+.platform-header-error {
+  grid-column: 1 / -1;
+}
+.studio-mobile-switch {
+  display: none;
+}
+@media (max-width: 960px) {
+  .feed-header {
+    padding-inline: 24px;
+    gap: var(--space-3);
+  }
+  .feed-header .studio-brand {
+    font-size: 20px;
+  }
+  .feed-header .project-switcher {
+    padding-left: var(--space-3);
+  }
+}
+@media (max-width: 740px) {
+  .field input,
+  .field textarea,
+  .field select,
+  .auth-form .field input,
+  .dialog .field input,
+  .dialog .field textarea,
+  .workspace-form input,
+  .task-add-form input,
+  .task-edit-form input {
+    font-size: var(--text-base);
+  }
+  .feed-header {
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: var(--space-4);
+    gap: var(--space-3);
+  }
+  .feed-header .studio-brand {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .feed-header .platform-signout {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .feed-header .project-switcher {
+    grid-column: 1 / -1;
+    max-width: none;
+    padding-left: 0;
+    border-left: 0;
+  }
+  .feed-header .header-right {
+    grid-column: 1 / -1;
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+  .header-right .button {
+    min-height: 44px;
+    font-size: var(--text-sm);
+  }
+  .studio-mobile-switch {
+    display: flex;
+    gap: var(--space-2);
+    padding: var(--space-1);
+    margin-bottom: var(--space-4);
+    background: #ede8de;
+    border-radius: var(--radius-card);
+  }
+  .studio-mobile-switch button {
+    flex: 1;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    border: 0;
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+  }
+  .studio-mobile-switch button.active {
+    background: var(--surface);
+    color: var(--accent);
+  }
+  .mobile-view-edit:not(.is-presenting) .preview-panel,
+  .mobile-view-preview:not(.is-presenting) .editor-panel {
+    display: none;
+  }
+  .editor-panel {
+    height: auto;
+    min-height: 0;
+    max-height: none;
+  }
+  .editor-content {
+    max-height: none;
+    overflow: visible;
+    flex: auto;
+  }
+  .editor-note {
+    display: none;
+  }
+  .editor-tabs button {
+    font-size: var(--text-sm);
+  }
+  .preview-toolbar {
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+  .mode-toggle {
+    margin-left: auto;
+  }
+  .phone-frame {
+    width: 338px;
+    max-width: 100%;
+  }
+  .page-heading .heading-actions {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 600px) {
+  .workspace-sidebar {
+    max-height: none;
+    overflow: visible;
+    padding: var(--space-3) var(--space-4);
+  }
+  .workspace-sidebar nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
+  .workspace-nav-button {
+    padding: var(--space-2);
+    gap: var(--space-1);
+    justify-content: center;
+    font-size: var(--text-xs);
+  }
+  .workspace-sidebar-heading {
+    grid-column: 1 / -1;
+    margin-top: 0;
+    padding-left: 0;
+  }
+  .workspace-clients-label {
+    display: none;
+  }
+  .workspace-clients-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    flex: 1;
+    min-width: 0;
+    border: 0;
+    background: transparent;
+    font-size: var(--text-sm);
+    text-align: left;
+    color: var(--text-secondary);
+  }
+  .workspace-clients-toggle svg {
+    margin-left: auto;
+  }
+  .workspace-clients-toggle[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+  }
+  .workspace-clients-list {
+    grid-column: 1 / -1;
+    display: none;
+    max-height: 260px;
+    overflow-y: auto;
+  }
+  .workspace-clients-list.is-expanded {
+    display: grid;
+  }
+  .workspace-content {
+    padding: var(--space-6) var(--space-4);
+  }
+  .task-today-card,
+  .task-calendar-card,
+  .workspace-card {
+    padding: var(--space-4);
+  }
+  .task-card-heading h2 {
+    font-size: 20px;
+  }
+  .task-calendar-heading h2 {
+    font-size: 18px;
+  }
+  .task-calendar-navigation {
+    gap: 0;
+  }
+  .task-calendar-popover {
+    padding: var(--space-4);
+  }
+  .task-calendar-popover h3 {
+    font-size: 16px;
+  }
+  .task-calendar-week {
+    font-size: var(--text-xs);
+  }
+  .task-title {
+    font-size: var(--text-sm);
+  }
+  .task-item-actions {
+    gap: 0;
+  }
+  .task-added-date {
+    white-space: normal;
+  }
+  .workspace-page-heading {
+    gap: var(--space-3);
+    margin-bottom: var(--space-6);
+  }
+  .workspace-page-heading .workspace-card-actions {
+    align-self: flex-end;
+  }
+  .dialog-inner {
+    padding: var(--space-5);
+  }
+  .dialog-actions .button {
+    flex: 1 1 140px;
+  }
+}

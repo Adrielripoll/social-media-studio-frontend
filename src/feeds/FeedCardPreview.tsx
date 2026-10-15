@@ -1,3 +1,4 @@
+import StudioImage from "../components/StudioImage";
 import { useEffect, useState } from "react";
 import { Copy, LayoutGrid, RefreshCw } from "lucide-react";
 import { Avatar } from "../components/ProfilePreview";
@@ -36,32 +37,42 @@ export default function FeedCardPreview({
     <section
       className="feed-card-preview"
       aria-label={"Prévia do feed " + feedName}
+      aria-busy={loading}
     >
       {loading ? (
-        <div className="feed-preview-loading" role="status">
-          <LayoutGrid size={24} />
-          <span>Carregando prévia…</span>
+        <div className="feed-preview-content feed-preview-loading" role="status">
+          <span className="visually-hidden">Carregando prévia…</span>
+          <div
+            className="feed-preview-profile preview-skeleton-profile"
+            aria-hidden="true"
+          >
+            <span className="preview-skeleton-avatar" />
+            <div>
+              <span className="preview-skeleton-line" />
+              <span className="preview-skeleton-line" />
+            </div>
+          </div>
+          <div className="feed-preview-grid" aria-hidden="true">
+            {Array.from({ length: 9 }, (_, index) => (
+              <div className="preview-skeleton-tile" key={index} />
+            ))}
+          </div>
         </div>
       ) : failed || !feed ? (
-        <div className="feed-preview-empty">
+        <div className="feed-preview-content feed-preview-empty" role="alert">
           <p>Não foi possível carregar a prévia.</p>
-          <button
-            className="text-button"
-            onClick={() => setReload((value) => value + 1)}
-          >
+          <button className="text-button" onClick={() => setReload((value) => value + 1)}>
             <RefreshCw size={14} />
             Tentar novamente
           </button>
         </div>
       ) : (
-        <>
+        <div className="feed-preview-content">
           <div className="feed-preview-profile">
             <Avatar src={feed.profile.avatar} name={feed.profile.name} />
             <div>
               <strong>
-                {feed.profile.username
-                  ? "@" + feed.profile.username
-                  : feed.profile.name}
+                {feed.profile.username ? "@" + feed.profile.username : feed.profile.name}
               </strong>
               <span>{feed.profile.name}</span>
               <small>
@@ -74,7 +85,7 @@ export default function FeedCardPreview({
             <div className="feed-preview-grid">
               {feed.posts.slice(0, 9).map((post, index) => (
                 <div className="feed-preview-post" key={post.id}>
-                  <img
+                  <StudioImage
                     src={post.images[0]}
                     alt={
                       "Publicação " +
@@ -85,10 +96,7 @@ export default function FeedCardPreview({
                     decoding="async"
                   />
                   {post.images.length > 1 && (
-                    <span
-                      className="feed-preview-carousel"
-                      aria-label="Carrossel"
-                    >
+                    <span className="feed-preview-carousel" aria-label="Carrossel">
                       <Copy size={15} />
                     </span>
                   )}
@@ -101,7 +109,7 @@ export default function FeedCardPreview({
               <p>Este feed ainda não tem publicações.</p>
             </div>
           )}
-        </>
+        </div>
       )}
     </section>
   );

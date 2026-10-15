@@ -1,3 +1,5 @@
+import { workspaceReturnUrl } from "./workspace/navigation";
+import StudioImage from "./components/StudioImage";
 import PlatformHeader from "./components/PlatformHeader";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -19,6 +21,7 @@ import {
   ArrowUp,
   ArrowDown,
   Pencil,
+  Eye,
   Sparkles,
   FolderOpen,
 } from "lucide-react";
@@ -69,11 +72,12 @@ export default function App({
     return () => controller.abort();
   }, [demo]);
   const [mode, setMode] = useState<"desktop" | "mobile">("desktop");
+  const [mobileView, setMobileView] = useState<"edit" | "preview">("edit");
   const [presentation, setPresentation] = useState(false);
   const [section, setSection] = useState<"profile" | "posts">("profile");
-  const [dialog, setDialog] = useState<
-    "newFeed" | "composer" | "deleteFeed" | null
-  >(null);
+  const [dialog, setDialog] = useState<"newFeed" | "composer" | "deleteFeed" | null>(
+    null,
+  );
   const [newTitle, setNewTitle] = useState("");
   const [editingPost, setEditingPost] = useState<Post | undefined>();
   const [viewerId, setViewerId] = useState<string | null>(null);
@@ -130,11 +134,7 @@ export default function App({
     try {
       if (demo) updateProfile("avatar", await readImage(file, 600));
       else {
-        const uploaded = await uploadFeedImage(
-          workspace!.activeFeedId,
-          file,
-          "avatar",
-        );
+        const uploaded = await uploadFeedImage(workspace!.activeFeedId, file, "avatar");
         updateCurrentFeed((feed) => ({
           ...feed,
           profile: {
@@ -146,9 +146,7 @@ export default function App({
       }
     } catch (error) {
       setAvatarError(
-        error instanceof Error
-          ? error.message
-          : "Não foi possível carregar a foto.",
+        error instanceof Error ? error.message : "Não foi possível carregar a foto.",
       );
     } finally {
       setAvatarBusy(false);
@@ -216,29 +214,29 @@ export default function App({
                 disabled={busy}
               />
             </label>
-            <button
-              className="button primary"
-              disabled={busy || !newTitle.trim()}
-            >
+            <button className="button primary" disabled={busy || !newTitle.trim()}>
               <Plus size={16} />
               Criar feed
             </button>
           </form>
           {operationError && <p role="alert">{operationError}</p>}
-          <a className="text-button" href="/">
+          <a className="text-button" href={workspaceReturnUrl()}>
             Voltar ao início
           </a>
         </div>
       </>
     );
-  const project = workspace.feeds.find(
-    (item) => item.id === workspace.activeFeedId,
-  )!;
+  const project = workspace.feeds.find((item) => item.id === workspace.activeFeedId)!;
   const switchingDisabled = busy || avatarBusy || saveStatus !== "saved";
   const { profile, posts } = project;
   const viewedPost = posts.find((post) => post.id === viewerId);
   const status = (
-    <div className={"save-status " + saveStatus} role="status">
+    <div
+      className={"save-status " + saveStatus}
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       {saveStatus === "saved" ? (
         <Check size={14} />
       ) : saveStatus === "saving" ? (
@@ -259,7 +257,11 @@ export default function App({
   );
 
   return (
-    <div className={"app " + (presentation ? "is-presenting" : "")}>
+    <div
+      className={
+        "app mobile-view-" + mobileView + " " + (presentation ? "is-presenting" : "")
+      }
+    >
       <PlatformHeader
         className="feed-header"
         onSignOut={onSignOut}
@@ -301,10 +303,7 @@ export default function App({
         <div className="header-right">
           {status}
           {presentation && (
-            <button
-              className="button secondary"
-              onClick={() => setPresentation(false)}
-            >
+            <button className="button secondary" onClick={() => setPresentation(false)}>
               <ArrowLeft size={16} />
               Voltar à edição
             </button>
@@ -317,9 +316,7 @@ export default function App({
           <CloudOff size={18} />
           <span>{saveError}</span>
           <button onClick={() => retrySave()}>Tentar salvar</button>
-          <button onClick={() => window.location.reload()}>
-            Recarregar feed
-          </button>
+          <button onClick={() => window.location.reload()}>Recarregar feed</button>
         </div>
       )}
 
@@ -330,8 +327,8 @@ export default function App({
           </p>
         )}
         {!demo && (
-          <a className="text-button" href="/">
-            ← Voltar ao início
+          <a className="text-button" href={workspaceReturnUrl()}>
+            ← Voltar ao espaço de trabalho
           </a>
         )}
         {!presentation && (
@@ -345,10 +342,7 @@ export default function App({
               <p>Monte, experimente e apresente sua próxima ideia.</p>
             </div>
             <div className="heading-actions">
-              <button
-                className="button secondary"
-                onClick={() => setPresentation(true)}
-              >
+              <button className="button secondary" onClick={() => setPresentation(true)}>
                 <Play size={15} />
                 Apresentar
               </button>
@@ -360,6 +354,26 @@ export default function App({
           </div>
         )}
 
+        {!presentation && (
+          <div className="studio-mobile-switch" role="group" aria-label="Modo do editor">
+            <button
+              className={mobileView === "edit" ? "active" : ""}
+              aria-pressed={mobileView === "edit"}
+              onClick={() => setMobileView("edit")}
+            >
+              <Pencil size={16} />
+              Editar feed
+            </button>
+            <button
+              className={mobileView === "preview" ? "active" : ""}
+              aria-pressed={mobileView === "preview"}
+              onClick={() => setMobileView("preview")}
+            >
+              <Eye size={16} />
+              Ver prévia
+            </button>
+          </div>
+        )}
         <div className="studio-layout">
           {!presentation && (
             <aside className="editor-panel">
@@ -371,12 +385,34 @@ export default function App({
                   </div>
                   <SlidersHorizontal size={18} />
                 </div>
-                <div className="editor-tabs" role="tablist" aria-label="Editor">
+                <div
+                  className="editor-tabs"
+                  role="tablist"
+                  aria-label="Editor"
+                  onKeyDown={(event) => {
+                    if (!["ArrowLeft", "ArrowRight", "Home", "End"].includes(event.key))
+                      return;
+                    event.preventDefault();
+                    const next =
+                      event.key === "Home"
+                        ? "profile"
+                        : event.key === "End"
+                          ? "posts"
+                          : section === "profile"
+                            ? "posts"
+                            : "profile";
+                    setSection(next);
+                    document
+                      .getElementById(next === "profile" ? "profile-tab" : "posts-tab")
+                      ?.focus();
+                  }}
+                >
                   <button
                     role="tab"
                     id="profile-tab"
                     aria-controls="profile-editor"
                     aria-selected={section === "profile"}
+                    tabIndex={section === "profile" ? 0 : -1}
                     className={section === "profile" ? "active" : ""}
                     onClick={() => setSection("profile")}
                   >
@@ -388,6 +424,7 @@ export default function App({
                     id="posts-tab"
                     aria-controls="posts-editor"
                     aria-selected={section === "posts"}
+                    tabIndex={section === "posts" ? 0 : -1}
                     className={section === "posts" ? "active" : ""}
                     onClick={() => setSection("posts")}
                   >
@@ -400,6 +437,7 @@ export default function App({
                     className="editor-content"
                     id="profile-editor"
                     role="tabpanel"
+                    tabIndex={0}
                     aria-labelledby="profile-tab"
                   >
                     <div className="avatar-editor">
@@ -444,9 +482,7 @@ export default function App({
                         className="visually-hidden"
                         aria-label="Selecionar foto do perfil"
                         disabled={avatarBusy}
-                        onChange={(event) =>
-                          void changeAvatar(event.target.files?.[0])
-                        }
+                        onChange={(event) => void changeAvatar(event.target.files?.[0])}
                       />
                     </div>
                     {avatarError && (
@@ -515,9 +551,7 @@ export default function App({
                       <input
                         value={profile.name}
                         maxLength={64}
-                        onChange={(event) =>
-                          updateProfile("name", event.target.value)
-                        }
+                        onChange={(event) => updateProfile("name", event.target.value)}
                       />
                     </label>
                     <label className="field">
@@ -539,9 +573,7 @@ export default function App({
                         rows={4}
                         value={profile.bio}
                         maxLength={150}
-                        onChange={(event) =>
-                          updateProfile("bio", event.target.value)
-                        }
+                        onChange={(event) => updateProfile("bio", event.target.value)}
                       />
                     </label>
                     <label className="field">
@@ -549,9 +581,7 @@ export default function App({
                       <input
                         value={profile.website}
                         maxLength={200}
-                        onChange={(event) =>
-                          updateProfile("website", event.target.value)
-                        }
+                        onChange={(event) => updateProfile("website", event.target.value)}
                         placeholder="suamarca.com.br"
                       />
                     </label>
@@ -568,10 +598,7 @@ export default function App({
                               "followers",
                               Math.min(
                                 999999999,
-                                Math.max(
-                                  0,
-                                  Math.trunc(Number(event.target.value)),
-                                ),
+                                Math.max(0, Math.trunc(Number(event.target.value))),
                               ),
                             )
                           }
@@ -589,10 +616,7 @@ export default function App({
                               "following",
                               Math.min(
                                 999999999,
-                                Math.max(
-                                  0,
-                                  Math.trunc(Number(event.target.value)),
-                                ),
+                                Math.max(0, Math.trunc(Number(event.target.value))),
                               ),
                             )
                           }
@@ -619,13 +643,10 @@ export default function App({
                     aria-labelledby="posts-tab"
                   >
                     <p className="section-intro">
-                      A ordem aqui é a ordem do feed. Arraste ou use as setas
-                      para organizar.
+                      A ordem aqui é a ordem do feed. Arraste ou use as setas para
+                      organizar.
                     </p>
-                    <button
-                      className="add-content"
-                      onClick={() => openComposer()}
-                    >
+                    <button className="add-content" onClick={() => openComposer()}>
                       <ImagePlus size={19} />
                       Adicionar publicação
                       <Plus size={16} />
@@ -647,8 +668,7 @@ export default function App({
                             }}
                             onDrop={(event) => {
                               event.preventDefault();
-                              if (dragId.current)
-                                reorder(dragId.current, post.id);
+                              if (dragId.current) reorder(dragId.current, post.id);
                               dragId.current = null;
                             }}
                             onDragEnd={() => {
@@ -659,26 +679,20 @@ export default function App({
                             <button
                               className="post-list-thumb"
                               onClick={() => setViewerId(post.id)}
-                              aria-label={
-                                "Visualizar publicação " + (index + 1)
-                              }
+                              aria-label={"Visualizar publicação " + (index + 1)}
                             >
-                              <img src={post.images[0]} alt="" />
+                              <StudioImage src={post.images[0]} alt="" />
                             </button>
                             <div className="post-list-copy">
                               <strong>
                                 {String(index + 1).padStart(2, "0")} ·{" "}
-                                {post.images.length > 1
-                                  ? "Carrossel"
-                                  : "Imagem"}
+                                {post.images.length > 1 ? "Carrossel" : "Imagem"}
                               </strong>
                               <p>{post.caption || "Sem legenda"}</p>
                               <div className="post-list-actions">
                                 <button
                                   className="icon-button"
-                                  aria-label={
-                                    "Editar publicação " + (index + 1)
-                                  }
+                                  aria-label={"Editar publicação " + (index + 1)}
                                   onClick={() => openComposer(post)}
                                 >
                                   <Pencil size={13} />
@@ -686,36 +700,26 @@ export default function App({
                                 <button
                                   className="icon-button"
                                   aria-label={
-                                    "Mover publicação " +
-                                    (index + 1) +
-                                    " para cima"
+                                    "Mover publicação " + (index + 1) + " para cima"
                                   }
                                   disabled={index === 0}
-                                  onClick={() =>
-                                    reorder(post.id, posts[index - 1].id)
-                                  }
+                                  onClick={() => reorder(post.id, posts[index - 1].id)}
                                 >
                                   <ArrowUp size={13} />
                                 </button>
                                 <button
                                   className="icon-button"
                                   aria-label={
-                                    "Mover publicação " +
-                                    (index + 1) +
-                                    " para baixo"
+                                    "Mover publicação " + (index + 1) + " para baixo"
                                   }
                                   disabled={index === posts.length - 1}
-                                  onClick={() =>
-                                    reorder(post.id, posts[index + 1].id)
-                                  }
+                                  onClick={() => reorder(post.id, posts[index + 1].id)}
                                 >
                                   <ArrowDown size={13} />
                                 </button>
                                 <button
                                   className="icon-button danger"
-                                  aria-label={
-                                    "Excluir publicação " + (index + 1)
-                                  }
+                                  aria-label={"Excluir publicação " + (index + 1)}
                                   onClick={() => setDeletePostId(post.id)}
                                 >
                                   <Trash2 size={13} />
@@ -749,18 +753,10 @@ export default function App({
             <div className="preview-toolbar">
               <div className="preview-label">
                 <span className="live-dot" />
-                <strong>
-                  {presentation ? project.title : "Prévia do perfil"}
-                </strong>
-                {!presentation && (
-                  <span className="preview-subtitle">Instagram</span>
-                )}
+                <strong>{presentation ? project.title : "Prévia do perfil"}</strong>
+                {!presentation && <span className="preview-subtitle">Instagram</span>}
               </div>
-              <div
-                className="mode-toggle"
-                role="group"
-                aria-label="Visualização"
-              >
+              <div className="mode-toggle" role="group" aria-label="Visualização">
                 <button
                   aria-pressed={mode === "desktop"}
                   className={mode === "desktop" ? "active" : ""}
@@ -813,12 +809,9 @@ export default function App({
             {!presentation && (
               <div className="preview-footer">
                 <GripVertical size={14} />
-                <span>
-                  Arraste os posts para experimentar novas combinações.
-                </span>
+                <span>Arraste os posts para experimentar novas combinações.</span>
                 <span className="preview-count">
-                  {posts.length}{" "}
-                  {posts.length === 1 ? "publicação" : "publicações"}
+                  {posts.length} {posts.length === 1 ? "publicação" : "publicações"}
                 </span>
               </div>
             )}
@@ -834,9 +827,7 @@ export default function App({
             <span>Feito para dar forma às suas ideias.</span>
             <span>
               Simulação independente ·{" "}
-              {demo
-                ? "Dados salvos apenas neste navegador"
-                : "Feeds salvos na sua conta"}
+              {demo ? "Dados salvos apenas neste navegador" : "Feeds salvos na sua conta"}
             </span>
           </footer>
         )}
@@ -915,9 +906,7 @@ export default function App({
         <PostComposer
           post={editingPost}
           prepareImage={
-            demo
-              ? undefined
-              : (file) => uploadFeedImage(project.id, file, "post")
+            demo ? undefined : (file) => uploadFeedImage(project.id, file, "post")
           }
           discardMedia={
             demo
@@ -932,9 +921,7 @@ export default function App({
             updateCurrentFeed((current) => ({
               ...current,
               posts: editingPost
-                ? current.posts.map((item) =>
-                    item.id === post.id ? post : item,
-                  )
+                ? current.posts.map((item) => (item.id === post.id ? post : item))
                 : [post, ...current.posts],
             }));
             setDialog(null);
@@ -969,10 +956,7 @@ export default function App({
             A publicação e suas imagens serão removidas deste feed.
           </p>
           <div className="dialog-actions">
-            <button
-              className="button secondary"
-              onClick={() => setDeletePostId(null)}
-            >
+            <button className="button secondary" onClick={() => setDeletePostId(null)}>
               Cancelar
             </button>
             <button
@@ -980,9 +964,7 @@ export default function App({
               onClick={() => {
                 updateCurrentFeed((current) => ({
                   ...current,
-                  posts: current.posts.filter(
-                    (post) => post.id !== deletePostId,
-                  ),
+                  posts: current.posts.filter((post) => post.id !== deletePostId),
                 }));
                 setDeletePostId(null);
               }}
@@ -1002,8 +984,8 @@ export default function App({
           className="small-dialog"
         >
           <p className="dialog-intro">
-            O feed <strong>{project.title}</strong> e todas as suas publicações
-            serão removidos {demo ? "deste navegador" : "da sua conta"}.
+            O feed <strong>{project.title}</strong> e todas as suas publicações serão
+            removidos {demo ? "deste navegador" : "da sua conta"}.
           </p>
           {operationError && (
             <p className="form-error" role="alert">

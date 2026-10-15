@@ -13,7 +13,8 @@ import { authErrorMessage } from "./auth/errors";
 function Home() {
   const auth = useAuth();
   useEffect(() => {
-    window.history.replaceState(null, "", "/");
+    if (["/login", "/cadastro", "/auth/callback"].includes(window.location.pathname))
+      window.history.replaceState(null, "", "/");
   }, []);
   return (
     <div className="platform-home">
@@ -24,17 +25,15 @@ function Home() {
           Bem-vindo
           {auth.identity?.name ? ", " + auth.identity.name.split(" ")[0] : ""}.
         </h1>
-        <p className="platform-intro">
-          Organize seu dia e dê espaço às próximas ideias.
-        </p>
+        <p className="platform-intro">Organize seu dia e dê espaço às próximas ideias.</p>
         <TaskPlanner />
         <section className="platform-demo">
           <div>
             <span className="demo-pill">FEED STUDIO</span>
             <h2>Dê forma às suas ideias.</h2>
             <p>
-              Monte perfis fictícios e organize suas publicações. Seus feeds
-              ficam salvos na sua conta.
+              Monte perfis fictícios e organize suas publicações. Seus feeds ficam salvos
+              na sua conta.
             </p>
           </div>
           <a className="button secondary" href="/simulador">
@@ -46,9 +45,7 @@ function Home() {
         <div className="platform-account">
           <span>
             Conectado como{" "}
-            <strong>
-              {auth.identity?.email || auth.identity?.name || "usuário"}
-            </strong>
+            <strong>{auth.identity?.email || auth.identity?.name || "usuário"}</strong>
           </span>
           <span className="platform-connected">
             <i />
@@ -127,8 +124,8 @@ export default function PlatformApp() {
         <span className="auth-eyebrow">SOCIAL STUDIO</span>
         <h2>Seu espaço está sendo preparado.</h2>
         <p className="auth-description">
-          O acesso estará disponível em breve. Enquanto isso, você pode explorar
-          a demonstração.
+          O acesso estará disponível em breve. Enquanto isso, você pode explorar a
+          demonstração.
         </p>
         <a className="button primary auth-submit" href="/demonstracao">
           Explorar demonstração

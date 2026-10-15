@@ -1,3 +1,4 @@
+import StudioImage from "./StudioImage";
 import { useState } from "react";
 import {
   Camera,
@@ -26,7 +27,11 @@ export function Avatar({
   return (
     <div className={"avatar " + className}>
       {src ? (
-        <img src={src} alt={"Foto de " + name} />
+        <StudioImage
+          src={src}
+          alt={"Foto de " + name}
+          fallback={(name.trim()[0] || "M").toUpperCase()}
+        />
       ) : (
         <span>{(name.trim()[0] || "M").toUpperCase()}</span>
       )}
@@ -86,11 +91,7 @@ export default function ProfilePreview({
         )}
         <header className="profile-header">
           <div className="profile-avatar-wrap">
-            <Avatar
-              src={profile.avatar}
-              name={profile.name}
-              className="profile-avatar"
-            />
+            <Avatar src={profile.avatar} name={profile.name} className="profile-avatar" />
           </div>
           <div className="profile-info">
             <div className="profile-title">
@@ -134,9 +135,7 @@ export default function ProfilePreview({
           </div>
           {mode === "mobile" && (
             <button
-              className={
-                "follow-button mobile-follow " + (following ? "following" : "")
-              }
+              className={"follow-button mobile-follow " + (following ? "following" : "")}
               onClick={() => setFollowing(!following)}
             >
               {following ? "Seguindo" : "Seguir"}
@@ -152,9 +151,7 @@ export default function ProfilePreview({
             {posts.map((post, index) => (
               <button
                 key={post.id}
-                className={
-                  "grid-post " + (dropId === post.id ? "drop-target" : "")
-                }
+                className={"grid-post " + (dropId === post.id ? "drop-target" : "")}
                 aria-label={"Abrir publicação " + (index + 1)}
                 draggable={!presentation}
                 data-post-id={post.id}
@@ -184,7 +181,7 @@ export default function ProfilePreview({
                   setDropId(null);
                 }}
               >
-                <img
+                <StudioImage
                   src={post.images[0]}
                   alt={
                     post.caption
