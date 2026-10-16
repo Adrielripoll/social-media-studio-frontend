@@ -1,3 +1,4 @@
+import { useAccount } from "./account/AccountContext";
 import { workspaceReturnUrl } from "./workspace/navigation";
 import StudioImage from "./components/StudioImage";
 import PlatformHeader from "./components/PlatformHeader";
@@ -44,6 +45,7 @@ export default function App({
   demo?: boolean;
   onSignOut?: () => Promise<void>;
 }) {
+  const account=useAccount();
   const {
     workspace,
     loadError,
@@ -158,6 +160,7 @@ export default function App({
     return (
       <>
         <PlatformHeader onSignOut={onSignOut} disabled={busy} />
+
         <div className="loading-screen feed-loading-screen">
           <div className="brand-icon">
             <Camera size={24} />
@@ -184,6 +187,7 @@ export default function App({
     return (
       <>
         <PlatformHeader onSignOut={onSignOut} disabled={busy} />
+
         <div className="loading-screen feed-loading-screen">
           <div className="brand-icon">
             <Camera size={24} />
@@ -310,6 +314,14 @@ export default function App({
           )}
         </div>
       </PlatformHeader>
+      {!demo && !presentation && account?.account?.retention?.policy && !account.account.retention.acceptedAt && (
+        <div className="save-warning" role="status">
+          <span>Antes de enviar arquivos, leia a política de retenção do armazenamento.</span>
+          <a href="/minha-conta?secao=armazenamento">Ler e aceitar política</a>
+        </div>
+      )}
+
+
 
       {saveStatus === "error" && (
         <div className="save-warning" role="alert">
@@ -686,7 +698,11 @@ export default function App({
                             <div className="post-list-copy">
                               <strong>
                                 {String(index + 1).padStart(2, "0")} ·{" "}
-                                {post.images.length > 1 ? "Carrossel" : "Imagem"}
+                                {post.images.length === 0
+                                  ? "Arquivos removidos"
+                                  : post.images.length > 1
+                                    ? "Carrossel"
+                                    : "Imagem"}
                               </strong>
                               <p>{post.caption || "Sem legenda"}</p>
                               <div className="post-list-actions">

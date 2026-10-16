@@ -1,0 +1,576 @@
+@import "../dashboards/dashboard-theme.css";
+.platform-home.account-experience {
+  --accent: #6650dc;
+  --accent-hover: #5039bf;
+  --focus: #7961ed;
+  --text-primary: #1a2039;
+  --text-secondary: #616981;
+  --muted: #65708a;
+  --surface: #fff;
+  --surface-soft: #f4f5fc;
+  --line: #e4e7f2;
+  --control-border: #bcc3db;
+  --radius-card: 20px;
+  --radius-control: 11px;
+  --danger: #b23257;
+  font-family: "Manrope Variable", sans-serif;
+  color: var(--text-primary);
+  background:
+    radial-gradient(ellipse at 95% 4%, #e9e5fc 0, transparent 38%), #f0f2f9;
+  min-height: 100dvh;
+}
+.account-experience .platform-header {
+  border-color: var(--line);
+  gap: 16px;
+}
+.my-account {
+  max-width: 1320px;
+  margin: auto;
+  padding: 44px 36px 80px;
+}
+.my-account-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 36px;
+}
+.account-eyebrow {
+  font-size: 0.69rem;
+  letter-spacing: 0.16em;
+  font-weight: 800;
+  color: var(--accent);
+}
+.my-account-hero h1 {
+  font-family: "Space Grotesk Variable", sans-serif;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  letter-spacing: -0.045em;
+  margin: 8px 0 10px;
+}
+.my-account-hero p,
+.account-card p,
+.account-section-title p {
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+.my-account-hero p {
+  margin: 0;
+  max-width: 65ch;
+}
+.account-status-pill {
+  padding: 10px 15px;
+  border-radius: 100px;
+  background: #e8e4ff;
+  color: #5742c7;
+  font-size: 0.76rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.account-status-pill.is-blocked {
+  background: #fff0df;
+  color: #8a4b12;
+}
+.my-account-layout {
+  display: grid;
+  grid-template-columns: 245px minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+.account-sidebar {
+  position: sticky;
+  top: 24px;
+  background: #ffffffbf;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 24px 16px;
+  min-width: 0;
+}
+.account-identity {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  padding: 0 8px 24px;
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.account-identity > strong {
+  font-size: 0.95rem;
+}
+.account-identity > span:last-child {
+  font-size: 0.73rem;
+  color: var(--text-secondary);
+}
+.account-avatar {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  border-radius: 21px;
+  margin-bottom: 6px;
+  background: linear-gradient(135deg, #7360e5, #469ccf);
+  box-shadow: 0 6px 18px #6650dc26;
+  color: white;
+  font-family: "Space Grotesk Variable", sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+.account-sidebar nav {
+  display: grid;
+  gap: 6px;
+  margin-top: 20px;
+}
+.account-sidebar nav a {
+  display: flex;
+  gap: 11px;
+  align-items: center;
+  padding: 14px 12px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  border-radius: 12px;
+  font-size: 0.82rem;
+}
+.account-sidebar nav a > span {
+  display: grid;
+  gap: 5px;
+  flex: 1;
+}
+.account-sidebar nav a small {
+  font-size: 0.67rem;
+  font-weight: 400;
+}
+.account-sidebar nav a > svg {
+  flex: none;
+}
+.account-sidebar nav a[aria-current] {
+  background: linear-gradient(100deg, #eeeaff, #eef5ff);
+  color: #5742c7;
+}
+.account-sidebar nav a:hover {
+  background: #f1f0fb;
+}
+.account-sidebar-note {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin: 26px 12px 0;
+}
+.account-main {
+  min-width: 0;
+}
+.account-section-stack {
+  display: grid;
+  gap: 24px;
+}
+.account-card,
+.account-experience .billing-card {
+  padding: 28px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: 0 5px 24px #2b2e5d06;
+}
+.account-card-heading,
+.account-section-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+}
+.account-card-heading h2,
+.account-section-title h2,
+.account-resources-heading h2,
+.account-card h2 {
+  font-family: "Space Grotesk Variable", sans-serif;
+  font-size: 1.18rem;
+  letter-spacing: -0.025em;
+  margin: 0 0 5px;
+}
+.account-card-heading p,
+.account-section-title p {
+  font-size: 0.81rem;
+  margin: 0;
+}
+.account-card-icon,
+.account-resource-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 46px;
+  height: 46px;
+  border-radius: 15px;
+  color: #6853dc;
+  background: linear-gradient(140deg, #eeeaff, #f4f1ff);
+}
+.account-card-icon.blue {
+  background: linear-gradient(140deg, #e5f3ff, #eef2ff);
+  color: #287eb5;
+}
+.account-form {
+  max-width: 650px;
+  display: grid;
+  gap: 18px;
+}
+.account-form .field {
+  margin: 0;
+  gap: 8px;
+}
+.account-form .field > span {
+  font-size: 0.79rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.account-form input {
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 46px;
+  border: 1px solid var(--control-border);
+  background: white;
+  color: var(--text-primary);
+  border-radius: 11px;
+  padding: 12px 14px;
+  font: inherit;
+  font-size: 0.87rem;
+}
+.account-form input[readonly] {
+  background: #f6f7fb;
+  color: var(--text-secondary);
+  border-color: var(--line);
+}
+.account-field-help {
+  font-size: 0.76rem !important;
+  line-height: 1.65;
+  color: var(--text-secondary);
+  margin: 0;
+}
+.account-form .account-field-help {
+  margin-top: -8px;
+}
+.account-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 12px;
+}
+.account-feedback {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  line-height: 1.65;
+  font-size: 0.83rem;
+  margin: 0;
+}
+.account-feedback p {
+  margin: 0 0 12px;
+}
+.account-feedback.error {
+  background: #fff0f4;
+  border-color: #efc3d1;
+  color: #9b2348;
+}
+.account-feedback.success {
+  background: #eaf8f1;
+  border-color: #c0e8d5;
+  color: #126b4c;
+}
+.account-feedback.warning {
+  background: #fff5e7;
+  border-color: #f0dbba;
+  color: #805025;
+}
+.account-text-button {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  width: max-content;
+  border: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.account-experience .billing-content {
+  display: grid;
+  gap: 24px;
+}
+.account-experience .billing-heading h2 {
+  font-family: "Space Grotesk Variable", sans-serif;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  letter-spacing: -0.035em;
+  margin: 10px 0;
+}
+.account-experience .billing-heading p {
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+.account-experience .billing-content > .billing-card {
+  margin: 0;
+}
+.account-experience .account-storage {
+  margin: 0;
+  padding: 22px;
+  border-color: var(--line);
+  box-shadow: 0 5px 24px #2b2e5d06;
+}
+.account-main > .account-retention {
+  margin-top: 24px;
+}
+.account-experience .billing-price {
+  font-family: "Space Grotesk Variable", sans-serif;
+  color: #5642be;
+}
+.account-experience .billing-blocked {
+  background: linear-gradient(110deg, #fff5e9, #fff0f4);
+  border-color: #f1d7c4;
+}
+.account-experience .billing-card > svg {
+  color: var(--accent);
+}
+.account-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  background: #f6f7fc;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  padding: 18px;
+}
+.account-facts > div {
+  min-width: 0;
+}
+.account-facts dt {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  margin-bottom: 7px;
+}
+.account-facts dd {
+  margin: 0;
+  font-size: 0.83rem;
+  font-weight: 700;
+  line-height: 1.6;
+}
+.account-empty {
+  text-align: center;
+  padding: 32px 12px;
+  color: var(--text-secondary);
+}
+.account-empty svg {
+  color: #8374cd;
+}
+.account-empty h3 {
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+.account-retention p {
+  font-size: 0.83rem;
+}
+.account-retention > .account-field-help {
+  margin-top: 14px;
+}
+.account-resources-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.account-resources-heading p {
+  font-size: 0.79rem;
+}
+.account-resources-heading > .button {
+  flex: none;
+}
+.account-resources {
+  padding: 0;
+  list-style: none;
+  margin: 20px 0;
+}
+.account-resources > li {
+  display: flex;
+  gap: 14px;
+  padding: 20px 0;
+  border-top: 1px solid var(--line);
+  align-items: flex-start;
+}
+.account-resource-info {
+  display: grid;
+  gap: 7px;
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.account-resource-info > strong {
+  font-size: 0.88rem;
+}
+.account-resource-info > span {
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  line-height: 1.6;
+}
+.account-resource-info > b {
+  font-size: 0.84rem;
+}
+.account-resource-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.account-resource-actions .button {
+  font-size: 0.73rem;
+  justify-content: center;
+}
+.account-resource-pending {
+  color: #8a4b12 !important;
+}
+.account-danger-button {
+  color: var(--danger) !important;
+}
+.account-experience a[aria-disabled="true"] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+@media (max-width: 960px) {
+  .my-account {
+    padding: 32px 24px 60px;
+  }
+  .my-account-layout {
+    grid-template-columns: 210px minmax(0, 1fr);
+    gap: 20px;
+  }
+  .account-card,
+  .account-experience .billing-card {
+    padding: 22px;
+  }
+  .account-resources > li {
+    flex-wrap: wrap;
+  }
+  .account-resource-actions {
+    flex-basis: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-left: 60px;
+  }
+}
+@media (max-width: 740px) {
+  .my-account {
+    padding: 28px 16px 50px;
+  }
+  .my-account-hero {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  .my-account-layout {
+    display: block;
+  }
+  .account-sidebar {
+    position: static;
+    padding: 8px;
+    border-radius: 15px;
+    margin-bottom: 22px;
+  }
+  .account-identity,
+  .account-sidebar-note {
+    display: none;
+  }
+  .account-sidebar nav {
+    display: flex;
+    margin: 0;
+    gap: 5px;
+    overflow-x: auto;
+  }
+  .account-sidebar nav a {
+    padding: 12px 10px;
+    gap: 8px;
+    font-size: 0.73rem;
+    flex: 1;
+    justify-content: center;
+    white-space: nowrap;
+  }
+  .account-sidebar nav a small,
+  .account-sidebar nav a > svg:last-child {
+    display: none;
+  }
+  .account-sidebar nav a > span {
+    flex: initial;
+  }
+  .account-sidebar nav a > svg {
+    width: 16px;
+  }
+  .account-main {
+    padding: 0;
+  }
+  .account-card,
+  .account-experience .billing-card {
+    padding: 20px;
+  }
+  .account-form-actions .button {
+    flex: 1;
+    justify-content: center;
+  }
+  .account-resource-actions {
+    margin-left: 0;
+  }
+  .account-resource-actions .button {
+    flex: 1;
+  }
+  .account-experience .billing-heading {
+    padding: 0 4px;
+  }
+  .account-experience .billing-actions {
+    flex-direction: column;
+  }
+}
+@media (max-width: 400px) {
+  .account-sidebar nav a {
+    flex-direction: column;
+    font-size: 0.66rem;
+    gap: 7px;
+    padding: 12px 6px;
+  }
+  .account-resources-heading h2 {
+    font-size: 1.05rem;
+  }
+  .account-card-heading {
+    align-items: flex-start;
+  }
+  .account-card-heading h2 {
+    font-size: 1.08rem;
+  }
+}
+
+.account-retention details {
+  margin-top: 1rem;
+}
+.account-retention summary {
+  cursor: pointer;
+  font-weight: 700;
+  padding: 0.75rem 0;
+}
+.retention-acceptance {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.retention-acceptance label {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  line-height: 1.6;
+}
+.retention-acceptance input[type="checkbox"] {
+  width: 1.25rem;
+  height: 1.25rem;
+  flex-shrink: 0;
+  accent-color: #7959e8;
+  margin-top: 0.15rem;
+}
+.retention-acceptance button {
+  justify-self: start;
+  min-height: 44px;
+}

@@ -1,6 +1,13 @@
 import StudioImage from "./StudioImage";
 import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, Heart, Bookmark, Pencil, Trash2 } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Heart,
+  Bookmark,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import type { Post, Profile } from "../types";
 import { formatNumber } from "../storage";
 import { Avatar } from "./ProfilePreview";
@@ -29,8 +36,11 @@ export default function PostViewer({
   useEffect(() => {
     function handleKey(event: KeyboardEvent) {
       if (event.key === "ArrowRight")
-        setIndex((current) => Math.min(current + 1, post.images.length - 1));
-      if (event.key === "ArrowLeft") setIndex((current) => Math.max(current - 1, 0));
+        setIndex((current) =>
+          Math.max(0, Math.min(current + 1, post.images.length - 1)),
+        );
+      if (event.key === "ArrowLeft")
+        setIndex((current) => Math.max(current - 1, 0));
     }
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
@@ -45,7 +55,16 @@ export default function PostViewer({
         <div className="viewer-media">
           <StudioImage
             src={post.images[index]}
-            alt={"Imagem " + (index + 1) + " de " + post.images.length}
+            alt={
+              post.images.length
+                ? "Imagem " + (index + 1) + " de " + post.images.length
+                : "Arquivos removidos"
+            }
+            fallback={
+              post.images.length
+                ? undefined
+                : "Arquivos removidos. O texto desta publicação foi preservado."
+            }
           />
           {index > 0 && (
             <button
@@ -88,7 +107,9 @@ export default function PostViewer({
               <button
                 className={"icon-button " + (liked ? "is-liked" : "")}
                 aria-label={
-                  liked ? "Remover curtida fictícia" : "Curtir publicação fictícia"
+                  liked
+                    ? "Remover curtida fictícia"
+                    : "Curtir publicação fictícia"
                 }
                 aria-pressed={liked}
                 onClick={() => setLiked(!liked)}
@@ -101,7 +122,10 @@ export default function PostViewer({
                 aria-pressed={bookmarked}
                 onClick={() => setBookmarked(!bookmarked)}
               >
-                <Bookmark size={25} fill={bookmarked ? "currentColor" : "none"} />
+                <Bookmark
+                  size={25}
+                  fill={bookmarked ? "currentColor" : "none"}
+                />
               </button>
             </div>
             {post.images.length > 1 && (
@@ -117,7 +141,9 @@ export default function PostViewer({
                 ))}
               </div>
             )}
-            <strong>{formatNumber(post.likes + (liked ? 1 : 0))} curtidas</strong>
+            <strong>
+              {formatNumber(post.likes + (liked ? 1 : 0))} curtidas
+            </strong>
           </div>
           {!presentation && (
             <div className="viewer-edit">

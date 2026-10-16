@@ -8,11 +8,18 @@ export function workspaceView(search = window.location.search): WorkspaceView {
   const client = params.get("client");
   const dashboard = params.get("dashboard");
   if (dashboard)
-    return { kind: "dashboard", id: dashboard, ...(client ? { clientId: client } : {}) };
+    return {
+      kind: "dashboard",
+      id: dashboard,
+      ...(client ? { clientId: client } : {}),
+    };
   if (client) return { kind: "client", id: client };
   const view = params.get("view");
   return {
-    kind: view === "clients" || view === "feeds" || view === "dashboards" ? view : "home",
+    kind:
+      view === "clients" || view === "feeds" || view === "dashboards"
+        ? view
+        : "home",
   };
 }
 export function workspaceUrl(view: WorkspaceView) {
@@ -25,19 +32,28 @@ export function workspaceUrl(view: WorkspaceView) {
         ...(view.clientId ? { client: view.clientId } : {}),
       })
     );
-  if (view.kind === "client") return "/?" + new URLSearchParams({ client: view.id });
+  if (view.kind === "client")
+    return "/?" + new URLSearchParams({ client: view.id });
   return view.kind === "home" ? "/" : "/?view=" + view.kind;
 }
 export function feedEditorUrl(id: string, view: WorkspaceView) {
-  return "/simulador?" + new URLSearchParams({ feed: id, returnTo: workspaceUrl(view) });
+  return (
+    "/simulador?" +
+    new URLSearchParams({ feed: id, returnTo: workspaceUrl(view) })
+  );
 }
 export function workspaceReturnUrl() {
   const value = new URLSearchParams(window.location.search).get("returnTo");
   if (!value) return "/?view=feeds";
   try {
     const url = new URL(value, window.location.origin);
-    if (url.origin !== window.location.origin || url.pathname !== "/")
-      return "/?view=feeds";
+    if (url.origin !== window.location.origin) return "/?view=feeds";
+    if (
+      url.pathname === "/minha-conta" &&
+      url.searchParams.get("secao") === "armazenamento"
+    )
+      return "/minha-conta?secao=armazenamento";
+    if (url.pathname !== "/") return "/?view=feeds";
     return workspaceUrl(workspaceView(url.search));
   } catch {
     return "/?view=feeds";

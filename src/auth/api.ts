@@ -107,6 +107,8 @@ export async function apiRequest<T>(
       resetCsrf();
       return apiRequest<T>(path, options, false);
     }
+    if (response.status === 403 && code === "account_access_denied")
+      window.dispatchEvent(new Event("account-access-changed"));
     const message =
       "message" in error && typeof error.message === "string"
         ? error.message

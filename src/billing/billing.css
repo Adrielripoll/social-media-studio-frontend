@@ -1,0 +1,121 @@
+.billing-page {
+  max-width: 960px;
+  margin: 36px auto 80px;
+  padding: 0 24px;
+  color: var(--text-primary, #292828);
+}
+.billing-heading h1 {
+  font-family: "Space Grotesk Variable", sans-serif;
+  font-size: clamp(1.8rem, 4vw, 2.7rem);
+  letter-spacing: -0.04em;
+  margin: 12px 0;
+}
+.billing-heading p {
+  line-height: 1.7;
+}
+.billing-blocked {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px;
+  background: #fff0e7;
+  border: 1px solid #e9bc9d;
+  border-radius: 16px;
+}
+.billing-blocked svg {
+  flex: none;
+  margin-top: 3px;
+}
+.billing-page > .account-storage {
+  margin: 24px 0;
+}
+.billing-card {
+  background: var(--surface, white);
+  border: 1px solid var(--line, #ded9ce);
+  border-radius: 20px;
+  padding: 28px;
+  margin-top: 24px;
+  box-shadow: 0 8px 32px #29282805;
+}
+.billing-card h2 {
+  margin: 12px 0;
+}
+.billing-card p {
+  line-height: 1.7;
+  max-width: 70ch;
+}
+.billing-price {
+  display: block;
+  font-size: 1.8rem;
+  margin: 24px 0 8px;
+}
+.billing-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 24px;
+}
+.billing-footnote {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #696357);
+}
+.billing-payments {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.billing-payments li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--line, #ded9ce);
+}
+.billing-payments li:last-child {
+  border: 0;
+}
+.billing-payments li > div {
+  display: grid;
+  gap: 6px;
+}
+@media (max-width: 600px) {
+  .billing-page {
+    padding: 0 16px;
+    margin-top: 24px;
+  }
+  .billing-card {
+    padding: 20px;
+  }
+  .billing-actions {
+    flex-direction: column;
+  }
+  .billing-actions .button {
+    justify-content: center;
+    width: 100%;
+  }
+}
+
+.platform-header:not(.feed-header) {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.platform-header:not(.feed-header) .studio-brand {
+  margin-right: auto;
+}
+.dashboard-presenting .platform-billing-link,
+.is-presenting .platform-billing-link {
+  display: none;
+}
+@media (max-width: 480px) {
+  .platform-header:not(.feed-header) .studio-brand {
+    flex-basis: 100%;
+  }
+  .platform-header:not(.feed-header) .platform-signout {
+    margin-left: auto;
+  }
+  .feed-header .platform-billing-link {
+    grid-column: 1 / -1;
+  }
+}

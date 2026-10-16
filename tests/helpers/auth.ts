@@ -38,6 +38,7 @@ export async function mockAuth(
   } = {},
 ) {
   const captured: CapturedRequest[] = [];
+  let currentUser = { ...platformUser };
   let csrfFailures = options.csrfFailures ?? 0;
   async function cookie(name: string, value: string) {
     await page.context().addCookies([
@@ -82,7 +83,46 @@ export async function mockAuth(
     const saved = await page.context().cookies(apiUrl);
     const access = saved.some((item) => item.name === "studio_access");
     const refresh = saved.some((item) => item.name === "studio_refresh");
-    if (path === "/dashboards") {
+    if (path === "/account/storage") {
+      value = { resources: [] };
+    } else if (path === "/account") {
+      value = {
+        retention: {
+          status: "protected",
+          months: 1,
+          projectedPurgeAt: null,
+          automaticPurgeEnabled: false,
+          acceptedAt: "2026-10-15T12:00:00Z",
+        },
+        plan: {
+          code: "basic",
+          name: "Plano Básico",
+          storageLimitBytes: 2500000000,
+          features: { images: true, videos: false },
+        },
+        access: {
+          status: "trialing",
+          allowed: true,
+          trialStartedAt: "2026-10-15T12:00:00Z",
+          trialEndsAt: "2099-10-22T12:00:00Z",
+        },
+        storage: {
+          usedBytes: 0,
+          reservedBytes: 0,
+          pendingDeletionBytes: 0,
+          limitBytes: 2500000000,
+          availableBytes: 2500000000,
+          percentUsed: 0,
+        },
+      };
+    } else if (path === "/billing") {
+      value = {
+        available: false,
+        priceCents: null,
+        subscription: null,
+        payments: [],
+      };
+    } else if (path === "/dashboards") {
       value = { dashboards: [] };
     } else if (path === "/auth/csrf") {
       await cookie("studio_csrf", "test-csrf-token");
@@ -136,7 +176,15 @@ export async function mockAuth(
         : options.rejectToken || !access
           ? 401
           : 200;
-      value = status === 200 ? platformUser : { message: "Falha temporária." };
+      if (status === 200 && request.method() === "PATCH")
+        currentUser = {
+          ...currentUser,
+          ...(typeof body?.name === "string"
+            ? { name: body.name.trim().replace(/\s+/g, " ") }
+            : {}),
+          ...(typeof body?.phone === "string" ? { phone: body.phone } : {}),
+        };
+      value = status === 200 ? currentUser : { message: "Falha temporária." };
       if (status === 401) await page.context().clearCookies();
     } else if (path === "/clients") {
       value = { clients: [] };
@@ -157,7 +205,8 @@ export async function mockAuth(
       };
     } else if (path === "/auth/logout" || path === "/auth/password") {
       await page.context().clearCookies();
-      value = path === "/auth/logout" ? { authenticated: false } : { updated: true };
+      value =
+        path === "/auth/logout" ? { authenticated: false } : { updated: true };
     }
     await route.fulfill({
       status,

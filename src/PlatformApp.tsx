@@ -1,3 +1,5 @@
+import { AccountAccessBoundary } from "./account/AccountAccessBoundary";
+import { AccountProvider } from "./account/AccountContext";
 import PlatformHeader from "./components/PlatformHeader";
 import Workspace from "./workspace/Workspace";
 import { useEffect, useState } from "react";
@@ -13,27 +15,34 @@ import { authErrorMessage } from "./auth/errors";
 function Home() {
   const auth = useAuth();
   useEffect(() => {
-    if (["/login", "/cadastro", "/auth/callback"].includes(window.location.pathname))
+    if (
+      ["/login", "/cadastro", "/auth/callback"].includes(
+        window.location.pathname,
+      )
+    )
       window.history.replaceState(null, "", "/");
   }, []);
   return (
     <div className="platform-home">
       <PlatformHeader onSignOut={auth.signOut} />
+
       <Workspace>
         <span className="auth-eyebrow">SEU ESPAÇO CRIATIVO</span>
         <h1>
           Bem-vindo
           {auth.identity?.name ? ", " + auth.identity.name.split(" ")[0] : ""}.
         </h1>
-        <p className="platform-intro">Organize seu dia e dê espaço às próximas ideias.</p>
+        <p className="platform-intro">
+          Organize seu dia e dê espaço às próximas ideias.
+        </p>
         <TaskPlanner />
         <section className="platform-demo">
           <div>
             <span className="demo-pill">FEED STUDIO</span>
             <h2>Dê forma às suas ideias.</h2>
             <p>
-              Monte perfis fictícios e organize suas publicações. Seus feeds ficam salvos
-              na sua conta.
+              Monte perfis fictícios e organize suas publicações. Seus feeds
+              ficam salvos na sua conta.
             </p>
           </div>
           <a className="button secondary" href="/simulador">
@@ -45,7 +54,9 @@ function Home() {
         <div className="platform-account">
           <span>
             Conectado como{" "}
-            <strong>{auth.identity?.email || auth.identity?.name || "usuário"}</strong>
+            <strong>
+              {auth.identity?.email || auth.identity?.name || "usuário"}
+            </strong>
           </span>
           <span className="platform-connected">
             <i />
@@ -105,10 +116,16 @@ function AuthContent() {
     );
   }
   if (auth.identity)
-    return path === "/simulador" ? (
-      <Simulator key={auth.identity.id} onSignOut={auth.signOut} />
-    ) : (
-      <Home />
+    return (
+      <AccountProvider key={auth.identity.id}>
+        <AccountAccessBoundary>
+          {path === "/simulador" ? (
+            <Simulator onSignOut={auth.signOut} />
+          ) : (
+            <Home />
+          )}
+        </AccountAccessBoundary>
+      </AccountProvider>
     );
   if (path === "/cadastro") return <AuthPages mode="signup" />;
   if (path === "/recuperar-senha") return <AuthPages mode="forgot" />;
@@ -124,8 +141,8 @@ export default function PlatformApp() {
         <span className="auth-eyebrow">SOCIAL STUDIO</span>
         <h2>Seu espaço está sendo preparado.</h2>
         <p className="auth-description">
-          O acesso estará disponível em breve. Enquanto isso, você pode explorar a
-          demonstração.
+          O acesso estará disponível em breve. Enquanto isso, você pode explorar
+          a demonstração.
         </p>
         <a className="button primary auth-submit" href="/demonstracao">
           Explorar demonstração

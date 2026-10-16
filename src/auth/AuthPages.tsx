@@ -1,3 +1,4 @@
+import { normalizeMobilePhone } from "./phone";
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import {
@@ -45,16 +46,6 @@ const titles = {
   ],
 };
 
-function normalizeMobilePhone(value: string): string | null {
-  const input = value.trim();
-  if (!/^\+?[\d\s().-]+$/.test(input)) return null;
-  const digits = input.replace(/\D/g, "");
-  const hasCountryCode = digits.length === 13 && digits.startsWith("55");
-  if (input.startsWith("+") && !hasCountryCode) return null;
-  const nationalNumber = hasCountryCode ? digits.slice(2) : digits;
-  return /^[1-9]{2}9\d{8}$/.test(nationalNumber) ? "+55" + nationalNumber : null;
-}
-
 export default function AuthPages({ mode }: { mode: Mode }) {
   const auth = useAuth();
   const [name, setName] = useState("");
@@ -73,7 +64,9 @@ export default function AuthPages({ mode }: { mode: Mode }) {
   function rejectField(field: AuthField, message: string) {
     setInvalidField(field);
     setError(message);
-    (formRef.current?.elements.namedItem(field) as HTMLInputElement | null)?.focus();
+    (
+      formRef.current?.elements.namedItem(field) as HTMLInputElement | null
+    )?.focus();
   }
   function clearFieldError(field: AuthField) {
     if (invalidField === field) {
@@ -83,7 +76,11 @@ export default function AuthPages({ mode }: { mode: Mode }) {
   }
   function fieldMessage(field: AuthField) {
     return invalidField === field && error ? (
-      <span className="field-error" id={"auth-" + field + "-error"} role="alert">
+      <span
+        className="field-error"
+        id={"auth-" + field + "-error"}
+        role="alert"
+      >
         {error}
       </span>
     ) : null;
@@ -100,7 +97,9 @@ export default function AuthPages({ mode }: { mode: Mode }) {
       "password",
       "confirmation",
     ] as AuthField[]) {
-      const input = formRef.current?.elements.namedItem(field) as HTMLInputElement | null;
+      const input = formRef.current?.elements.namedItem(
+        field,
+      ) as HTMLInputElement | null;
       if (!input || input.validity.valid) continue;
       const messages = {
         name: "Informe um nome com pelo menos 2 caracteres.",
@@ -232,15 +231,17 @@ export default function AuthPages({ mode }: { mode: Mode }) {
               disabled={busy}
               onClick={() => void resend()}
             >
-              {resent ? "Instruções reenviadas" : "Reenviar email de confirmação"}
+              {resent
+                ? "Instruções reenviadas"
+                : "Reenviar email de confirmação"}
             </button>
           )}
         </div>
       ) : resetUnavailable ? (
         <div className="auth-notice">
           <p>
-            Abra o link enviado ao seu email para escolher uma nova senha. Se ele expirou,
-            solicite outro.
+            Abra o link enviado ao seu email para escolher uma nova senha. Se
+            ele expirou, solicite outro.
           </p>
           <a className="button primary auth-submit" href="/recuperar-senha">
             Solicitar novo link
@@ -249,9 +250,9 @@ export default function AuthPages({ mode }: { mode: Mode }) {
       ) : callbackFailed ? (
         <div className="auth-notice">
           <p>
-            Você pode entrar se já confirmou o email. Abra o link no navegador em que
-            iniciou o cadastro. Caso ele tenha expirado, solicite outro na tela de
-            cadastro.
+            Você pode entrar se já confirmou o email. Abra o link no navegador
+            em que iniciou o cadastro. Caso ele tenha expirado, solicite outro
+            na tela de cadastro.
           </p>
           <a className="button primary auth-submit" href="/login">
             Ir para o login
@@ -361,7 +362,9 @@ export default function AuthPages({ mode }: { mode: Mode }) {
                 <div className="auth-password">
                   <input
                     type={visible ? "text" : "password"}
-                    autoComplete={mode === "login" ? "current-password" : "new-password"}
+                    autoComplete={
+                      mode === "login" ? "current-password" : "new-password"
+                    }
                     required
                     minLength={mode === "login" ? 1 : 8}
                     maxLength={128}
@@ -369,7 +372,9 @@ export default function AuthPages({ mode }: { mode: Mode }) {
                     aria-label="Senha"
                     aria-invalid={invalidField === "password" || undefined}
                     aria-describedby={
-                      invalidField === "password" ? "auth-password-error" : undefined
+                      invalidField === "password"
+                        ? "auth-password-error"
+                        : undefined
                     }
                     value={password}
                     onChange={(event) => {
@@ -422,12 +427,23 @@ export default function AuthPages({ mode }: { mode: Mode }) {
                 {fieldMessage("confirmation")}
               </label>
             )}
+            {mode === "login" &&
+              new URLSearchParams(window.location.search).get("senha") ===
+                "alterada" && (
+                <p className="auth-message" role="status">
+                  Senha alterada. Entre novamente com a nova senha.
+                </p>
+              )}
             {((error && !invalidField) || auth.error) && (
               <p className="auth-message error" role="alert">
                 {error || auth.error}
               </p>
             )}
-            <button className="button primary auth-submit" disabled={busy} type="submit">
+            <button
+              className="button primary auth-submit"
+              disabled={busy}
+              type="submit"
+            >
               {busy ? (
                 <>
                   <LoaderCircle className="spin" size={17} />

@@ -1,3 +1,4 @@
+import { storageChanged } from "../account/AccountContext";
 import { apiRequest, ApiError } from "../auth/api";
 import type { Feed, Post, Profile } from "../types";
 import { readImage } from "../storage";
@@ -75,13 +76,13 @@ export function saveFeed(feed: Feed, revision: number) {
         })),
       },
     },
-  );
+  ).finally(storageChanged);
 }
 export function deleteFeed(id: string) {
   return apiRequest<void>("/feeds/" + id, {
     method: "DELETE",
     timeoutMs: 60_000,
-  });
+  }).finally(storageChanged);
 }
 export async function uploadFeedImage(
   feedId: string,
@@ -95,11 +96,11 @@ export async function uploadFeedImage(
   return apiRequest<RemoteMedia>(
     "/feeds/" + feedId + "/media?purpose=" + purpose,
     { method: "POST", body, timeoutMs: 60_000 },
-  );
+  ).finally(storageChanged);
 }
 export function deleteUnusedImage(feedId: string, mediaId: string) {
   return apiRequest<void>("/feeds/" + feedId + "/media/" + mediaId, {
     method: "DELETE",
     timeoutMs: 60_000,
-  });
+  }).finally(storageChanged);
 }

@@ -9,11 +9,13 @@ export default function PlatformHeader({
   onSignOut,
   disabled = false,
   className = "",
+  showAccountLink = true,
 }: {
   children?: ReactNode;
   onSignOut?: () => Promise<void>;
   disabled?: boolean;
   className?: string;
+  showAccountLink?: boolean;
 }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -30,9 +32,21 @@ export default function PlatformHeader({
     }
   }
   return (
-    <header className={"platform-header " + className + (error ? " has-error" : "")}>
+    <header
+      className={"platform-header " + className + (error ? " has-error" : "")}
+    >
       <StudioBrand />
       {children}
+      {onSignOut &&
+        showAccountLink &&
+        !["/assinatura", "/minha-conta"].includes(window.location.pathname) && (
+          <a
+            className="button secondary platform-billing-link"
+            href="/minha-conta"
+          >
+            Minha conta
+          </a>
+        )}
       {onSignOut && (
         <button
           className="button secondary platform-signout"

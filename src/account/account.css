@@ -1,0 +1,111 @@
+.account-storage {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px 28px;
+  padding: 16px 24px;
+  margin: 16px 24px;
+  background: var(--surface, #fff);
+  border: 1px solid var(--line, #ded9ce);
+  border-radius: var(--radius-card, 12px);
+  color: var(--text-primary, #292828);
+  font-size: 0.8125rem;
+}
+.account-storage-plan {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 190px;
+}
+.account-storage-plan div {
+  display: grid;
+  gap: 4px;
+}
+.account-storage-plan span,
+.account-storage-usage > span,
+.account-storage-label span {
+  color: var(--text-secondary, #696357);
+}
+.account-storage-usage {
+  display: grid;
+  gap: 6px;
+  flex: 1;
+  min-width: 230px;
+}
+.account-storage-label {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+.account-storage-bar {
+  position: relative;
+}
+.account-storage-percent {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0 6px;
+  border-radius: 10px;
+  background: var(--surface, #fff);
+  color: var(--text-primary, #292828);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 18px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+.account-storage meter {
+  display: block;
+  width: 100%;
+  height: 24px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--surface-soft, #fbf8f2);
+}
+.account-storage meter::-webkit-meter-bar {
+  height: 100%;
+  background: var(--surface-soft, #fbf8f2);
+  border: 0;
+  border-radius: 10px;
+}
+.account-storage meter::-webkit-meter-optimum-value {
+  background: var(--accent, #b94732);
+  border-radius: 10px;
+}
+.account-storage meter::-moz-meter-bar {
+  background: var(--accent, #b94732);
+  border-radius: 10px;
+}
+.account-storage-notice {
+  flex-basis: 100%;
+  margin: 0;
+  line-height: 1.5;
+}
+.account-storage.is-full {
+  border-color: var(--danger, #ae382d);
+}
+.account-storage-error {
+  justify-content: space-between;
+}
+.account-storage-error p {
+  margin: 0;
+}
+.is-presenting .account-storage {
+  display: none;
+}
+@media (max-width: 600px) {
+  .account-storage {
+    margin: 12px;
+    padding: 16px;
+    gap: 16px;
+  }
+  .account-storage-usage {
+    min-width: 0;
+    flex-basis: 100%;
+  }
+  .account-storage-plan {
+    min-width: 0;
+  }
+}

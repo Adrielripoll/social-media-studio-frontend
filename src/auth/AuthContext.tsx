@@ -13,7 +13,11 @@ interface AuthState {
   refreshSession: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  updatePassword: (password: string) => Promise<void>;
+  updateProfile: (input: { name: string; phone?: string }) => Promise<void>;
+  updatePassword: (
+    password: string,
+    options?: { returnToLogin?: boolean },
+  ) => Promise<void>;
 }
 const AuthContext = createContext<AuthState | null>(null);
 
@@ -103,8 +107,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function updatePassword(password: string) {
+  async function updateProfile(input: { name: string; phone?: string }) {
+    const user = await apiRequest<PlatformUser>("/users/me", {
+      method: "PATCH",
+      body: input,
+    });
+    if (
+      !identity ||
+      user.id !== identity.id ||
+      typeof user.name !== "string" ||
+      !(user.phone === null || typeof user.phone === "string")
+    )
+      throw new ApiError(502);
+    current.current?.abort();
+    setVerifying(false);
+    setIdentity(user);
+  }
+  async function updatePassword(
+    password: string,
+    options?: { returnToLogin?: boolean },
+  ) {
     await apiRequest("/auth/password", { method: "POST", body: { password } });
+    if (options?.returnToLogin)
+      window.history.replaceState(null, "", "/login?senha=alterada");
     clearState();
   }
 
@@ -121,6 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signIn,
         signOut,
         updatePassword,
+        updateProfile,
       }}
     >
       {children}
