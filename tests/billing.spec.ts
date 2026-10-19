@@ -243,6 +243,11 @@ test("recontratação exibe o preço atual do catálogo em vez do valor do contr
           canceledAt: "2026-10-15T12:00:00Z",
           checkoutUrl: null,
         },
+        resumption: {
+          mode: "checkout",
+          nextChargeDate: "2026-10-16",
+          priceCents: 14990,
+        },
         payments: [],
       },
       headers: corsHeaders,
@@ -251,6 +256,205 @@ test("recontratação exibe o preço atual do catálogo em vez do valor do contr
   await login(page);
   await expect(page.locator(".billing-price")).toContainText("149,90 / mês");
   await expect(
-    page.getByRole("button", { name: "Contratar Plano Básico" }),
+    page.getByRole("button", { name: "Retomar assinatura" }),
   ).toBeEnabled();
+});
+
+test("retomada de ciclo pago destaca ausência de cobrança e agenda a próxima renovação", async ({
+  page,
+}) => {
+  await mockAuth(page);
+  let resumed = false;
+  let resumeRequests = 0;
+  let checkoutRequests = 0;
+  await page.route(apiUrl + "/account", (route) =>
+    route.fulfill({
+      json: summary(resumed ? "active" : "canceled", true),
+      headers: corsHeaders,
+    }),
+  );
+  await page.route(apiUrl + "/billing", (route) =>
+    route.fulfill({
+      json: {
+        available: true,
+        priceCents: 14990,
+        subscription: {
+          status: resumed ? "active" : "canceled",
+          priceCents: 9900,
+          anchorDate: "2099-10-15",
+          canceledAt: resumed ? null : "2099-10-20T12:00:00Z",
+          checkoutUrl: null,
+          nextRenewalDate: resumed ? "2099-11-15" : null,
+        },
+        currentPeriod: {
+          start: "2099-10-15T03:00:00Z",
+          end: "2099-11-15T03:00:00Z",
+        },
+        resumption: resumed
+          ? null
+          : { mode: "renewal", nextChargeDate: "2099-11-15", priceCents: 9900 },
+        payments: [],
+      },
+      headers: corsHeaders,
+    }),
+  );
+  await page.route(apiUrl + "/billing/checkout", (route) => {
+    if (route.request().method() !== "OPTIONS") checkoutRequests++;
+    return route.fulfill({ status: 500, headers: corsHeaders });
+  });
+  await page.route(apiUrl + "/billing/resume", (route) => {
+    if (route.request().method() === "OPTIONS")
+      return route.fulfill({ status: 204, headers: corsHeaders });
+    expect(route.request().postDataJSON()).toEqual({ mode: "renewal" });
+    resumeRequests++;
+    resumed = true;
+    return route.fulfill({
+      json: { kind: "resumed", nextChargeDate: "2099-11-15" },
+      headers: corsHeaders,
+    });
+  });
+  await login(page);
+  await page.goto("/assinatura");
+  await page.getByRole("button", { name: "Retomar assinatura" }).click();
+  const dialog = page.getByRole("dialog", { name: "Retomar assinatura?" });
+  await expect(dialog).toContainText("Nenhuma cobrança será feita agora.");
+  await expect(dialog).toContainText("99,00");
+  await expect(dialog).toContainText("15/11/2099");
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await dialog.getByRole("button", { name: "Confirmar retomada" }).click();
+  await expect(dialog).not.toBeVisible();
+  await expect(
+    page.getByText("Assinatura retomada. Nenhuma cobrança foi feita agora.", {
+      exact: false,
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Cancelar assinatura", exact: true }),
+  ).toBeVisible();
+  expect(resumeRequests).toBe(1);
+  expect(checkoutRequests).toBe(0);
+});
+
+test("retomada com ciclo encerrado exige confirmação de pagamento antes de abrir o Asaas", async ({
+  page,
+}) => {
+  await mockAuth(page);
+  let resumeRequests = 0;
+  await page.route(apiUrl + "/account", (route) =>
+    route.fulfill({
+      json: summary("subscription_expired", false),
+      headers: corsHeaders,
+    }),
+  );
+  await page.route(apiUrl + "/billing", (route) =>
+    route.fulfill({
+      json: {
+        available: true,
+        priceCents: 14990,
+        subscription: {
+          status: "canceled",
+          priceCents: 9900,
+          anchorDate: "2026-09-15",
+          canceledAt: "2026-09-20T12:00:00Z",
+          checkoutUrl: null,
+        },
+        currentPeriod: null,
+        resumption: {
+          mode: "checkout",
+          nextChargeDate: "2026-10-16",
+          priceCents: 14990,
+        },
+        payments: [],
+      },
+      headers: corsHeaders,
+    }),
+  );
+  await page.route(apiUrl + "/billing/resume", (route) => {
+    if (route.request().method() === "OPTIONS")
+      return route.fulfill({ status: 204, headers: corsHeaders });
+    expect(route.request().postDataJSON()).toEqual({ mode: "checkout" });
+    resumeRequests++;
+    return route.fulfill({
+      json: {
+        kind: "checkout",
+        url: "https://sandbox.asaas.com/checkoutSession/show?id=resume_test",
+      },
+      headers: corsHeaders,
+    });
+  });
+  await page.route("https://sandbox.asaas.com/checkoutSession/**", (route) =>
+    route.fulfill({ contentType: "text/html", body: "Checkout de teste" }),
+  );
+  await login(page);
+  await page.getByRole("button", { name: "Retomar assinatura" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toContainText("149,90 agora");
+  await expect(dialog).toContainText(
+    "O acesso será liberado após a confirmação do pagamento",
+  );
+  expect(resumeRequests).toBe(0);
+  await dialog
+    .getByRole("button", { name: "Continuar para pagamento" })
+    .click();
+  await expect(page).toHaveURL(/sandbox.asaas.com\/checkoutSession\/show/);
+  expect(resumeRequests).toBe(1);
+});
+
+test("ciclo encerrado durante a confirmação não vira um novo checkout silencioso", async ({
+  page,
+}) => {
+  await mockAuth(page);
+  await page.route(apiUrl + "/account", (route) =>
+    route.fulfill({ json: summary("canceled", true), headers: corsHeaders }),
+  );
+  await page.route(apiUrl + "/billing", (route) =>
+    route.fulfill({
+      json: {
+        available: true,
+        priceCents: 9900,
+        subscription: {
+          status: "canceled",
+          priceCents: 9900,
+          anchorDate: "2099-10-15",
+          canceledAt: "2099-10-20T12:00:00Z",
+          checkoutUrl: null,
+        },
+        resumption: {
+          mode: "renewal",
+          nextChargeDate: "2099-11-15",
+          priceCents: 9900,
+        },
+        payments: [],
+      },
+      headers: corsHeaders,
+    }),
+  );
+  await page.route(apiUrl + "/billing/resume", (route) =>
+    route.fulfill({
+      status: route.request().method() === "OPTIONS" ? 204 : 409,
+      json: {
+        code: "paid_cycle_ended",
+        message:
+          "Seu ciclo pago terminou. Atualize a página e confirme um novo pagamento para iniciar outro ciclo.",
+      },
+      headers: corsHeaders,
+    }),
+  );
+  await login(page);
+  await page.goto("/assinatura");
+  await page.getByRole("button", { name: "Retomar assinatura" }).click();
+  await page
+    .getByRole("dialog")
+    .getByRole("button", { name: "Confirmar retomada" })
+    .click();
+  await expect(page.getByRole("dialog")).not.toBeVisible();
+  await expect(
+    page.getByRole("alert").filter({ hasText: "Seu ciclo pago terminou" }),
+  ).toBeVisible();
+  await expect(page).toHaveURL(/minha-conta|assinatura/);
 });

@@ -6,6 +6,12 @@ import { useAccount } from "../account/AccountContext";
 import StorageSummary, { formatBytes } from "../account/StorageSummary";
 import Dialog from "../components/Dialog";
 import "./billing.css";
+interface ResumptionOffer {
+  mode: "renewal" | "checkout";
+  nextChargeDate: string;
+  priceCents: number | null;
+}
+
 interface Billing {
   available: boolean;
   priceCents: number | null;
@@ -18,6 +24,7 @@ interface Billing {
     nextRenewalDate?: string | null;
     paymentMethod?: string;
   };
+  resumption?: ResumptionOffer | null;
   currentPeriod?: { start: string; end: string } | null;
   payments: {
     status: string;
@@ -48,6 +55,7 @@ const statusLabels: Record<string, string> = {
   pending: "Aguardando pagamento",
   active: "Assinatura contratada",
   cancel_requested: "Cancelamento em processamento",
+  resume_requested: "Retomada em processamento",
   canceled: "Assinatura cancelada",
 };
 export default function BillingPanel({
@@ -63,6 +71,9 @@ export default function BillingPanel({
   const [busy, setBusy] = useState(false),
     [confirm, setConfirm] = useState(false),
     [revision, setRevision] = useState(0);
+  const [resumeConfirmation, setResumeConfirmation] =
+    useState<ResumptionOffer | null>(null);
+
   useEffect(() => {
     const controller = new AbortController();
     void apiRequest<Billing>("/billing", { signal: controller.signal })
@@ -90,31 +101,66 @@ export default function BillingPanel({
     }, 30_000);
     return () => clearInterval(timer);
   }, []);
-  async function action(kind: "checkout" | "cancel" | "reconcile") {
-    if (busy) return;
+  async function action(
+    kind: "checkout" | "cancel" | "reconcile" | "resume",
+    offer?: ResumptionOffer,
+  ) {
+    if (busy || (kind === "resume" && !offer)) return;
     setBusy(true);
     setError("");
     setNotice("");
     try {
-      const result = await apiRequest<{ url?: string }>("/billing/" + kind, {
+      const result = await apiRequest<{
+        url?: string;
+        kind?: "resumed" | "checkout";
+        nextChargeDate?: string | null;
+      }>("/billing/" + kind, {
         method: "POST",
-        body: kind === "checkout" ? { plan: "basic" } : undefined,
+        body:
+          kind === "checkout"
+            ? { plan: "basic" }
+            : offer
+              ? { mode: offer.mode }
+              : undefined,
         timeoutMs: 60_000,
       });
-      if (kind === "checkout") {
+      if (
+        kind === "checkout" ||
+        (kind === "resume" && result.kind === "checkout")
+      ) {
         if (!result.url) throw new Error();
         window.location.assign(checkoutUrl(result.url));
         return;
       }
       setConfirm(false);
+      setResumeConfirmation(null);
       setRevision((v) => v + 1);
       state?.refresh();
+      if (kind === "resume") {
+        setNotice(
+          "Assinatura retomada. Nenhuma cobrança foi feita agora." +
+            (result.nextChargeDate
+              ? " A próxima cobrança será em " +
+                date(result.nextChargeDate) +
+                "."
+              : ""),
+        );
+        return;
+      }
       setNotice(
         kind === "cancel"
           ? "Cancelamento confirmado. Seu acesso continua até o término do ciclo pago."
           : "Verificação solicitada. A confirmação pode levar alguns minutos; esta página será atualizada automaticamente.",
       );
     } catch (reason) {
+      setRevision((value) => value + 1);
+      state?.refresh();
+      if (
+        reason instanceof ApiError &&
+        ["paid_cycle_ended", "subscription_not_resumable"].includes(reason.code)
+      ) {
+        setResumeConfirmation(null);
+      }
       setError(
         reason instanceof ApiError
           ? reason.message
@@ -246,10 +292,17 @@ export default function BillingPanel({
             )}
           </dl>
         )}
+        {billing?.resumption && (
+          <p className="auth-message" role="status">
+            {billing.resumption.mode === "renewal"
+              ? "Você pode retomar sua assinatura sem nenhuma cobrança agora. A próxima cobrança será no início do próximo ciclo, em " +
+                date(billing.resumption.nextChargeDate) +
+                "."
+              : "Seu ciclo anterior terminou. Para retomar, será necessário um novo pagamento para iniciar um novo ciclo."}
+          </p>
+        )}
         <div className="billing-actions">
-          {(!subscription ||
-            subscription.status === "canceled" ||
-            subscription.status === "pending") && (
+          {(!subscription || subscription.status === "pending") && (
             <button
               className="button primary"
               disabled={
@@ -259,10 +312,7 @@ export default function BillingPanel({
                 !!loadError ||
                 !priceCents ||
                 (subscription?.status === "pending" &&
-                  !subscription.checkoutUrl) ||
-                (subscription?.status === "canceled" &&
-                  !!access?.allowed &&
-                  access.status !== "trialing")
+                  !subscription.checkoutUrl)
               }
               onClick={() => void action("checkout")}
             >
@@ -271,6 +321,26 @@ export default function BillingPanel({
                 : subscription?.checkoutUrl
                   ? "Continuar pagamento"
                   : "Contratar Plano Básico"}
+            </button>
+          )}
+          {subscription?.status === "canceled" && billing?.resumption && (
+            <button
+              className="button primary"
+              disabled={
+                busy ||
+                !billing.available ||
+                !state?.account?.retention?.acceptedAt ||
+                !!loadError ||
+                !billing.resumption.priceCents
+              }
+              onClick={() => {
+                setError("");
+                setResumeConfirmation(
+                  billing.resumption ? { ...billing.resumption } : null,
+                );
+              }}
+            >
+              Retomar assinatura
             </button>
           )}
           <button
@@ -345,6 +415,51 @@ export default function BillingPanel({
             ))}
           </ul>
         </section>
+      )}
+      {resumeConfirmation && (
+        <Dialog
+          title="Retomar assinatura?"
+          onClose={() => setResumeConfirmation(null)}
+          busy={busy}
+        >
+          {resumeConfirmation.mode === "renewal" ? (
+            <p>
+              <strong>Nenhuma cobrança será feita agora.</strong> Seu ciclo já
+              está pago. A próxima cobrança será de{" "}
+              {money(resumeConfirmation.priceCents ?? 0)} em{" "}
+              {date(resumeConfirmation.nextChargeDate)}, no início do próximo
+              ciclo. Depois disso, a renovação será mensal.
+            </p>
+          ) : (
+            <p>
+              Seu ciclo anterior terminou. Você será direcionado ao Asaas para
+              pagar {money(resumeConfirmation.priceCents ?? 0)} agora e iniciar
+              um novo ciclo mensal. O acesso será liberado após a confirmação do
+              pagamento.
+            </p>
+          )}
+          <div className="billing-actions">
+            <button
+              className="button secondary"
+              disabled={busy}
+              onClick={() => setResumeConfirmation(null)}
+            >
+              Voltar
+            </button>
+            <button
+              className="button primary"
+              disabled={busy}
+              onClick={() => void action("resume", resumeConfirmation)}
+            >
+              {busy
+                ? "Aguarde…"
+                : resumeConfirmation.mode === "renewal"
+                  ? "Confirmar retomada"
+                  : "Continuar para pagamento"}
+            </button>
+          </div>
+          {error && <p role="alert">{error}</p>}
+        </Dialog>
       )}
       {confirm && (
         <Dialog
