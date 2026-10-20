@@ -59,7 +59,7 @@ test("edita perfil, normaliza celular e preserva as alterações após recarrega
   await page.reload();
   await expect(page.getByLabel("Nome completo")).toHaveValue("Maria Oliveira");
   await expect(page.getByLabel("Celular (com DDD)")).toHaveValue(
-    "+5551988887777",
+    "(51) 98888-7777",
   );
   expect(
     requests
@@ -124,8 +124,11 @@ test("valida confirmação de senha e usa o fluxo existente que encerra a sessã
   const requests = await mockAuth(page);
   await openProfile(page);
   await page
+    .getByLabel("Senha atual", { exact: true })
+    .fill("senha-segura-123");
+  await page
     .getByLabel("Nova senha", { exact: true })
-    .fill("nova-senha-segura-123");
+    .fill("Nova-senha-segura-123");
   const confirmation = page.getByLabel("Confirme a nova senha");
   await confirmation.fill("senha-diferente");
   await page
@@ -136,7 +139,7 @@ test("valida confirmação de senha e usa o fluxo existente que encerra a sessã
   );
   await expect(confirmation).toBeFocused();
   expect(requests.some((r) => r.path === "/auth/password")).toBe(false);
-  await confirmation.fill("nova-senha-segura-123");
+  await confirmation.fill("Nova-senha-segura-123");
   await page
     .getByRole("button", { name: "Alterar senha", exact: true })
     .click();
@@ -147,10 +150,11 @@ test("valida confirmação de senha e usa o fluxo existente que encerra a sessã
     page.getByRole("button", { name: "Entrar", exact: true }),
   ).toBeVisible();
   expect(requests.find((r) => r.path === "/auth/password")?.body).toEqual({
-    password: "nova-senha-segura-123",
+    password: "Nova-senha-segura-123",
+    currentPassword: "senha-segura-123",
   });
   expect(await page.evaluate(() => JSON.stringify(localStorage))).not.toContain(
-    "nova-senha-segura-123",
+    "Nova-senha-segura-123",
   );
 });
 test("navegação entre seções acompanha o histórico e funciona de 320 a 1440 px", async ({
@@ -468,4 +472,91 @@ test("exclusão que falha mantém a cota ocupada e permite retomar sem perder o 
   await expect(
     page.getByText("Nenhum arquivo armazenado na sua conta."),
   ).toBeVisible();
+});
+
+test("limita nome a 60, mascara telefone e valida complexidade da nova senha", async ({
+  page,
+}) => {
+  const requests = await mockAuth(page);
+  await openProfile(page);
+  await expect(page.getByLabel("Nome completo")).toHaveAttribute(
+    "maxlength",
+    "60",
+  );
+  await expect(page.getByLabel("Celular (com DDD)")).toHaveValue(
+    "(11) 99999-9999",
+  );
+  await page.getByLabel("Senha atual", { exact: true }).fill("senha-anterior");
+  await page.getByLabel("Nova senha", { exact: true }).fill("sem-maiuscula!");
+  await page.getByLabel("Confirme a nova senha").fill("sem-maiuscula!");
+  await page
+    .getByRole("button", { name: "Alterar senha", exact: true })
+    .click();
+  await expect(page.getByRole("alert")).toContainText("maiúscula");
+  expect(requests.some((r) => r.path === "/auth/password")).toBe(false);
+});
+test("senha atual incorreta mantém sessão e foca o campo para correção", async ({
+  page,
+}) => {
+  await mockAuth(page);
+  await page.route(apiUrl + "/auth/password", (route) =>
+    route.fulfill({
+      status: 400,
+      json: {
+        code: "current_password_invalid",
+        message: "A senha atual está incorreta.",
+      },
+      headers: corsHeaders,
+    }),
+  );
+  await openProfile(page);
+  await page.getByLabel("Senha atual", { exact: true }).fill("senha-incorreta");
+  await page.getByLabel("Nova senha", { exact: true }).fill("Nova-senha!");
+  await page.getByLabel("Confirme a nova senha").fill("Nova-senha!");
+  await page
+    .getByRole("button", { name: "Alterar senha", exact: true })
+    .click();
+  await expect(page.getByRole("alert")).toContainText(
+    "senha atual está incorreta",
+  );
+  await expect(page.getByLabel("Senha atual", { exact: true })).toBeFocused();
+  await expect(
+    page.getByRole("heading", { name: "Minha conta", exact: true }),
+  ).toBeVisible();
+});
+
+test("rate limit no perfil informa espera, preserva sessão e não repete a escrita", async ({
+  page,
+}) => {
+  await mockAuth(page);
+  let attempts = 0;
+  await page.route(apiUrl + "/users/me", (route) => {
+    if (route.request().method() !== "PATCH") return route.fallback();
+    attempts++;
+    return route.fulfill({
+      status: 429,
+      headers: {
+        ...corsHeaders,
+        "Retry-After": "60",
+        "Access-Control-Expose-Headers": "Retry-After",
+      },
+      json: {
+        code: "rate_limit_exceeded",
+        message: "Muitas solicitações. Aguarde 60 segundos e tente novamente.",
+        retryAfterSeconds: 60,
+      },
+    });
+  });
+  await openProfile(page);
+  await page.getByLabel("Nome completo").fill("Nome em edição");
+  await page.getByRole("button", { name: "Salvar perfil" }).click();
+  await expect(page.getByRole("alert")).toContainText("Aguarde 60 segundos");
+  await expect(page.getByLabel("Nome completo")).toHaveValue("Nome em edição");
+  await expect(
+    page.getByRole("heading", { name: "Minha conta", exact: true }),
+  ).toBeVisible();
+  expect(attempts).toBe(1);
+  await page.screenshot({
+    path: test.info().outputPath("rate-limit-profile.png"),
+  });
 });

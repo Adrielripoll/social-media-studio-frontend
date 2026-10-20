@@ -101,6 +101,22 @@ export default function BillingPanel({
     }, 30_000);
     return () => clearInterval(timer);
   }, []);
+  const [policyBusy, setPolicyBusy] = useState(false);
+  const [pendingSubscription, setPendingSubscription] = useState<{
+    kind: "checkout" | "resume";
+    offer?: ResumptionOffer;
+  } | null>(null);
+  function requestSubscription(
+    kind: "checkout" | "resume",
+    offer?: ResumptionOffer,
+  ) {
+    if (!state?.account?.retention?.acceptedAt) {
+      setResumeConfirmation(null);
+      setPendingSubscription({ kind, offer });
+      return;
+    }
+    void action(kind, offer);
+  }
   async function action(
     kind: "checkout" | "cancel" | "reconcile" | "resume",
     offer?: ResumptionOffer,
@@ -172,6 +188,11 @@ export default function BillingPanel({
   }
   const access = state?.account?.access,
     subscription = billing?.subscription;
+  const hasPendingPayment =
+    ["creating", "pending"].includes(subscription?.status ?? "") ||
+    billing?.payments.some((payment) =>
+      ["PENDING", "OVERDUE", "AWAITING_RISK_ANALYSIS"].includes(payment.status),
+    );
   const priceCents =
     subscription &&
     (subscription.status !== "canceled" ||
@@ -308,13 +329,12 @@ export default function BillingPanel({
               disabled={
                 busy ||
                 !billing?.available ||
-                !state?.account?.retention?.acceptedAt ||
                 !!loadError ||
                 !priceCents ||
                 (subscription?.status === "pending" &&
                   !subscription.checkoutUrl)
               }
-              onClick={() => void action("checkout")}
+              onClick={() => requestSubscription("checkout")}
             >
               {busy
                 ? "Aguarde…"
@@ -329,7 +349,6 @@ export default function BillingPanel({
               disabled={
                 busy ||
                 !billing.available ||
-                !state?.account?.retention?.acceptedAt ||
                 !!loadError ||
                 !billing.resumption.priceCents
               }
@@ -343,18 +362,20 @@ export default function BillingPanel({
               Retomar assinatura
             </button>
           )}
-          <button
-            className="button secondary"
-            disabled={busy}
-            onClick={() => {
-              setRevision((v) => v + 1);
-              state?.refresh();
-              if (billing?.available) void action("reconcile");
-            }}
-          >
-            <RefreshCw size={16} aria-hidden="true" />
-            Verificar pagamento
-          </button>
+          {hasPendingPayment && (
+            <button
+              className="button secondary"
+              disabled={busy}
+              onClick={() => {
+                setRevision((v) => v + 1);
+                state?.refresh();
+                if (billing?.available) void action("reconcile");
+              }}
+            >
+              <RefreshCw size={16} aria-hidden="true" />
+              Verificar pagamento
+            </button>
+          )}
           {subscription &&
             ["active", "pending"].includes(subscription.status) && (
               <button
@@ -366,11 +387,6 @@ export default function BillingPanel({
               </button>
             )}
         </div>
-        <p className="billing-footnote">
-          O retorno do checkout não confirma o pagamento. O acesso será liberado
-          após a confirmação pelo Asaas. Em caso de atraso, o vencimento
-          permanece na data-base contratada.
-        </p>
       </section>
       {billing && !billing.payments.length && (
         <section className="billing-card account-empty" aria-label="Cobranças">
@@ -449,7 +465,7 @@ export default function BillingPanel({
             <button
               className="button primary"
               disabled={busy}
-              onClick={() => void action("resume", resumeConfirmation)}
+              onClick={() => requestSubscription("resume", resumeConfirmation)}
             >
               {busy
                 ? "Aguarde…"
@@ -459,6 +475,22 @@ export default function BillingPanel({
             </button>
           </div>
           {error && <p role="alert">{error}</p>}
+        </Dialog>
+      )}
+      {pendingSubscription && (
+        <Dialog
+          title="Antes de continuar"
+          onClose={() => setPendingSubscription(null)}
+          busy={policyBusy}
+        >
+          <RetentionNotice
+            onBusyChange={setPolicyBusy}
+            onAccepted={() => {
+              const pending = pendingSubscription;
+              setPendingSubscription(null);
+              void action(pending.kind, pending.offer);
+            }}
+          />
         </Dialog>
       )}
       {confirm && (

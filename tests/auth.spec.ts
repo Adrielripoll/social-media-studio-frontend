@@ -13,7 +13,7 @@ async function signup(page: Parameters<typeof login>[0]) {
   await page.getByLabel("Seu nome", { exact: true }).fill("Maria Silva");
   await page.getByLabel("Email", { exact: true }).fill(user.email);
   await page.getByLabel("Celular (com DDD)").fill("(11) 99999-9999");
-  await page.getByLabel("Senha", { exact: true }).fill("senha-segura-123");
+  await page.getByLabel("Senha", { exact: true }).fill("Senha-segura-123");
   await page.getByRole("button", { name: "Criar minha conta" }).click();
 }
 
@@ -90,16 +90,28 @@ test("cadastro exige celular e aceita +55 no mobile", async ({ page }) => {
   await page.goto("/cadastro");
   await page.getByLabel("Seu nome", { exact: true }).fill("Maria Silva");
   await page.getByLabel("Email", { exact: true }).fill(user.email);
-  await page.getByLabel("Senha", { exact: true }).fill("senha-segura-123");
+  await page.getByLabel("Senha", { exact: true }).fill("Senha-segura-123");
   const phone = page.getByLabel("Celular (com DDD)");
   await page.getByRole("button", { name: "Criar minha conta" }).click();
   expect(requests.some((item) => item.path === "/auth/signup")).toBe(false);
+  await phone.fill("5199999999999999999999999");
+  await expect(phone).toHaveValue("(51) 99999-9999");
+  await phone.fill("51999999999");
+  await phone.pressSequentially("9999");
+  await expect(phone).toHaveValue("(51) 99999-9999");
+  await phone.fill("55999999999");
+  await phone.pressSequentially("9999");
+  await expect(phone).toHaveValue("(55) 99999-9999");
+  await phone.fill("5511999999999");
+  await expect(phone).toHaveValue("(11) 99999-9999");
   await phone.fill("(11) 3333-4444");
   await page.getByRole("button", { name: "Criar minha conta" }).click();
   await expect(page.getByRole("alert")).toContainText(
     "celular brasileiro com DDD",
   );
   await phone.fill("+55 (11) 99999-9999");
+  await phone.pressSequentially("9999");
+  await expect(phone).toHaveValue("(11) 99999-9999");
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth > innerWidth,
@@ -167,16 +179,16 @@ test("recuperação retorna pelo backend e permite redefinir a senha", async ({
     .click();
   await expect(page.getByRole("status")).toContainText("Se existir uma conta");
   await page.goto(apiUrl + "/auth/confirm?token_hash=test&type=recovery");
-  await page.getByLabel("Senha", { exact: true }).fill("nova-senha-segura");
+  await page.getByLabel("Senha", { exact: true }).fill("Nova-senha-segura!");
   await page
     .getByLabel("Confirme a nova senha", { exact: true })
-    .fill("nova-senha-segura");
+    .fill("Nova-senha-segura!");
   await page.getByRole("button", { name: "Salvar nova senha" }).click();
   await expect(
     page.getByRole("heading", { name: "Senha atualizada." }),
   ).toBeVisible();
   expect(requests.find((item) => item.path === "/auth/password")?.body).toEqual(
-    { password: "nova-senha-segura" },
+    { password: "Nova-senha-segura!" },
   );
   expect(
     (await page.context().cookies(apiUrl)).some(
@@ -340,10 +352,13 @@ test("localhost redireciona para o hostname local da API antes de autenticar", a
   page,
 }) => {
   const requests = await mockAuth(page);
-  await page.goto("http://localhost:3103/login?origem=teste");
-  await expect(page).toHaveURL("http://127.0.0.1:3103/login?origem=teste");
+  const origin = corsHeaders["Access-Control-Allow-Origin"];
+  await page.goto(
+    origin.replace("127.0.0.1", "localhost") + "/login?origem=teste",
+  );
+  await expect(page).toHaveURL(origin + "/login?origem=teste");
   await page.getByLabel("Email", { exact: true }).fill(user.email);
-  await page.getByLabel("Senha", { exact: true }).fill("senha-segura-123");
+  await page.getByLabel("Senha", { exact: true }).fill("Senha-segura-123");
   await page.getByRole("button", { name: "Entrar", exact: true }).click();
   await expect(
     page.getByRole("heading", { name: "Bem-vindo, Maria." }),
@@ -478,4 +493,28 @@ test("falha na consulta inicial da sessão oferece repetir sem assumir que o usu
   await expect(
     page.getByRole("heading", { name: "Bem-vindo, Maria." }),
   ).toBeVisible();
+});
+
+test("rate limit no CSRF informa espera sem tentar login", async ({ page }) => {
+  const requests = await mockAuth(page);
+  let attempts = 0;
+  await page.route(apiUrl + "/auth/csrf", (route) => {
+    attempts++;
+    return route.fulfill({
+      status: 429,
+      headers: {
+        ...corsHeaders,
+        "Retry-After": "30",
+        "Access-Control-Expose-Headers": "Retry-After",
+      },
+      json: {
+        code: "rate_limit_exceeded",
+        message: "Muitas solicitações. Aguarde 30 segundos e tente novamente.",
+      },
+    });
+  });
+  await login(page);
+  await expect(page.getByRole("alert")).toContainText("Aguarde 30 segundos");
+  expect(attempts).toBe(1);
+  expect(requests.some((item) => item.path === "/auth/login")).toBe(false);
 });

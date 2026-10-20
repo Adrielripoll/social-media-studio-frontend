@@ -14,9 +14,35 @@ export class ApiError extends Error {
     public readonly status: number,
     message = "Não foi possível concluir. Tente novamente.",
     public readonly code = "",
+    public readonly retryAfterSeconds: number | null = null,
   ) {
     super(message);
   }
+}
+
+function responseError(response: Response, value: unknown): ApiError {
+  const error = value && typeof value === "object" ? value : {};
+  const code =
+    "code" in error && typeof error.code === "string" ? error.code : "";
+  const message =
+    "message" in error && typeof error.message === "string"
+      ? error.message
+      : undefined;
+  const header = response.headers.get("Retry-After");
+  const seconds = header && /^\d+$/.test(header) ? Number(header) : null;
+  const retryAfter =
+    seconds !== null && Number.isSafeInteger(seconds) ? seconds : null;
+  return new ApiError(
+    response.status,
+    message ??
+      (response.status === 429
+        ? "Muitas solicitações. Aguarde " +
+          (retryAfter ?? "alguns") +
+          " segundos e tente novamente."
+        : undefined),
+    code,
+    retryAfter,
+  );
 }
 
 let csrfToken: string | null = null;
@@ -48,7 +74,8 @@ async function getCsrf() {
         credentials: "include",
         signal: AbortSignal.timeout(15_000),
       });
-      if (!response.ok) throw new ApiError(response.status);
+      if (!response.ok)
+        throw responseError(response, await response.json().catch(() => null));
       const value: unknown = await response.json();
       if (
         !value ||
@@ -109,11 +136,7 @@ export async function apiRequest<T>(
     }
     if (response.status === 403 && code === "account_access_denied")
       window.dispatchEvent(new Event("account-access-changed"));
-    const message =
-      "message" in error && typeof error.message === "string"
-        ? error.message
-        : undefined;
-    throw new ApiError(response.status, message, code);
+    throw responseError(response, value);
   }
   return value as T;
 }

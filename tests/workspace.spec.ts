@@ -1,5 +1,5 @@
 import { test, expect } from "@playwright/test";
-import { login, mockAuth } from "./helpers/auth";
+import { login, mockAuth, apiUrl, corsHeaders } from "./helpers/auth";
 import { client, mockWorkspace } from "./helpers/workspace";
 test.beforeEach(async ({ page }) => {
   await mockAuth(page);
@@ -148,7 +148,9 @@ test("funciona no mobile sem rolagem horizontal", async ({ page }) => {
   const parent = client("Nome muito comprido para conferir a quebra de linha");
   await mockWorkspace(page, [parent]);
   await login(page);
-  await nav(page).getByRole("button", { name: "Seus clientes", exact: true }).click();
+  await nav(page)
+    .getByRole("button", { name: "Seus clientes", exact: true })
+    .click();
   await nav(page)
     .getByRole("button", { name: parent.name, exact: true })
     .click();
@@ -184,4 +186,57 @@ test("apresenta conflito da API sem remover o cliente", async ({ page }) => {
     "projetos vinculados",
   );
   expect(state.clients).toHaveLength(1);
+});
+
+test("cliente sem logo mostra ícone e permite adicionar e remover imagem opcional", async ({
+  page,
+}) => {
+  const company = client("Empresa de teste");
+  await mockWorkspace(page, [company]);
+  const image =
+    "data:image/svg+xml," +
+    encodeURIComponent(
+      '<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10"><rect width="10" height="10" fill="blue"/></svg>',
+    );
+  let logo: string | null = null;
+  await page.route(apiUrl + "/clients/" + company.id + "/logo", (route) => {
+    if (route.request().method() === "POST") logo = image;
+    if (route.request().method() === "DELETE") logo = null;
+    return route.fulfill({ json: { url: logo }, headers: corsHeaders });
+  });
+  await login(page);
+  await nav(page)
+    .getByRole("button", { name: company.name, exact: true })
+    .click();
+  const section = page.getByRole("region", { name: "Logo da empresa" });
+  await expect(section.locator("img")).toHaveCount(0);
+  await expect(
+    section.getByRole("button", { name: "Adicionar logo" }),
+  ).toBeEnabled();
+  await section.getByLabel("Selecionar logo da empresa").setInputFiles({
+    name: "logo.png",
+    mimeType: "image/png",
+    buffer: Buffer.from("image-fixture"),
+  });
+  await expect(
+    section.getByRole("img", { name: "Logo de Empresa de teste" }),
+  ).toBeVisible();
+  await expect(section.getByRole("status")).toContainText("Logo atualizado");
+  await page.screenshot({
+    path: test.info().outputPath("client-logo-desktop.png"),
+  });
+  await section.getByRole("button", { name: "Remover logo" }).click();
+  await expect(section.locator("img")).toHaveCount(0);
+  await expect(
+    section.getByRole("button", { name: "Adicionar logo" }),
+  ).toBeEnabled();
+  await page.setViewportSize({ width: 390, height: 844 });
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: test.info().outputPath("client-logo-mobile.png"),
+  });
 });

@@ -88,10 +88,11 @@ test("o retorno de sucesso do checkout não libera a conta sem confirmação", a
     page.getByRole("heading", { name: "Vamos regularizar seu acesso." }),
   ).toBeVisible();
   await expect(
-    page.getByText("O retorno do checkout não confirma o pagamento.", {
-      exact: false,
-    }),
-  ).toBeVisible();
+    page.getByRole("button", { name: "Contratar Plano Básico" }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("navigation", { name: "Navegação do espaço de trabalho" }),
+  ).toHaveCount(0);
 });
 test("exibe cobrança pendente e atualiza acesso após confirmação verificada", async ({
   page,
@@ -126,6 +127,12 @@ test("exibe cobrança pendente e atualiza acesso após confirmação verificada"
             valueCents: 9900,
             invoiceUrl: "https://sandbox.asaas.com/i/test",
           },
+          {
+            status: "CONFIRMED",
+            dueDate: "2026-09-15",
+            valueCents: 9900,
+            invoiceUrl: null,
+          },
         ],
       },
       headers: corsHeaders,
@@ -140,6 +147,13 @@ test("exibe cobrança pendente e atualiza acesso após confirmação verificada"
   confirmed = true;
   await page.getByRole("button", { name: "Verificar pagamento" }).click();
   await expect(page.getByRole("heading", { name: /Bem-vindo/ })).toBeVisible();
+  await page.goto("/assinatura");
+  await expect(
+    page.getByText("Pagamento confirmado", { exact: true }),
+  ).toHaveCount(2);
+  await expect(
+    page.getByRole("button", { name: "Verificar pagamento" }),
+  ).toHaveCount(0);
 });
 test("mostra o período pago e confirma cancelamento sem remover o acesso", async ({
   page,
@@ -457,4 +471,74 @@ test("ciclo encerrado durante a confirmação não vira um novo checkout silenci
     page.getByRole("alert").filter({ hasText: "Seu ciclo pago terminou" }),
   ).toBeVisible();
   await expect(page).toHaveURL(/minha-conta|assinatura/);
+});
+
+test("apresenta política antes do checkout e só continua após aceite persistido", async ({
+  page,
+}) => {
+  await mockAuth(page);
+  let accepted = false;
+  let checkoutCalls = 0;
+  await page.route(apiUrl + "/account", (route) =>
+    route.fulfill({
+      json: {
+        ...summary(),
+        retention: {
+          ...summary().retention,
+          acceptedAt: accepted ? "2026-10-20T12:00:00Z" : null,
+          policy: {
+            version: "2026-10-16.v1",
+            paragraphs: [
+              "Contas de teste: 1 mês. Assinaturas encerradas: 6 meses.",
+            ],
+          },
+        },
+      },
+      headers: corsHeaders,
+    }),
+  );
+  await page.route(apiUrl + "/billing", (route) =>
+    route.fulfill({
+      json: {
+        available: true,
+        priceCents: 9900,
+        subscription: null,
+        payments: [],
+      },
+      headers: corsHeaders,
+    }),
+  );
+  await page.route(apiUrl + "/account/retention/accept", (route) => {
+    expect(route.request().postDataJSON()).toEqual({
+      version: "2026-10-16.v1",
+      accepted: true,
+    });
+    accepted = true;
+    return route.fulfill({ json: { accepted: true }, headers: corsHeaders });
+  });
+  await page.route(apiUrl + "/billing/checkout", (route) => {
+    checkoutCalls++;
+    expect(accepted).toBe(true);
+    return route.fulfill({
+      status: 503,
+      json: { message: "Checkout simulado, sem cobrança." },
+      headers: corsHeaders,
+    });
+  });
+  await login(page);
+  await page.getByRole("button", { name: "Contratar Plano Básico" }).click();
+  const dialog = page.getByRole("dialog", { name: "Antes de continuar" });
+  await expect(dialog).toBeVisible();
+  await page.screenshot({
+    path: test.info().outputPath("retention-before-checkout.png"),
+  });
+  expect(checkoutCalls).toBe(0);
+  await expect(
+    dialog.getByRole("button", { name: "Aceitar e continuar" }),
+  ).toBeDisabled();
+  await dialog.getByRole("checkbox").check();
+  await dialog.getByRole("button", { name: "Aceitar e continuar" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByRole("alert")).toContainText("Checkout simulado");
+  expect(checkoutCalls).toBe(1);
 });

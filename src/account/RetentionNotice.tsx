@@ -1,8 +1,12 @@
 import { ShieldCheck, Clock3 } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import { useAccount } from "./AccountContext";
 import { apiRequest, ApiError } from "../auth/api";
-export default function RetentionNotice() {
+export default function RetentionNotice({
+  onAccepted,
+  onBusyChange,
+}: { onAccepted?: () => void; onBusyChange?: (busy: boolean) => void } = {}) {
+  const titleId = useId();
   const account = useAccount(),
     retention = account?.account?.retention;
   const [checked, setChecked] = useState(false),
@@ -20,6 +24,7 @@ export default function RetentionNotice() {
   async function accept() {
     if (!checked || busy || !retention?.policy) return;
     setBusy(true);
+    onBusyChange?.(true);
     setError("");
     try {
       await apiRequest("/account/retention/accept", {
@@ -28,6 +33,7 @@ export default function RetentionNotice() {
       });
       setAcceptedVersion(retention.policy.version);
       account?.refresh();
+      onAccepted?.();
     } catch (reason) {
       setError(
         reason instanceof ApiError
@@ -36,12 +42,13 @@ export default function RetentionNotice() {
       );
     } finally {
       setBusy(false);
+      onBusyChange?.(false);
     }
   }
   return (
     <section
       className="account-card account-retention"
-      aria-labelledby="retention-title"
+      aria-labelledby={titleId}
     >
       <div className="account-card-heading">
         <span className="account-card-icon blue">
@@ -52,7 +59,7 @@ export default function RetentionNotice() {
           )}
         </span>
         <div>
-          <h2 id="retention-title">Seus arquivos, com clareza</h2>
+          <h2 id={titleId}>Seus arquivos, com clareza</h2>
           <p>Política de retenção do armazenamento.</p>
         </div>
       </div>
@@ -84,7 +91,7 @@ export default function RetentionNotice() {
       </p>
       {retention?.policy && (
         <>
-          <details>
+          <details open={onAccepted ? true : undefined}>
             <summary>
               Ler política de retenção · versão {retention.policy.version}
             </summary>
@@ -120,7 +127,11 @@ export default function RetentionNotice() {
                 disabled={!checked || busy}
                 onClick={() => void accept()}
               >
-                {busy ? "Registrando…" : "Aceitar política de retenção"}
+                {busy
+                  ? "Registrando…"
+                  : onAccepted
+                    ? "Aceitar e continuar"
+                    : "Aceitar política de retenção"}
               </button>
               <p className="account-field-help">
                 O aceite é necessário para contratar uma assinatura.

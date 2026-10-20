@@ -4,12 +4,13 @@ import { UserRound, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 import { ApiError } from "../auth/api";
 import { authErrorMessage } from "../auth/errors";
-import { normalizeMobilePhone } from "../auth/phone";
+import { formatMobilePhone, normalizeMobilePhone } from "../auth/phone";
+import { isValidPassword, PASSWORD_HELP } from "../auth/password";
 export default function ProfilePanel() {
   const auth = useAuth(),
     identity = auth.identity!;
   const [name, setName] = useState(identity.name),
-    [phone, setPhone] = useState(identity.phone ?? "");
+    [phone, setPhone] = useState(formatMobilePhone(identity.phone ?? ""));
   const [busy, setBusy] = useState(false),
     [error, setError] = useState(""),
     [saved, setSaved] = useState(false),
@@ -33,10 +34,10 @@ export default function ProfilePanel() {
     setSaved(false);
     if (
       name.trim().length < 2 ||
-      name.trim().length > 120 ||
+      name.trim().length > 60 ||
       /\p{Cc}/u.test(name)
     ) {
-      reject("name", "Informe um nome entre 2 e 120 caracteres.");
+      reject("name", "Informe um nome entre 2 e 60 caracteres.");
       return;
     }
     const normalized = normalizeMobilePhone(phone);
@@ -50,7 +51,7 @@ export default function ProfilePanel() {
         name: name.trim(),
         ...(normalized ? { phone: normalized } : {}),
       });
-      setPhone(normalized ?? "");
+      setPhone(formatMobilePhone(normalized ?? ""));
       setName(name.trim().replace(/\s+/g, " "));
       setSaved(true);
     } catch (reason) {
@@ -88,7 +89,7 @@ export default function ProfilePanel() {
               autoComplete="name"
               required
               minLength={2}
-              maxLength={120}
+              maxLength={60}
               value={name}
               disabled={busy}
               onChange={(event) => {
@@ -123,12 +124,12 @@ export default function ProfilePanel() {
               name="phone"
               type="tel"
               autoComplete="tel"
-              maxLength={32}
+              maxLength={19}
               value={phone}
               disabled={busy}
               placeholder="(11) 99999-9999"
               onChange={(event) => {
-                setPhone(event.target.value);
+                setPhone(formatMobilePhone(event.target.value));
                 setSaved(false);
                 if (field === "phone") {
                   setError("");
@@ -171,24 +172,36 @@ export default function ProfilePanel() {
 }
 function PasswordPanel() {
   const auth = useAuth();
+  const [currentPassword, setCurrentPassword] = useState("");
+  const currentPasswordInput = useRef<HTMLInputElement>(null);
   const [password, setPassword] = useState(""),
     [confirmation, setConfirmation] = useState(""),
     [visible, setVisible] = useState(false),
     [busy, setBusy] = useState(false),
     [error, setError] = useState("");
   const [passwordField, setPasswordField] = useState<
-    "password" | "confirmation" | null
+    "currentPassword" | "password" | "confirmation" | null
   >(null);
   const confirmationInput = useRef<HTMLInputElement>(null),
     passwordInput = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (passwordField === "currentPassword" && !busy)
+      currentPasswordInput.current?.focus();
+  }, [passwordField, busy]);
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (busy) return;
     setError("");
     setPasswordField(null);
-    if (password.length < 8 || password.length > 128) {
+    if (!currentPassword) {
+      setPasswordField("currentPassword");
+      setError("Informe sua senha atual.");
+      currentPasswordInput.current?.focus();
+      return;
+    }
+    if (!isValidPassword(password)) {
       setPasswordField("password");
-      setError("A senha deve conter entre 8 e 128 caracteres.");
+      setError(PASSWORD_HELP);
       passwordInput.current?.focus();
       return;
     }
@@ -200,9 +213,21 @@ function PasswordPanel() {
     }
     setBusy(true);
     try {
-      await auth.updatePassword(password, { returnToLogin: true });
+      await auth.updatePassword(password, {
+        returnToLogin: true,
+        currentPassword,
+      });
     } catch (reason) {
       setError(authErrorMessage(reason));
+      if (
+        reason instanceof ApiError &&
+        ["current_password_invalid", "current_password_required"].includes(
+          reason.code,
+        )
+      ) {
+        setPasswordField("currentPassword");
+        currentPasswordInput.current?.focus();
+      }
     } finally {
       setBusy(false);
     }
@@ -223,6 +248,28 @@ function PasswordPanel() {
         onSubmit={(event) => void submit(event)}
         noValidate
       >
+        <label className="field">
+          <span>Senha atual</span>
+          <input
+            ref={currentPasswordInput}
+            name="current-password"
+            type={visible ? "text" : "password"}
+            autoComplete="current-password"
+            required
+            maxLength={128}
+            value={currentPassword}
+            onChange={(event) => {
+              setCurrentPassword(event.target.value);
+              setError("");
+              setPasswordField(null);
+            }}
+            disabled={busy}
+            aria-invalid={passwordField === "currentPassword" || undefined}
+            aria-describedby={
+              passwordField === "currentPassword" ? "password-error" : undefined
+            }
+          />
+        </label>
         <label className="field">
           <span>Nova senha</span>
           <input
@@ -280,8 +327,7 @@ function PasswordPanel() {
           {visible ? "Ocultar senhas" : "Mostrar senhas"}
         </button>
         <p className="account-field-help" id="password-help">
-          Use pelo menos 8 caracteres. Após salvar, você deverá entrar
-          novamente.
+          {PASSWORD_HELP} Após salvar, você deverá entrar novamente.
         </p>
         {error && (
           <p

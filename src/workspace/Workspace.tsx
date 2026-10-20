@@ -1,3 +1,4 @@
+import ClientLogo from "./ClientLogo";
 import DashboardLibrary from "../dashboards/DashboardLibrary";
 import DashboardDetail from "../dashboards/DashboardDetail";
 import { workspaceView, workspaceUrl } from "./navigation";
@@ -429,6 +430,13 @@ export default function Workspace({ children }: { children: ReactNode }) {
                 </button>
               )}
             </header>
+            {selectedClient && (
+              <ClientLogo
+                key={selectedClient.id}
+                id={selectedClient.id}
+                name={selectedClient.name}
+              />
+            )}
             {loading && (
               <p className="workspace-muted" role="status">
                 <LoaderCircle className="spin" size={16} />

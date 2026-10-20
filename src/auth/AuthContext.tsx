@@ -16,7 +16,7 @@ interface AuthState {
   updateProfile: (input: { name: string; phone?: string }) => Promise<void>;
   updatePassword: (
     password: string,
-    options?: { returnToLogin?: boolean },
+    options?: { returnToLogin?: boolean; currentPassword?: string },
   ) => Promise<void>;
 }
 const AuthContext = createContext<AuthState | null>(null);
@@ -125,9 +125,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
   async function updatePassword(
     password: string,
-    options?: { returnToLogin?: boolean },
+    options?: { returnToLogin?: boolean; currentPassword?: string },
   ) {
-    await apiRequest("/auth/password", { method: "POST", body: { password } });
+    await apiRequest("/auth/password", {
+      method: "POST",
+      body: {
+        password,
+        ...(options?.currentPassword !== undefined
+          ? { currentPassword: options.currentPassword }
+          : {}),
+      },
+    });
     if (options?.returnToLogin)
       window.history.replaceState(null, "", "/login?senha=alterada");
     clearState();

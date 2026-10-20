@@ -12,9 +12,11 @@ export const platformUser = {
   createdAt: "2026-10-13T12:00:00.000Z",
   updatedAt: "2026-10-13T12:00:00.000Z",
 };
-export const apiUrl = "http://127.0.0.1:43001";
+export const apiUrl =
+  process.env.STUDIO_TEST_API_URL ?? "http://127.0.0.1:43001";
 export const corsHeaders = {
-  "Access-Control-Allow-Origin": "http://127.0.0.1:3103",
+  "Access-Control-Allow-Origin":
+    process.env.STUDIO_TEST_ORIGIN ?? "http://127.0.0.1:3103",
   "Access-Control-Allow-Credentials": "true",
   "Access-Control-Allow-Headers": "Content-Type,X-CSRF-Token",
   "Access-Control-Allow-Methods": "GET,POST,PUT,PATCH,DELETE,OPTIONS",
@@ -161,7 +163,7 @@ export async function mockAuth(
       );
       if (valid) await authenticate();
       const destination =
-        "http://127.0.0.1:3103" +
+        corsHeaders["Access-Control-Allow-Origin"] +
         (type === "recovery" ? "/redefinir-senha" : "/auth/callback") +
         "?status=" +
         (valid ? "success" : "invalid");
@@ -188,6 +190,8 @@ export async function mockAuth(
       if (status === 401) await page.context().clearCookies();
     } else if (path === "/clients") {
       value = { clients: [] };
+    } else if (/^\/clients\/[^/]+\/logo$/.test(path)) {
+      value = { url: null };
     } else if (path === "/feeds") {
       value = { feeds: [] };
     } else if (path === "/projects") {

@@ -37,6 +37,10 @@ export async function mockWorkspace(
       await route.fulfill({ status: 204, headers: corsHeaders });
       return;
     }
+    if (path.endsWith("/logo")) {
+      await route.fallback();
+      return;
+    }
     const body = request.postData()
       ? (request.postDataJSON() as Record<string, unknown>)
       : null;

@@ -1,4 +1,5 @@
-import { normalizeMobilePhone } from "./phone";
+import { formatMobilePhone, normalizeMobilePhone } from "./phone";
+import { isValidPassword, PASSWORD_HELP } from "./password";
 import { useRef, useState } from "react";
 import type { FormEvent } from "react";
 import {
@@ -114,8 +115,11 @@ export default function AuthPages({ mode }: { mode: Mode }) {
       rejectField(field, messages[field]);
       return;
     }
-    if (mode === "signup" && name.trim().length < 2) {
-      rejectField("name", "Informe seu nome.");
+    if (
+      mode === "signup" &&
+      (name.trim().length < 2 || name.trim().length > 60)
+    ) {
+      rejectField("name", "Informe um nome entre 2 e 60 caracteres.");
       return;
     }
     const mobilePhone = mode === "signup" ? normalizeMobilePhone(phone) : null;
@@ -124,6 +128,10 @@ export default function AuthPages({ mode }: { mode: Mode }) {
         "phone",
         "Informe um celular brasileiro com DDD e 9 dígitos. Exemplo: (11) 99999-9999.",
       );
+      return;
+    }
+    if ((mode === "signup" || mode === "reset") && !isValidPassword(password)) {
+      rejectField("password", PASSWORD_HELP);
       return;
     }
     if (mode === "reset" && password !== confirmation) {
@@ -281,7 +289,7 @@ export default function AuthPages({ mode }: { mode: Mode }) {
                   autoComplete="name"
                   required
                   minLength={2}
-                  maxLength={120}
+                  maxLength={60}
                   name="name"
                   aria-label="Seu nome"
                   aria-invalid={invalidField === "name" || undefined}
@@ -331,7 +339,7 @@ export default function AuthPages({ mode }: { mode: Mode }) {
                   inputMode="tel"
                   autoComplete="tel"
                   required
-                  maxLength={25}
+                  maxLength={19}
                   name="phone"
                   aria-label="Celular (com DDD)"
                   aria-invalid={invalidField === "phone" || undefined}
@@ -340,7 +348,7 @@ export default function AuthPages({ mode }: { mode: Mode }) {
                   }
                   value={phone}
                   onChange={(event) => {
-                    setPhone(event.target.value);
+                    setPhone(formatMobilePhone(event.target.value));
                     clearFieldError("phone");
                   }}
                   placeholder="(11) 99999-9999"
@@ -374,7 +382,9 @@ export default function AuthPages({ mode }: { mode: Mode }) {
                     aria-describedby={
                       invalidField === "password"
                         ? "auth-password-error"
-                        : undefined
+                        : mode !== "login"
+                          ? "auth-password-help"
+                          : undefined
                     }
                     value={password}
                     onChange={(event) => {
@@ -397,6 +407,9 @@ export default function AuthPages({ mode }: { mode: Mode }) {
                     {visible ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
+                {mode !== "login" && (
+                  <small id="auth-password-help">{PASSWORD_HELP}</small>
+                )}
                 {fieldMessage("password")}
               </label>
             )}
