@@ -27,14 +27,21 @@ function Home() {
       <PlatformHeader onSignOut={auth.signOut} />
 
       <Workspace>
-        <span className="auth-eyebrow">SEU ESPAÇO CRIATIVO</span>
-        <h1>
-          Bem-vindo
-          {auth.identity?.name ? ", " + auth.identity.name.split(" ")[0] : ""}.
-        </h1>
-        <p className="platform-intro">
-          Organize seu dia e dê espaço às próximas ideias.
-        </p>
+        <header className="studio-hero studio-page-heading">
+          <div>
+            <span className="auth-eyebrow">SEU ESPAÇO CRIATIVO</span>
+            <h1>
+              Bem-vindo
+              {auth.identity?.name
+                ? ", " + auth.identity.name.split(" ")[0]
+                : ""}
+              .
+            </h1>
+            <p className="platform-intro">
+              Organize seu dia e dê espaço às próximas ideias.
+            </p>
+          </div>
+        </header>
         <TaskPlanner />
         <section className="platform-demo">
           <div>

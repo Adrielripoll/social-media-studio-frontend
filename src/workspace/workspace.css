@@ -1,14 +1,14 @@
 .platform-layout {
   display: grid;
-  grid-template-columns: 260px minmax(0, 1fr);
-  max-width: 1500px;
+  grid-template-columns: 228px minmax(0, 1fr);
+  max-width: 1660px;
   margin: auto;
   min-height: calc(100dvh - 90px);
 }
 .workspace-sidebar {
   background: #fff;
-  border-right: 1px solid #e8e8df;
-  padding: 28px 18px;
+  border-right: 1px solid var(--line);
+  padding: 30px 16px;
   min-width: 0;
 }
 .workspace-sidebar nav {
@@ -25,15 +25,24 @@
   background: transparent;
   text-align: left;
   border-radius: var(--radius-control);
-  padding: 11px 12px;
-  font-size: 12px;
+  padding: 13px 14px;
+  font-size: var(--text-sm);
+  font-weight: 600;
   color: var(--text-secondary);
+  transition:
+    background 0.18s,
+    color 0.18s;
 }
 .workspace-nav-button:hover,
-.workspace-client-link:hover,
+.workspace-client-link:hover {
+  background: var(--surface-soft);
+  color: var(--accent);
+}
 .workspace-sidebar .is-active {
-  background: #f8f0e5;
-  color: var(--text-secondary);
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-weight: 700;
+  box-shadow: inset 3px 0 var(--accent);
 }
 .workspace-sidebar svg {
   flex-shrink: 0;
@@ -53,7 +62,7 @@
   padding-left: 12px;
 }
 .workspace-client-group {
-  border-bottom: 1px solid #f2eee6;
+  border-bottom: 1px solid var(--line);
   padding-bottom: 6px;
 }
 .workspace-client-link {
@@ -74,6 +83,8 @@
   align-self: start;
   width: 100%;
   min-width: 0;
+  max-width: none;
+  padding: 30px 34px 48px;
 }
 .workspace-page-heading {
   display: flex;
@@ -99,11 +110,34 @@
 }
 .workspace-cards {
   display: grid;
-  gap: 14px;
+  gap: 20px;
+}
+.workspace-client-cards {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 310px), 1fr));
+}
+.workspace-client-card {
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.workspace-client-info {
+  flex: 1;
+}
+.workspace-client-avatar,
+.feed-library-symbol {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 15px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-family: var(--heading-font);
+  font-size: 22px;
 }
 .workspace-card {
   background: #fff;
-  border: 1px solid #e8e8df;
+  border: 1px solid var(--line);
   border-radius: var(--radius-card);
   padding: 23px;
   display: flex;
@@ -145,11 +179,13 @@
 }
 .workspace-empty {
   padding: 30px;
-  border: 1px dashed #ded8cb;
+  border: 1px dashed var(--line);
   border-radius: var(--radius-card);
   font-size: 13px;
   line-height: 1.8;
   color: var(--text-secondary);
+  background: var(--surface);
+  grid-column: 1 / -1;
 }
 .workspace-error {
   display: flex;
@@ -181,16 +217,16 @@
 .workspace-form select {
   width: 100%;
   min-width: 0;
-  border: 1px solid #e4dccd;
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-control);
-  background: #fffefa;
+  background: var(--surface);
   padding: 12px;
   font-size: 13px;
-  color: #605644;
+  color: var(--text-primary);
 }
 .workspace-form input:focus,
 .workspace-form select:focus {
-  outline: 2px solid #edcfaa;
+  outline: 2px solid var(--focus);
 }
 .workspace-form small {
   font-size: 11px;
@@ -199,16 +235,18 @@
 .workspace-form .workspace-error {
   margin: 0;
 }
-@media (max-width: 850px) {
+@media (max-width: 1100px) {
   .platform-layout {
-    grid-template-columns: 200px minmax(0, 1fr);
+    grid-template-columns: 190px minmax(0, 1fr);
   }
   .workspace-sidebar {
     padding: 24px 10px;
   }
-  .workspace-content {
-    padding: 35px 22px;
+  .platform-layout > .workspace-content {
+    padding-inline: 24px;
   }
+}
+@media (max-width: 850px) {
   .workspace-page-heading {
     flex-direction: column;
   }
@@ -222,7 +260,7 @@
   }
   .workspace-sidebar {
     border-right: 0;
-    border-bottom: 1px solid #e8e8df;
+    border-bottom: 1px solid var(--line);
     max-height: 300px;
     overflow-y: auto;
   }
@@ -258,15 +296,35 @@
   }
 }
 
-.feed-create-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin: 20px 0;
+.workspace-page > .feed-library,
+.workspace-page > .dashboard-library {
+  margin-top: 32px;
+}
+.feed-library-cards {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr));
+  align-items: start;
+}
+.feed-library-empty {
+  display: grid;
+  justify-items: center;
+  gap: 16px;
+  padding: 48px 24px;
+  border-style: solid;
+  text-align: center;
+}
+.feed-library-empty h3 {
+  color: var(--text-primary);
+  font-size: 24px;
+}
+.feed-library-empty .feed-library-symbol {
+  width: 64px;
+  height: 64px;
+  border-radius: 20px;
 }
 .field select {
   width: 100%;
   padding: 10px;
-  border: 1px solid var(--border, #ddd);
+  border: 1px solid var(--control-border);
   border-radius: var(--radius-control);
   background: white;
   font: inherit;
@@ -301,7 +359,7 @@
   width: 100%;
   max-width: 360px;
   margin: 18px auto 0;
-  border: 1px solid #ebe8e1;
+  border: 1px solid var(--line);
   border-radius: 9px;
   overflow: hidden;
   background: #fff;
@@ -341,12 +399,12 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 2px;
-  border-top: 1px solid #efede7;
+  border-top: 1px solid var(--line);
 }
 .feed-preview-post {
   position: relative;
   aspect-ratio: 3/4;
-  background: #f3f1eb;
+  background: var(--surface-soft);
   overflow: hidden;
 }
 .feed-preview-post img {
@@ -387,7 +445,7 @@
   padding: 1.25rem;
   margin-bottom: 1.5rem;
   background: var(--surface, #fff);
-  border: 1px solid var(--border, #e5e7eb);
+  border: 1px solid var(--line);
   border-radius: 16px;
 }
 .client-logo-image {
@@ -396,7 +454,7 @@
   flex-shrink: 0;
   display: grid;
   place-items: center;
-  border: 1px solid var(--border, #e5e7eb);
+  border: 1px solid var(--line);
   border-radius: 16px;
   color: var(--muted, #6b7280);
   overflow: hidden;

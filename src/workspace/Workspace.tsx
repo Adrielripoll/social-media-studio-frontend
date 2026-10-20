@@ -234,7 +234,7 @@ export default function Workspace({ children }: { children: ReactNode }) {
           <Pencil size={16} />
         </button>
         <button
-          className="task-icon-button"
+          className="task-icon-button danger"
           aria-label={"Excluir cliente " + client.name}
           disabled={disabled}
           onClick={() => {
@@ -408,7 +408,7 @@ export default function Workspace({ children }: { children: ReactNode }) {
         ) : (
           <section aria-label="Gerenciar clientes" className="workspace-page">
             <header
-              className="workspace-page-heading"
+              className="workspace-page-heading studio-page-heading studio-hero"
               role={selectedClient ? "article" : undefined}
               aria-label={
                 selectedClient ? "Cliente " + selectedClient.name : undefined
@@ -417,6 +417,11 @@ export default function Workspace({ children }: { children: ReactNode }) {
               <div>
                 <span className="task-eyebrow">SEU ESPAÇO DE TRABALHO</span>
                 <h1>{selectedClient?.name ?? "Clientes"}</h1>
+                <p>
+                  {selectedClient
+                    ? "Seus feeds e resultados, reunidos em um só lugar."
+                    : "Organize suas marcas e mantenha cada trabalho por perto."}
+                </p>
               </div>
               {selectedClient && clientActions(selectedClient)}
               {view.kind === "clients" && (
@@ -457,7 +462,7 @@ export default function Workspace({ children }: { children: ReactNode }) {
                   </button>
                 </div>
               )}
-            <div className="workspace-cards">
+            <div className="workspace-cards workspace-client-cards">
               {!loading &&
                 !error &&
                 view.kind === "clients" &&
@@ -469,10 +474,13 @@ export default function Workspace({ children }: { children: ReactNode }) {
               {visibleClients.map((client) => (
                 <article
                   key={client.id}
-                  className="workspace-card"
+                  className="workspace-card workspace-client-card"
                   aria-label={"Cliente " + client.name}
                 >
-                  <div>
+                  <span className="workspace-client-avatar" aria-hidden="true">
+                    {client.name.trim().charAt(0).toLocaleUpperCase("pt-BR")}
+                  </span>
+                  <div className="workspace-client-info">
                     <span className="workspace-card-label">CLIENTE</span>
                     <h2>{client.name}</h2>
                   </div>

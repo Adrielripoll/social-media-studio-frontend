@@ -37,7 +37,7 @@ O perfil da plataforma e o token CSRF ficam em memória. As chaves legadas de se
 | /recuperar-senha | Solicitar recuperação                     |
 | /redefinir-senha | Definir senha com uma sessão válida       |
 | /simulador       | Simulador autenticado, salvo na conta     |
-| /demonstracao     | Demonstração pública local separada       |
+| /demonstracao    | Demonstração pública local separada       |
 
 O celular brasileiro é normalizado para +55DDDNÚMERO. O backend valida os dados novamente; o celular é contato sem confirmação por SMS.
 
@@ -52,6 +52,15 @@ As imagens são preparadas em WebP, limitadas a 1.600 pixels no maior lado ou 60
 A fase 3 está implementada: a página inicial mostra hoje e um calendário mensal. O menu da data permite criar tarefas, editar apenas o título, concluir/reabrir e excluir com confirmação. A lista principal permanece em hoje. As tarefas persistem no backend, com fuso America/Sao_Paulo e criação apenas para hoje/futuro.
 
 Consulte [Calendário e tarefas](../social-media-studio-backend/docs/calendario-e-tarefas.md). A integração de feeds e Storage fica para a fase 5; a cobrança permanece independente desta entrega.
+
+## Interface
+
+A interface compartilha o padrão visual dos dashboards: fontes Manrope e Space
+Grotesk, ações em violeta, fundo lilás claro, superfícies brancas e cabeçalhos
+escuros. Os tokens, controles e cabeçalhos compartilhados ficam em
+`src/design-system.css`; os estilos de cada ferramenta cuidam de seu layout.
+Início, clientes, feeds, editor, autenticação e conta usam essa mesma base.
+A prévia do Instagram mantém a aparência da rede social.
 
 ## Verificação
 

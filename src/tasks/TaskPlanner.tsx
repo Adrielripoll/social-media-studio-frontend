@@ -279,7 +279,7 @@ export default function TaskPlanner() {
           {...actions}
           key={today}
           tasks={todayTasks}
-          visibleLimit={6}
+          visibleLimit={5}
           referenceDate={today}
           empty={
             loading

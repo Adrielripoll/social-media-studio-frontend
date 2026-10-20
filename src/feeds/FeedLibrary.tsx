@@ -5,36 +5,48 @@ import { LayoutGrid, Plus, RefreshCw } from "lucide-react";
 import { ApiError } from "../auth/api";
 import { createFeed, listFeeds, deleteFeed } from "./api";
 import type { FeedSummary } from "./api";
+
 export default function FeedLibrary({ clientId }: { clientId?: string }) {
   const [feeds, setFeeds] = useState<FeedSummary[]>([]);
-  const [loading, setLoading] = useState(true),
-    [busy, setBusy] = useState(false);
-  const [error, setError] = useState(""),
-    [reload, setReload] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [reload, setReload] = useState(0);
+
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);
     setError("");
     void listFeeds(controller.signal)
       .then((value) => {
-        if (!controller.signal.aborted)
-          setFeeds(value.filter((feed) => !clientId || feed.clientId === clientId));
+        if (!controller.signal.aborted) {
+          setFeeds(
+            value.filter((feed) => !clientId || feed.clientId === clientId),
+          );
+        }
       })
       .catch((reason) => {
-        if (!controller.signal.aborted)
+        if (!controller.signal.aborted) {
           setError(
             reason instanceof ApiError
               ? reason.message
               : "Não foi possível carregar os feeds.",
           );
+        }
       })
       .finally(() => {
-        if (!controller.signal.aborted) setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       });
     return () => controller.abort();
   }, [clientId, reload]);
+
   async function create() {
-    if (busy) return;
+    if (busy) {
+      return;
+    }
+
     setBusy(true);
     setError("");
     try {
@@ -47,25 +59,38 @@ export default function FeedLibrary({ clientId }: { clientId?: string }) {
       );
     } catch (reason) {
       setError(
-        reason instanceof ApiError ? reason.message : "Não foi possível criar o feed.",
+        reason instanceof ApiError
+          ? reason.message
+          : "Não foi possível criar o feed.",
       );
       setBusy(false);
     }
   }
+
   return (
-    <section className="workspace-page" aria-label="Seus feeds">
-      <header className="workspace-page-heading">
+    <section className="workspace-page feed-library" aria-label="Seus feeds">
+      <header
+        className={
+          "workspace-page-heading " +
+          (clientId
+            ? "studio-section-heading"
+            : "studio-page-heading studio-hero")
+        }
+      >
         <div>
-          <h2>{clientId ? "Feeds deste cliente" : "Seus feeds"}</h2>
+          <span className="task-eyebrow">SEU ESTÚDIO CRIATIVO</span>
+          {clientId ? <h2>Feeds deste cliente</h2> : <h1>Seus feeds</h1>}
           <p>Crie e apresente seus perfis fictícios do Instagram.</p>
         </div>
-      </header>
-      <div className="feed-create-actions">
-        <button className="button primary" disabled={busy} onClick={() => void create()}>
+        <button
+          className="button primary"
+          disabled={busy}
+          onClick={() => void create()}
+        >
           <Plus size={16} />
           {busy ? "Criando…" : "Criar feed"}
         </button>
-      </div>
+      </header>
       {loading && <p role="status">Carregando feeds…</p>}
       {error && (
         <div className="workspace-error" role="alert">
@@ -80,16 +105,32 @@ export default function FeedLibrary({ clientId }: { clientId?: string }) {
         </div>
       )}
       {!loading && !error && !feeds.length && (
-        <p className="workspace-empty">Nenhum feed criado ainda.</p>
+        <div className="workspace-empty feed-library-empty">
+          <span className="feed-library-symbol" aria-hidden="true">
+            <LayoutGrid size={28} />
+          </span>
+          <h3>Dê espaço à sua próxima ideia.</h3>
+          <p>Nenhum feed criado ainda.</p>
+        </div>
       )}
-      <div className={"workspace-cards" + (clientId ? " feed-preview-cards" : "")}>
+      <div
+        className={
+          "workspace-cards feed-library-cards" +
+          (clientId ? " feed-preview-cards" : "")
+        }
+      >
         {feeds.map((feed) => (
           <article
-            className={"workspace-card" + (clientId ? " workspace-feed-card" : "")}
+            className={
+              "workspace-card" + (clientId ? " workspace-feed-card" : "")
+            }
             key={feed.id}
             aria-label={"Feed " + feed.name}
           >
             <div className="feed-card-header">
+              <span className="feed-library-symbol" aria-hidden="true">
+                <LayoutGrid size={22} />
+              </span>
               <div>
                 <span className="workspace-card-label">INSTAGRAM</span>
                 <h3>{feed.name}</h3>
@@ -121,7 +162,9 @@ export default function FeedLibrary({ clientId }: { clientId?: string }) {
                   className="button secondary"
                   href={feedEditorUrl(
                     feed.id,
-                    clientId ? { kind: "client", id: clientId } : { kind: "feeds" },
+                    clientId
+                      ? { kind: "client", id: clientId }
+                      : { kind: "feeds" },
                   )}
                 >
                   <LayoutGrid size={16} />

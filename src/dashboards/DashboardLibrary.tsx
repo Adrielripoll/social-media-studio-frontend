@@ -62,9 +62,18 @@ export default function DashboardLibrary({
       className="dashboard-library workspace-page"
       aria-label={clientId ? "Dashboards deste cliente" : "Seus dashboards"}
     >
-      <header className="workspace-page-heading dashboard-library-heading dashboard-hero">
+      <header
+        className={
+          "workspace-page-heading " +
+          (clientId
+            ? "studio-section-heading"
+            : "dashboard-library-heading dashboard-hero")
+        }
+      >
         <div>
-          <span className="dashboard-hero-eyebrow">
+          <span
+            className={clientId ? "task-eyebrow" : "dashboard-hero-eyebrow"}
+          >
             RESULTADOS QUE CONTAM UMA HISTÓRIA
           </span>
           {clientId ? (
