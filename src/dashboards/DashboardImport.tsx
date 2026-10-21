@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from "react";
-import { Download, FileSpreadsheet, LoaderCircle, RefreshCw } from "lucide-react";
+import { FileSpreadsheet, LoaderCircle, RefreshCw } from "lucide-react";
 import Dialog from "../components/Dialog";
 import {
   confirmImport,
+  DAILY_METRICS,
   errorMessage,
   getImportSchema,
-  METRICS,
   previewImport,
 } from "./api";
 import type { Dashboard, ImportPreview, ImportSchema } from "./api";
 import { formatCount, periodLabel } from "./metrics";
+
 export default function DashboardImport({
   dashboard,
   onImported,
@@ -19,15 +20,14 @@ export default function DashboardImport({
   onImported: (value: Dashboard) => void;
   onClose: () => void;
 }) {
-  const [schema, setSchema] = useState<ImportSchema | null>(null),
-    [reload, setReload] = useState(0);
-  const [preview, setPreview] = useState<ImportPreview | null>(null),
-    [filename, setFilename] = useState("");
-  const [error, setError] = useState(""),
-    [reading, setReading] = useState(false),
-    [saving, setSaving] = useState(false);
-  const input = useRef<HTMLInputElement>(null),
-    file = useRef<File | null>(null);
+  const [schema, setSchema] = useState<ImportSchema | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
+  const [sheets, setSheets] = useState<string[]>([]);
+  const [preview, setPreview] = useState<ImportPreview | null>(null);
+  const [error, setError] = useState("");
+  const [reading, setReading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [reload, setReload] = useState(0);
   const request = useRef<AbortController | null>(null);
   const busy = reading || saving;
   useEffect(() => {
@@ -35,285 +35,302 @@ export default function DashboardImport({
     setError("");
     void getImportSchema(controller.signal)
       .then((value) => {
-        if (!controller.signal.aborted) setSchema(value);
+        if (!controller.signal.aborted) {
+          setSchema(value);
+        }
       })
       .catch((reason) => {
-        if (!controller.signal.aborted) setError(errorMessage(reason));
+        if (!controller.signal.aborted) {
+          setError(errorMessage(reason));
+        }
       });
     return () => controller.abort();
   }, [reload]);
-  useEffect(
-    () => () => {
-      request.current?.abort();
-      file.current = null;
-    },
-    [],
-  );
-  async function readFile(value: File, sheet?: string) {
+  useEffect(() => () => request.current?.abort(), []);
+
+  async function readFiles(values: File[], selection: string[] = []) {
     request.current?.abort();
     const controller = new AbortController();
     request.current = controller;
+    setFiles(values);
+    setSheets(selection);
     setPreview(null);
     setError("");
-    setFilename(value.name);
-    file.current = value;
+    setReading(false);
+    if (!values.length) {
+      return;
+    }
     if (
-      !/\.(xlsx|csv)$/i.test(value.name) ||
-      value.size > (schema?.maxBytes ?? 5 * 1024 * 1024)
+      values.length > (schema?.maxFiles ?? 6) ||
+      values.some(
+        (file) =>
+          !/\.(csv|xlsx)$/i.test(file.name) ||
+          file.size > (schema?.maxBytes ?? 5 * 1024 * 1024),
+      )
     ) {
-      setError("Selecione um arquivo XLSX ou CSV de até 5 MB.");
+      setError("Selecione até 6 arquivos XLSX ou CSV, com até 5 MB cada.");
       return;
     }
     setReading(true);
     try {
-      const result = await previewImport(dashboard.id, value, sheet, controller.signal);
-      if (!controller.signal.aborted) setPreview(result);
+      const value = await previewImport(
+        dashboard.id,
+        values,
+        selection,
+        controller.signal,
+      );
+      if (!controller.signal.aborted) {
+        setPreview(value);
+        setSheets(value.files.map((file) => file.selectedSheet));
+      }
     } catch (reason) {
-      if (!controller.signal.aborted) setError(errorMessage(reason));
+      if (!controller.signal.aborted) {
+        setError(errorMessage(reason));
+      }
     } finally {
-      if (!controller.signal.aborted) setReading(false);
+      if (!controller.signal.aborted) {
+        setReading(false);
+      }
     }
   }
-  function download() {
-    if (!schema) return;
-    const url = URL.createObjectURL(
-      new Blob([schema.exampleCsv], { type: "text/csv;charset=utf-8" }),
-    );
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = "modelo-dashboard-instagram.csv";
-    link.click();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-  }
+
   async function confirm() {
-    if (busy || !preview?.valid) return;
+    if (busy || !preview?.valid) {
+      return;
+    }
     setSaving(true);
     setError("");
     try {
-      onImported(await confirmImport(dashboard.id, dashboard.revision, preview.periods));
+      onImported(
+        await confirmImport(dashboard.id, preview.revision, preview.points),
+      );
     } catch (reason) {
       setError(errorMessage(reason));
+      // A new preview is required after a revision conflict or an uncertain response.
+      setPreview(null);
     } finally {
       setSaving(false);
     }
   }
+  const dates = [...new Set(preview?.points.map((point) => point.date))].sort();
+  const byPoint = new Map(
+    preview?.points.map((point) => [
+      point.date + "/" + point.metric,
+      point.value,
+    ]),
+  );
   return (
     <Dialog
-      title="Importar resultados"
-      onClose={onClose}
+      title="Importar resultados da Meta"
       busy={busy}
-      className="dashboard-import-dialog"
+      onClose={onClose}
+      className="workspace-dialog dashboard-import-dialog"
     >
-      <p className="dialog-intro">
-        Uma linha por período. Confira os dados antes de confirmar; o arquivo não ficará
-        armazenado.
-      </p>
-      {schema ? (
-        <>
-          <div className="dashboard-import-actions">
-            <button className="button secondary" onClick={download}>
-              <Download size={16} />
-              Baixar planilha modelo
-            </button>
-            <span className="workspace-muted">
-              O modelo contém exemplos. Substitua pelos seus resultados.
-            </span>
-          </div>
-          <details className="dashboard-schema" open={!preview}>
-            <summary>Modelo das colunas</summary>
+      <div className="workspace-form">
+        <div className="dashboard-import-intro">
+          <FileSpreadsheet size={28} aria-hidden="true" />
+          <div>
+            <h3>Do Meta Business direto para o relatório</h3>
             <p>
-              Use datas AAAA-MM-DD ou DD/MM/AAAA e números inteiros, como 1234 ou 1.234.
-              Colunas em qualquer ordem; pelo menos uma métrica por período. Deixe vazio o
-              que não foi medido.
+              Selecione uma ou várias exportações de métricas. Mantenha o título
+              e as colunas Data e Primary; não é necessário preencher um modelo.
             </p>
-            <div
-              className="dashboard-table-scroll"
-              tabIndex={0}
-              role="region"
-              aria-label="Modelo de colunas"
-            >
-              <table>
-                <caption className="visually-hidden">
-                  Colunas aceitas na importação
-                </caption>
-                <thead>
-                  <tr>
-                    <th>Coluna</th>
-                    <th>Significado</th>
-                    <th>Obrigatória</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {schema.columns.map((column) => (
-                    <tr key={column.column}>
-                      <td>
-                        <code>{column.column}</code>
-                      </td>
-                      <td>{column.label}</td>
-                      <td>{column.required ? "Sim" : "Não"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </details>
-          <div className="dashboard-import-actions">
-            <input
-              ref={input}
-              className="visually-hidden"
-              type="file"
-              accept=".xlsx,.csv"
-              aria-label="Selecionar planilha de resultados"
-              disabled={busy}
-              onChange={(event) => {
-                const next = event.target.files?.[0];
-                if (next) void readFile(next);
-                event.target.value = "";
-              }}
-            />
-            <button
-              className="button primary"
-              disabled={busy}
-              onClick={() => input.current?.click()}
-            >
-              <FileSpreadsheet size={18} />
-              {filename ? "Trocar planilha" : "Selecionar planilha"}
-            </button>
-            <span className="workspace-muted">
-              {filename || "XLSX ou CSV · até 5 MB e 500 períodos"}
-            </span>
           </div>
-        </>
-      ) : (
-        !error && (
-          <p className="workspace-muted" role="status">
-            Carregando modelo…
-          </p>
-        )
-      )}
-      {reading && (
-        <p className="dashboard-status" role="status">
-          <LoaderCircle className="spin" size={18} />
-          Lendo e validando a planilha…
+        </div>
+        <p>
+          Importando em <strong>{dashboard.name}</strong>
+          {dashboard.accountName ? " · " + dashboard.accountName : ""}. Confira
+          se todos os arquivos pertencem ao mesmo perfil.
         </p>
-      )}
-      {error && (
-        <div className="workspace-error" role="alert">
-          <span>{error}</span>
-          {!schema && (
-            <button className="button secondary" onClick={() => setReload((v) => v + 1)}>
+        <p className="dashboard-hint">
+          Até {schema?.maxFiles ?? 6} arquivos, 5 MB cada e{" "}
+          {schema?.maxRows ?? 1096} dias por arquivo. XLSX com várias abas
+          permite escolher a aba de cada arquivo. Nenhum arquivo será
+          armazenado.
+        </p>
+        <label>
+          Selecionar planilhas da Meta
+          <input
+            type="file"
+            accept=".csv,.xlsx"
+            multiple
+            disabled={busy || !schema}
+            onChange={(event) => {
+              void readFiles(Array.from(event.target.files ?? []));
+              event.target.value = "";
+            }}
+          />
+        </label>
+        {error && (
+          <div className="workspace-error" role="alert">
+            <span>{error}</span>
+            <button
+              className="button secondary"
+              disabled={busy}
+              onClick={() =>
+                schema && files.length
+                  ? void readFiles(files, sheets)
+                  : setReload((value) => value + 1)
+              }
+            >
               <RefreshCw size={16} />
               Tentar novamente
             </button>
-          )}
-        </div>
-      )}
-      {preview && (
-        <>
-          {preview.sheetNames.length > 1 && (
-            <label className="field">
-              <span>Aba da planilha</span>
-              <select
-                aria-label="Aba da planilha"
-                value={preview.selectedSheet}
-                disabled={busy}
-                onChange={(event) => {
-                  if (file.current) void readFile(file.current, event.target.value);
-                }}
-              >
-                {preview.sheetNames.map((name) => (
-                  <option key={name}>{name}</option>
-                ))}
-              </select>
-            </label>
-          )}
-          {!!preview.warnings.length && (
-            <div className="dashboard-notice" role="status">
-              {preview.warnings.map((warning) => (
-                <p key={warning}>{warning}</p>
+          </div>
+        )}
+        {reading && (
+          <p role="status">
+            <LoaderCircle className="spin" size={18} /> Lendo e validando os
+            arquivos…
+          </p>
+        )}
+        {preview && (
+          <>
+            <ul
+              className="dashboard-import-files"
+              aria-label="Arquivos selecionados"
+            >
+              {preview.files.map((file, index) => (
+                <li key={index}>
+                  <strong>{file.filename}</strong>
+                  <span>
+                    {DAILY_METRICS.find((metric) => metric.key === file.metric)
+                      ?.label ?? "Métrica não reconhecida"}{" "}
+                    · {file.rowCount} linhas
+                  </span>
+                  {file.startDate && file.endDate && (
+                    <small>
+                      {periodLabel({
+                        startDate: file.startDate,
+                        endDate: file.endDate,
+                      })}
+                    </small>
+                  )}
+                  {file.filledZeros > 0 && (
+                    <small>
+                      {file.filledZeros} dia(s) sem novos seguidores
+                      preenchido(s) com zero.
+                    </small>
+                  )}
+                  {file.sheetNames.length > 1 && (
+                    <label>
+                      Aba de {file.filename}
+                      <select
+                        aria-label={"Aba de " + file.filename}
+                        disabled={busy}
+                        value={file.selectedSheet}
+                        onChange={(event) => {
+                          const next = [...sheets];
+                          next[index] = event.target.value;
+                          void readFiles(files, next);
+                        }}
+                      >
+                        {file.sheetNames.map((sheet) => (
+                          <option key={sheet}>{sheet}</option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
+                </li>
               ))}
-            </div>
-          )}
-          {!preview.valid && (
-            <div className="workspace-error dashboard-import-errors" role="alert">
-              <strong>Corrija a planilha antes de importar.</strong>
-              <ul>
-                {preview.issues.map((issue, index) => (
-                  <li key={index}>
-                    {issue.row ? "Linha " + issue.row : "Arquivo"}
-                    {issue.column ? " · " + issue.column : ""}: {issue.message}
-                  </li>
-                ))}
-              </ul>
-              {preview.issueCount > preview.issues.length && (
-                <p>
-                  Mostrando os primeiros {preview.issues.length} de {preview.issueCount}{" "}
-                  problemas.
-                </p>
-              )}
-            </div>
-          )}
-          <div className="dashboard-preview-heading">
-            <h3>Prévia dos resultados</h3>
-            <span>
-              {preview.rowCount} {preview.rowCount === 1 ? "período" : "períodos"}
-            </span>
-          </div>
-          <div
-            className="dashboard-table-scroll"
-            tabIndex={0}
-            role="region"
-            aria-label="Prévia dos resultados"
-          >
-            <table>
-              <caption>
-                Primeiros {Math.min(8, preview.periods.length)} períodos. Nenhum dado foi
-                salvo.
-              </caption>
-              <thead>
-                <tr>
-                  <th>Período</th>
-                  {METRICS.map((metric) => (
-                    <th key={metric.key}>{metric.label}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {preview.periods.slice(0, 8).map((period, index) => (
-                  <tr key={index}>
-                    <td>{periodLabel(period)}</td>
-                    {METRICS.map((metric) => (
-                      <td key={metric.key}>{formatCount(period[metric.key])}</td>
+            </ul>
+            {preview.warnings.map((warning, index) => (
+              <p className="dashboard-notice" key={index}>
+                {warning}
+              </p>
+            ))}
+            {!preview.valid && (
+              <div className="workspace-error" role="alert">
+                <div>
+                  <strong>
+                    Corrija {preview.issueCount} problema(s) antes de importar.
+                  </strong>
+                  <ul>
+                    {preview.issues.map((issue, index) => (
+                      <li key={index}>
+                        {issue.filename}
+                        {issue.row ? " · linha " + issue.row : ""}
+                        {issue.column ? " · " + issue.column : ""}:{" "}
+                        {issue.message}
+                      </li>
                     ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          {!!dashboard.periods.length && (
-            <p className="dashboard-notice">
-              Ao confirmar, os {dashboard.periods.length} períodos atuais serão
-              substituídos pelos dados desta planilha. Nome, cliente e análise serão
-              mantidos.
+                  </ul>
+                </div>
+              </div>
+            )}
+            {preview.valid && (
+              <>
+                <p className="dashboard-success" role="status">
+                  Prévia pronta: {preview.changes.created} novos valores,{" "}
+                  {preview.changes.updated} atualizações e{" "}
+                  {preview.changes.unchanged} valores sem alteração.
+                </p>
+                <div
+                  className="dashboard-table-scroll"
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Prévia dos resultados diários"
+                >
+                  <table>
+                    <caption>
+                      Primeiros {Math.min(8, dates.length)} de {dates.length}{" "}
+                      dias da importação
+                    </caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">Data</th>
+                        {DAILY_METRICS.map((metric) => (
+                          <th scope="col" key={metric.key}>
+                            {metric.label}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dates.slice(0, 8).map((date) => (
+                        <tr key={date}>
+                          <th scope="row">
+                            {date.split("-").reverse().join("/")}
+                          </th>
+                          {DAILY_METRICS.map((metric) => (
+                            <td key={metric.key}>
+                              {formatCount(
+                                byPoint.get(date + "/" + metric.key),
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </>
+            )}
+            <p className="dashboard-hint">
+              Somente os dias e métricas enviados serão atualizados. Os demais
+              resultados e os relatórios antigos serão preservados. Dias
+              ausentes de seguidores, entre a primeira e a última data desse
+              arquivo, equivalem a zero; outras lacunas permanecem sem
+              informação.
             </p>
-          )}
-        </>
-      )}
-      <div className="dialog-actions">
-        <button className="button secondary" onClick={onClose} disabled={busy}>
-          Cancelar
-        </button>
-        <button
-          className="button primary"
-          onClick={() => void confirm()}
-          disabled={busy || !preview?.valid}
-        >
-          {saving
-            ? "Importando…"
-            : dashboard.periods.length
-              ? "Confirmar e substituir períodos"
-              : "Confirmar importação"}
-        </button>
+          </>
+        )}
+        <div className="dialog-actions">
+          <button
+            className="button secondary"
+            disabled={busy}
+            onClick={onClose}
+          >
+            Cancelar
+          </button>
+          <button
+            className="button primary"
+            disabled={busy || !preview?.valid}
+            onClick={() => void confirm()}
+          >
+            {saving ? "Importando…" : "Confirmar importação"}
+          </button>
+        </div>
       </div>
     </Dialog>
   );

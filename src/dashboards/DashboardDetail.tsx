@@ -30,6 +30,7 @@ import {
   getDashboard,
   updateDashboard,
 } from "./api";
+import { DAILY_METRICS } from "./api";
 import type { Dashboard, Period } from "./api";
 import {
   engagementRate,
@@ -41,9 +42,25 @@ import {
 } from "./metrics";
 const DashboardCharts = lazy(() => import("./DashboardCharts"));
 import DashboardImport from "./DashboardImport";
+import {
+  dailyHistory,
+  defaultDailyRange,
+  summarizeDaily,
+} from "./daily-results";
+const MetaDashboardCharts = lazy(() => import("./MetaDashboardCharts"));
 import MetricSparkline from "./MetricSparkline";
 import type { LucideIcon } from "lucide-react";
 import "./dashboards.css";
+function cardsCoverage(history: Period[]): string[] {
+  return DAILY_METRICS.flatMap((metric) => {
+    const days = history.filter(
+      (period) => typeof period[metric.key] === "number",
+    ).length;
+    return days > 0 && days < history.length
+      ? [`${metric.label}: ${days}/${history.length} dias`]
+      : [];
+  });
+}
 type Metadata = Pick<Dashboard, "name" | "accountName" | "clientId" | "notes">;
 const metadataOf = (value: Dashboard): Metadata => ({
   name: value.name,
@@ -75,6 +92,20 @@ export default function DashboardDetail({
   const [presenting, setPresenting] = useState(false);
   const [currentKey, setCurrentKey] = useState(""),
     [previousKey, setPreviousKey] = useState("");
+  const [legacy, setLegacy] = useState(false);
+  const [rangeStart, setRangeStart] = useState("");
+  const [rangeEnd, setRangeEnd] = useState("");
+  const [comparing, setComparing] = useState(false);
+  const [comparisonStart, setComparisonStart] = useState("");
+  const [comparisonEnd, setComparisonEnd] = useState("");
+  useEffect(() => {
+    setLegacy(false);
+    setRangeStart("");
+    setRangeEnd("");
+    setComparing(false);
+    setComparisonStart("");
+    setComparisonEnd("");
+  }, [id]);
   const presentationButton = useRef<HTMLButtonElement>(null);
   const dirty =
     !!dashboard &&
@@ -199,15 +230,32 @@ export default function DashboardDetail({
   const periods = [...dashboard.periods].sort((a, b) =>
     b.startDate.localeCompare(a.startDate),
   );
-  const current =
+  const legacyCurrent =
     periods.find((period) => keyOf(period) === currentKey) ?? periods[0];
-  const index = current ? periods.indexOf(current) : -1;
-  const previous =
+  const index = legacyCurrent ? periods.indexOf(legacyCurrent) : -1;
+  const legacyPrevious =
     previousKey === "none"
       ? undefined
       : (periods.find(
-          (period) => keyOf(period) === previousKey && period !== current,
+          (period) => keyOf(period) === previousKey && period !== legacyCurrent,
         ) ?? periods[index + 1]);
+  const dailyPoints = dashboard.dailyMetrics ?? [];
+  const daily = dailyPoints.length > 0 && !legacy;
+  const bounds = defaultDailyRange(dailyPoints);
+  const start = rangeStart || bounds.start;
+  const end = rangeEnd || bounds.end;
+  const history = daily
+    ? dailyHistory(dailyPoints, start, end)
+    : dashboard.periods;
+  const current = daily ? summarizeDaily(history) : legacyCurrent;
+  const previous = daily
+    ? comparing
+      ? summarizeDaily(
+          dailyHistory(dailyPoints, comparisonStart, comparisonEnd),
+        )
+      : undefined
+    : legacyPrevious;
+  const partial = daily ? cardsCoverage(history) : [];
   const client = clients.find((value) => value.id === dashboard.clientId);
   const cards: {
     label: string;
@@ -215,7 +263,12 @@ export default function DashboardDetail({
     icon: LucideIcon;
     value: (period: Period) => number | null;
   }[] = [
-    { label: "Alcance", tone: "violet", icon: ScanEye, value: (p) => p.reach },
+    {
+      label: daily ? "Alcance médio diário" : "Alcance",
+      tone: "violet",
+      icon: ScanEye,
+      value: (p) => p.reach,
+    },
     { label: "Visualizações", tone: "blue", icon: Eye, value: (p) => p.views },
     { label: "Interações", tone: "rose", icon: Heart, value: interactions },
     {
@@ -433,51 +486,146 @@ export default function DashboardDetail({
           </form>
         </details>
       )}
+      {dailyPoints.length > 0 && dashboard.periods.length > 0 && (
+        <label className="dashboard-source">
+          Origem dos resultados
+          <select
+            aria-label="Origem dos resultados"
+            value={legacy ? "legacy" : "meta"}
+            onChange={(event) => setLegacy(event.target.value === "legacy")}
+          >
+            <option value="meta">Dados diários da Meta</option>
+            <option value="legacy">Relatórios anteriores por período</option>
+          </select>
+        </label>
+      )}
+      {daily && (
+        <div className="dashboard-periods dashboard-daily-filters">
+          <div className="dashboard-period-context">
+            <CalendarDays size={20} />
+            <div>
+              <h2>Visão geral</h2>
+              <p>Escolha um intervalo de até 1.096 dias</p>
+            </div>
+          </div>
+          <label>
+            De
+            <input
+              type="date"
+              aria-label="Início do relatório"
+              value={start}
+              max={end}
+              onChange={(event) => setRangeStart(event.target.value)}
+            />
+          </label>
+          <label>
+            Até
+            <input
+              type="date"
+              aria-label="Fim do relatório"
+              value={end}
+              min={start}
+              onChange={(event) => setRangeEnd(event.target.value)}
+            />
+          </label>
+          <label className="dashboard-compare-toggle">
+            <input
+              type="checkbox"
+              checked={comparing}
+              onChange={(event) => setComparing(event.target.checked)}
+            />
+            Comparar intervalo
+          </label>
+          {comparing && (
+            <>
+              <label>
+                Comparar de
+                <input
+                  type="date"
+                  aria-label="Início da comparação"
+                  value={comparisonStart}
+                  max={comparisonEnd || undefined}
+                  onChange={(event) => setComparisonStart(event.target.value)}
+                />
+              </label>
+              <label>
+                Comparar até
+                <input
+                  type="date"
+                  aria-label="Fim da comparação"
+                  value={comparisonEnd}
+                  min={comparisonStart || undefined}
+                  onChange={(event) => setComparisonEnd(event.target.value)}
+                />
+              </label>
+            </>
+          )}
+        </div>
+      )}
+      {daily && !current && (
+        <p className="workspace-error" role="alert">
+          Selecione um intervalo válido de até 1.096 dias.
+        </p>
+      )}
+      {daily && comparing && !previous && (
+        <p className="dashboard-notice" role="status">
+          Informe as duas datas de um intervalo válido para comparar.
+        </p>
+      )}
+      {partial.length > 0 && (
+        <p className="dashboard-notice" role="status">
+          Cobertura parcial: {partial.join("; ")}. Os totais incompletos ficam
+          indisponíveis. A média de alcance considera somente os dias
+          informados.
+        </p>
+      )}
       {current ? (
         <>
-          <div className="dashboard-periods">
-            <div className="dashboard-period-context">
-              <CalendarDays size={20} aria-hidden="true" />
-              <div>
-                <h2>Visão geral</h2>
-                <p>Escolha os períodos de análise</p>
+          {!daily && (
+            <div className="dashboard-periods">
+              <div className="dashboard-period-context">
+                <CalendarDays size={20} aria-hidden="true" />
+                <div>
+                  <h2>Visão geral</h2>
+                  <p>Escolha os períodos de análise</p>
+                </div>
               </div>
-            </div>
-            <label>
-              Período
-              <select
-                aria-label="Período do relatório"
-                value={keyOf(current)}
-                onChange={(event) => {
-                  setCurrentKey(event.target.value);
-                  setPreviousKey("");
-                }}
-              >
-                {periods.map((period) => (
-                  <option key={keyOf(period)} value={keyOf(period)}>
-                    {periodLabel(period)}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Comparar com
-              <select
-                aria-label="Período de comparação"
-                value={previous ? keyOf(previous) : "none"}
-                onChange={(event) => setPreviousKey(event.target.value)}
-              >
-                <option value="none">Sem comparação</option>
-                {periods
-                  .filter((period) => period !== current)
-                  .map((period) => (
+              <label>
+                Período
+                <select
+                  aria-label="Período do relatório"
+                  value={keyOf(current)}
+                  onChange={(event) => {
+                    setCurrentKey(event.target.value);
+                    setPreviousKey("");
+                  }}
+                >
+                  {periods.map((period) => (
                     <option key={keyOf(period)} value={keyOf(period)}>
                       {periodLabel(period)}
                     </option>
                   ))}
-              </select>
-            </label>
-          </div>
+                </select>
+              </label>
+              <label>
+                Comparar com
+                <select
+                  aria-label="Período de comparação"
+                  value={previous ? keyOf(previous) : "none"}
+                  onChange={(event) => setPreviousKey(event.target.value)}
+                >
+                  <option value="none">Sem comparação</option>
+                  {periods
+                    .filter((period) => period !== current)
+                    .map((period) => (
+                      <option key={keyOf(period)} value={keyOf(period)}>
+                        {periodLabel(period)}
+                      </option>
+                    ))}
+                </select>
+              </label>
+            </div>
+          )}
           <div className="dashboard-kpis">
             {cards.map((card) => {
               const value = card.value(current),
@@ -496,7 +644,15 @@ export default function DashboardDetail({
                       <card.icon size={17} aria-hidden="true" />
                     </span>
                   </div>
-                  <strong>{formatCount(value)}</strong>
+                  <strong>
+                    {daily &&
+                    card.label === "Alcance médio diário" &&
+                    value !== null
+                      ? new Intl.NumberFormat("pt-BR", {
+                          maximumFractionDigits: 1,
+                        }).format(value)
+                      : formatCount(value)}
+                  </strong>
                   {delta && (
                     <span className={"dashboard-change " + delta.direction}>
                       {delta.direction === "up" && (
@@ -508,10 +664,7 @@ export default function DashboardDetail({
                       {delta.label}
                     </span>
                   )}
-                  <MetricSparkline
-                    periods={dashboard.periods}
-                    value={card.value}
-                  />
+                  <MetricSparkline periods={history} value={card.value} />
                 </article>
               );
             })}
@@ -523,26 +676,52 @@ export default function DashboardDetail({
               </div>
             }
           >
-            <DashboardCharts
-              current={current}
-              previous={previous}
-              periods={dashboard.periods}
-            />
+            {daily ? (
+              <MetaDashboardCharts periods={history} />
+            ) : (
+              <DashboardCharts
+                current={current}
+                previous={previous}
+                periods={history}
+              />
+            )}
           </Suspense>
           <details className="dashboard-methodology" open>
             <summary>Como os resultados são apresentados</summary>
-            <p>
-              Interações = curtidas + comentários + compartilhamentos +
-              salvamentos. Taxa de engajamento por alcance:{" "}
-              <strong>{formatRate(engagementRate(current))}</strong>.
-            </p>
-            <p>
-              A taxa usa interações ÷ alcance × 100. Se faltar um componente, o
-              total e a taxa ficam indisponíveis. “—” indica um dado não
-              informado; zero representa um resultado medido. O alcance é o
-              total informado para o período, sem somar pessoas entre
-              intervalos.
-            </p>
+            {daily ? (
+              <>
+                <p>
+                  O alcance é apresentado como média diária e evolução por dia.
+                  Ele não representa o alcance único do período. Interações são
+                  o total fornecido pela Meta; não há divisão por curtidas,
+                  comentários ou salvamentos nesses arquivos.
+                </p>
+                <p>
+                  Visualizações, interações, novos seguidores, visitas e cliques
+                  são somados apenas quando todos os dias do intervalo têm
+                  dados. Seguidores significa novos seguidores, não o total da
+                  conta nem crescimento líquido. Somente as lacunas entre a
+                  primeira e a última data do arquivo de seguidores recebem
+                  zero. Não calculamos taxa de engajamento usando alcance diário
+                  somado.
+                </p>
+              </>
+            ) : (
+              <>
+                <p>
+                  Interações = curtidas + comentários + compartilhamentos +
+                  salvamentos. Taxa de engajamento por alcance:{" "}
+                  <strong>{formatRate(engagementRate(current))}</strong>.
+                </p>
+                <p>
+                  A taxa usa interações ÷ alcance × 100. Se faltar um
+                  componente, o total e a taxa ficam indisponíveis. “—” indica
+                  um dado não informado; zero representa um resultado medido. O
+                  alcance é o total informado para o período, sem somar pessoas
+                  entre intervalos.
+                </p>
+              </>
+            )}
           </details>
           {dashboard.notes && (
             <section
@@ -571,8 +750,9 @@ export default function DashboardDetail({
           <BarChart3 size={36} aria-hidden="true" />
           <h2>Dê contexto aos seus resultados.</h2>
           <p>
-            Importe uma planilha XLSX ou CSV com os totais de cada período para
-            montar sua apresentação. O arquivo será descartado após a leitura.
+            Importe as planilhas XLSX ou CSV de métricas exportadas pela Meta
+            para montar sua apresentação. O arquivo será descartado após a
+            leitura.
           </p>
         </div>
       )}
@@ -582,6 +762,10 @@ export default function DashboardDetail({
           onClose={() => setImporting(false)}
           onImported={(value) => {
             accept(value);
+            setLegacy(false);
+            setRangeStart("");
+            setRangeEnd("");
+            setComparing(false);
             setCurrentKey("");
             setPreviousKey("");
             setImporting(false);

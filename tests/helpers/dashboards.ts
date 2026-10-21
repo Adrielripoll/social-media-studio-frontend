@@ -1,6 +1,10 @@
 import { randomUUID } from "node:crypto";
 import type { Page } from "@playwright/test";
-import type { Dashboard, ImportPreview } from "../../src/dashboards/api";
+import type {
+  Dashboard,
+  ImportPreview,
+  DailyPoint,
+} from "../../src/dashboards/api";
 import { apiUrl, corsHeaders } from "./auth";
 export function dashboard(
   name = "Resultados",
@@ -62,6 +66,16 @@ export function importedPeriods() {
     },
   ];
 }
+export function importedDailyPoints(): DailyPoint[] {
+  return ["2026-09-22", "2026-09-23", "2026-09-24"].flatMap((date, index) => [
+    { date, metric: "reach" as const, value: 100 * (index + 1) },
+    { date, metric: "views" as const, value: 500 + index * 100 },
+    { date, metric: "interactions" as const, value: 10 + index * 10 },
+    { date, metric: "newFollowers" as const, value: [1, 0, 2][index] },
+    { date, metric: "profileVisits" as const, value: 5 + index },
+    { date, metric: "linkClicks" as const, value: index },
+  ]);
+}
 export async function mockDashboards(page: Page, initial: Dashboard[] = []) {
   const state = {
     items: structuredClone(initial),
@@ -90,7 +104,8 @@ export async function mockDashboards(page: Page, initial: Dashboard[] = []) {
     }
     const headers = await request.allHeaders(),
       multipart = headers["content-type"]?.startsWith("multipart/");
-    const body = request.postData() && !multipart ? request.postDataJSON() : null;
+    const body =
+      request.postData() && !multipart ? request.postDataJSON() : null;
     captured.push({
       path,
       method: request.method(),
@@ -103,24 +118,10 @@ export async function mockDashboards(page: Page, initial: Dashboard[] = []) {
       status = 200;
     if (path === "/dashboards/schema")
       value = {
-        maxRows: 500,
+        maxRows: 1096,
+        maxFiles: 6,
         maxBytes: 5 * 1024 * 1024,
-        columns: [
-          {
-            column: "inicio_periodo",
-            label: "Início do período",
-            required: true,
-            example: "2026-08-01",
-          },
-          {
-            column: "fim_periodo",
-            label: "Fim do período",
-            required: true,
-            example: "2026-08-31",
-          },
-          { column: "alcance", label: "Alcance", required: false, example: "12000" },
-        ],
-        exampleCsv: "inicio_periodo;fim_periodo;alcance\n2026-08-01;2026-08-31;12000",
+        metrics: [],
       };
     else if (path === "/dashboards" && request.method() === "GET") {
       status = state.failList ? 503 : 200;
@@ -143,25 +144,79 @@ export async function mockDashboards(page: Page, initial: Dashboard[] = []) {
         status = 404;
         value = { message: "Dashboard não encontrado." };
       } else if (path.endsWith("/import-preview")) {
-        const selected = /name="sheet"\r\n\r\n([^\r\n]+)/.exec(
-          request.postData() ?? "",
+        const multipartBody = request.postData() ?? "";
+        const selected = /name="sheets"\r\n\r\n([^\r\n]+)/.exec(
+          multipartBody,
         )?.[1];
+        const selections: string[] = selected ? JSON.parse(selected) : [];
+        const filenames = [
+          ...multipartBody.matchAll(/filename="([^"\r\n]+)"/g),
+        ].map((match) => match[1]);
+        const metricByName: Record<string, DailyPoint["metric"]> = {
+          "Alcance.csv": "reach",
+          "Visualizações.csv": "views",
+          "Interações.csv": "interactions",
+          "Seguidores.csv": "newFollowers",
+          "Visitas.csv": "profileVisits",
+          "Cliques.csv": "linkClicks",
+        };
+        const selectedMetrics = filenames.map(
+          (filename) => metricByName[filename] ?? "reach",
+        );
+        const points = importedDailyPoints().filter((point) =>
+          selectedMetrics.includes(point.metric),
+        );
         const invalid =
-          state.invalidPreview || (state.multipleSheets && selected !== "Resultados");
+          state.invalidPreview ||
+          (state.multipleSheets && selections[0] !== "Resultados");
+        const changes = { created: 0, updated: 0, unchanged: 0 };
+        for (const point of points) {
+          const stored = item.dailyMetrics?.find(
+            (current) =>
+              current.date === point.date && current.metric === point.metric,
+          );
+          if (!stored) {
+            changes.created++;
+          } else if (stored.value === point.value) {
+            changes.unchanged++;
+          } else {
+            changes.updated++;
+          }
+        }
         const preview: ImportPreview = {
           valid: !invalid,
-          rowCount: invalid ? 0 : 2,
-          periods: invalid ? [] : importedPeriods(),
-          sheetNames: state.multipleSheets ? ["Notas", "Resultados"] : ["Dados"],
-          selectedSheet: state.multipleSheets ? (selected ?? "Notas") : "Dados",
+          revision: item.revision,
+          changes,
+          points: invalid ? [] : points,
+          files: filenames.map((filename, index) => ({
+            filename,
+            metric: selectedMetrics[index],
+            rowCount: 3,
+            startDate: "2026-09-22",
+            endDate: "2026-09-24",
+            filledZeros: selectedMetrics[index] === "newFollowers" ? 1 : 0,
+            sheetNames: state.multipleSheets ? ["Notas", "Resultados"] : [],
+            selectedSheet: state.multipleSheets
+              ? selections[index] || "Notas"
+              : "",
+          })),
           warnings: [],
           issues: invalid
-            ? [{ row: 2, column: "alcance", message: "Informe um número inteiro." }]
+            ? [
+                {
+                  filename: filenames[0] ?? "dados.csv",
+                  row: 2,
+                  column: "Primary",
+                  message: "Informe um número inteiro.",
+                },
+              ]
             : [],
           issueCount: invalid ? 1 : 0,
         };
         status = state.failPreview ? 503 : 200;
-        value = state.failPreview ? { message: "Falha ao ler a planilha." } : preview;
+        value = state.failPreview
+          ? { message: "Falha ao ler a planilha." }
+          : preview;
       } else if (request.method() === "GET") value = item;
       else if (request.method() === "DELETE") {
         state.items = state.items.filter((value) => value.id !== id);
@@ -174,9 +229,33 @@ export async function mockDashboards(page: Page, initial: Dashboard[] = []) {
         status = 503;
         value = { message: "Não foi possível salvar o dashboard." };
       } else {
-        if (path.endsWith("/periods")) item.periods = body.periods;
-        else Object.assign(item, body);
-        item.revision++;
+        if (path.endsWith("/metrics")) {
+          const merged = new Map(
+            (item.dailyMetrics ?? []).map((point) => [
+              point.metric + "/" + point.date,
+              point,
+            ]),
+          );
+          let changed = false;
+          for (const point of body.points as DailyPoint[]) {
+            const key = point.metric + "/" + point.date;
+            if (merged.get(key)?.value !== point.value) {
+              changed = true;
+            }
+            merged.set(key, point);
+          }
+          item.dailyMetrics = [...merged.values()];
+          if (changed) {
+            item.revision++;
+          }
+        } else {
+          if (path.endsWith("/periods")) {
+            item.periods = body.periods;
+          } else {
+            Object.assign(item, body);
+          }
+          item.revision++;
+        }
         value = item;
       }
     }

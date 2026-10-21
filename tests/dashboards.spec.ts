@@ -4,6 +4,7 @@ import { client, mockWorkspace } from "./helpers/workspace";
 import {
   dashboard,
   importedPeriods,
+  importedDailyPoints,
   mockDashboards,
 } from "./helpers/dashboards";
 test.beforeEach(async ({ page }) => {
@@ -12,9 +13,7 @@ test.beforeEach(async ({ page }) => {
 const csv = {
   name: "resultados.csv",
   mimeType: "text/csv",
-  buffer: Buffer.from(
-    "inicio_periodo;fim_periodo;alcance\n2026-08-01;2026-08-31;12000",
-  ),
+  buffer: Buffer.from("Alcance\nData,Primary\n2026-09-22,100"),
 };
 test("cria dashboard independente, associa cliente, salva análise e persiste ao recarregar", async ({
   page,
@@ -23,6 +22,7 @@ test("cria dashboard independente, associa cliente, salva análise e persiste ao
   await mockWorkspace(page, [parent]);
   const { state, captured } = await mockDashboards(page);
   await login(page);
+  await expect(page.getByRole("navigation")).toBeVisible();
   await page
     .getByRole("navigation")
     .getByRole("button", { name: "Dashboards", exact: true })
@@ -84,59 +84,85 @@ test("cria dashboard independente, associa cliente, salva análise e persiste ao
     expect(item.cookie).toContain("studio_access=");
   }
 });
-test("importação mostra modelo e prévia, grava só após confirmação e exibe comparações", async ({
+const metaFiles = [
+  "Alcance",
+  "Visualizações",
+  "Interações",
+  "Seguidores",
+  "Visitas",
+  "Cliques",
+].map((name) => ({ ...csv, name: name + ".csv" }));
+test("importa seis arquivos com prévia, mostra média diária e reimporta sem duplicar ou apagar relatórios anteriores", async ({
   page,
 }) => {
   const value = dashboard();
+  value.periods = importedPeriods();
   const { state, captured } = await mockDashboards(page, [value]);
   await login(page);
+  await expect(page.getByRole("navigation")).toBeVisible();
   await page.goto("/?view=dashboards&dashboard=" + value.id);
   await page
     .getByRole("button", { name: "Importar dados", exact: true })
     .click();
   const dialog = page.getByRole("dialog");
-  await expect(
-    dialog.getByText("inicio_periodo", { exact: true }),
-  ).toBeVisible();
+  await expect(dialog.getByText("inicio_periodo", { exact: true })).toHaveCount(
+    0,
+  );
   await dialog
-    .getByLabel("Selecionar planilha de resultados")
-    .setInputFiles(csv);
-  await expect(
-    dialog.getByRole("heading", { name: "Prévia dos resultados" }),
-  ).toBeVisible();
-  expect(state.items[0].periods).toEqual([]);
+    .getByLabel("Selecionar planilhas da Meta")
+    .setInputFiles(metaFiles);
+  await expect(dialog.getByRole("status")).toContainText("18 novos valores");
+  await expect(dialog).toContainText("1 dia(s) sem novos seguidores");
+  expect(state.items[0].dailyMetrics ?? []).toEqual([]);
   await dialog
     .getByRole("button", { name: "Confirmar importação", exact: true })
     .click();
   await expect(dialog).toHaveCount(0);
   await expect(
-    page.getByRole("article", { name: "Alcance", exact: true }),
-  ).toContainText("15.000");
+    page
+      .getByRole("article", { name: "Alcance médio diário", exact: true })
+      .locator("strong"),
+  ).toHaveText("200");
   await expect(
-    page.getByRole("article", { name: "Alcance", exact: true }),
-  ).toContainText("+25%");
+    page
+      .getByRole("article", { name: "Interações", exact: true })
+      .locator("strong"),
+  ).toHaveText("60");
   await expect(
-    page.getByRole("article", { name: "Cliques no link", exact: true }),
-  ).toContainText("Sem base de comparação");
-  expect(state.items[0].periods).toHaveLength(2);
-  expect(
-    captured.some((item) => item.multipart?.includes("resultados.csv")),
-  ).toBe(true);
+    page
+      .getByRole("article", { name: "Novos seguidores", exact: true })
+      .locator("strong"),
+  ).toHaveText("3");
+  expect(state.items[0].dailyMetrics).toHaveLength(18);
+  expect(state.items[0].periods).toEqual(importedPeriods());
   await page.reload();
   await expect(
+    page.getByRole("article", { name: "Alcance médio diário", exact: true }),
+  ).toContainText("200");
+  await page.getByLabel("Origem dos resultados").selectOption("legacy");
+  await expect(
     page.getByRole("article", { name: "Alcance", exact: true }),
   ).toContainText("15.000");
+  await page.getByLabel("Origem dos resultados").selectOption("meta");
   await page
     .getByRole("button", { name: "Importar dados", exact: true })
     .click();
-  await page.getByLabel("Selecionar planilha de resultados").setInputFiles(csv);
-  await expect(page.getByRole("dialog")).toContainText(
-    "períodos atuais serão substituídos",
-  );
   await page
-    .getByRole("button", { name: "Confirmar e substituir períodos" })
+    .getByLabel("Selecionar planilhas da Meta")
+    .setInputFiles(metaFiles);
+  await expect(page.getByRole("dialog")).toContainText(
+    "18 valores sem alteração",
+  );
+  const revision = state.items[0].revision;
+  await page
+    .getByRole("button", { name: "Confirmar importação", exact: true })
     .click();
-  expect(state.items[0].periods).toHaveLength(2);
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect(state.items[0].revision).toBe(revision);
+  expect(state.items[0].dailyMetrics).toHaveLength(18);
+  expect(
+    captured.filter((item) => item.path.endsWith("/metrics")),
+  ).toHaveLength(2);
 });
 test("erros de linha bloqueiam confirmação; permite escolher uma aba XLSX diferente", async ({
   page,
@@ -145,24 +171,25 @@ test("erros de linha bloqueiam confirmação; permite escolher uma aba XLSX dife
   const { state } = await mockDashboards(page, [value]);
   state.multipleSheets = true;
   await login(page);
+  await expect(page.getByRole("navigation")).toBeVisible();
   await page.goto("/?view=dashboards&dashboard=" + value.id);
   await page
     .getByRole("button", { name: "Importar dados", exact: true })
     .click();
-  await page.getByLabel("Selecionar planilha de resultados").setInputFiles({
+  await page.getByLabel("Selecionar planilhas da Meta").setInputFiles({
     ...csv,
     name: "resultados.xlsx",
     mimeType:
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
   });
   await expect(page.getByRole("dialog").getByRole("alert")).toContainText(
-    "Linha 2",
+    "linha 2",
   );
   await expect(
     page.getByRole("button", { name: "Confirmar importação" }),
   ).toBeDisabled();
   await page
-    .getByLabel("Aba da planilha", { exact: true })
+    .getByLabel("Aba de resultados.xlsx", { exact: true })
     .selectOption("Resultados");
   await expect(
     page.getByRole("button", { name: "Confirmar importação" }),
@@ -176,6 +203,7 @@ test("mantém rascunho após falha e conflito sem sobrescrever o dashboard", asy
   const value = dashboard();
   const { state } = await mockDashboards(page, [value]);
   await login(page);
+  await expect(page.getByRole("navigation")).toBeVisible();
   await page.goto("/?view=dashboards&dashboard=" + value.id);
   await page
     .getByText("Editar informações do dashboard", { exact: true })
@@ -211,6 +239,7 @@ test("mostra ausência como traço, zero como zero e taxa indisponível se falta
   value.periods[1].reach = 0;
   await mockDashboards(page, [value]);
   await login(page);
+  await expect(page.getByRole("navigation")).toBeVisible();
   await page.goto("/?view=dashboards&dashboard=" + value.id);
   await expect(
     page
@@ -234,6 +263,7 @@ test("resultados se adaptam de 320 a 1440 px; apresentação oculta edição e s
   value.notes = "Análise para o cliente.";
   await mockDashboards(page, [value]);
   await login(page);
+  await expect(page.getByRole("navigation")).toBeVisible();
   await page.goto("/?view=dashboards&dashboard=" + value.id);
   await expect(
     page
@@ -280,6 +310,7 @@ test("dashboard aparece no cliente, nasce associado e pode ser excluído com con
     dashboard("Resultados do cliente", parent.id),
   ]);
   await login(page);
+  await expect(page.getByRole("navigation")).toBeVisible();
   await page
     .getByRole("navigation")
     .getByRole("button", { name: parent.name, exact: true })
@@ -328,20 +359,17 @@ test("importação mobile permite recuperar falha de leitura sem gravar antes de
   const { state } = await mockDashboards(page, [value]);
   state.failPreview = true;
   await login(page);
+  await expect(page.getByRole("navigation")).toBeVisible();
   await page.setViewportSize({ width: 320, height: 844 });
   await page.goto("/?view=dashboards&dashboard=" + value.id);
   await page
     .getByRole("button", { name: "Importar dados", exact: true })
     .click();
   const dialog = page.getByRole("dialog");
-  await dialog
-    .getByLabel("Selecionar planilha de resultados")
-    .setInputFiles(csv);
+  await dialog.getByLabel("Selecionar planilhas da Meta").setInputFiles(csv);
   await expect(dialog.getByRole("alert")).toContainText("Falha ao ler");
   state.failPreview = false;
-  await dialog
-    .getByLabel("Selecionar planilha de resultados")
-    .setInputFiles(csv);
+  await dialog.getByLabel("Selecionar planilhas da Meta").setInputFiles(csv);
   await expect(
     dialog.getByRole("button", { name: "Confirmar importação" }),
   ).toBeEnabled();
@@ -368,6 +396,7 @@ test("gráficos exploram histórico, composição e comparação sem erros de re
   value.periods = importedPeriods().reverse();
   await mockDashboards(page, [value]);
   await login(page);
+  await expect(page.getByRole("navigation")).toBeVisible();
   await page.goto("/?view=dashboards&dashboard=" + value.id);
   const report = page.getByRole("region", {
     name: "Gráficos dos resultados",
@@ -444,6 +473,7 @@ test("gráficos distinguem lacunas, composição incompleta, zero e período ún
   value.periods[0].likes = null;
   await mockDashboards(page, [value]);
   await login(page);
+  await expect(page.getByRole("navigation")).toBeVisible();
   await page.goto("/?view=dashboards&dashboard=" + value.id);
   let composition = page.getByRole("figure", {
     name: "Distribuição das interações",
@@ -486,4 +516,101 @@ test("gráficos distinguem lacunas, composição incompleta, zero e período ún
       .locator(".dashboard-chart-highlight strong"),
   ).toHaveText("0%");
   expect(errors).toEqual([]);
+});
+
+test("dados diários filtram e comparam intervalos; gráficos e prévia funcionam em desktop e mobile", async ({
+  page,
+}) => {
+  const errors: string[] = [];
+  page.on("pageerror", (error) => errors.push(error.message));
+  const value = dashboard();
+  value.dailyMetrics = importedDailyPoints();
+  await mockDashboards(page, [value]);
+  await login(page);
+  await expect(page.getByRole("navigation")).toBeVisible();
+  await page.goto("/?view=dashboards&dashboard=" + value.id);
+  const report = page.getByRole("region", {
+    name: "Gráficos dos resultados",
+    exact: true,
+  });
+  await expect(report.getByRole("figure")).toHaveCount(7);
+  await expect(
+    report.getByRole("figure", {
+      name: "Distribuição das interações",
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await page
+    .getByLabel("Início do relatório", { exact: true })
+    .fill("2026-09-23");
+  await expect(
+    page
+      .getByRole("article", { name: "Alcance médio diário", exact: true })
+      .locator("strong"),
+  ).toHaveText("250");
+  await page.getByLabel("Comparar intervalo").check();
+  await page
+    .getByLabel("Início da comparação", { exact: true })
+    .fill("2026-09-22");
+  await page
+    .getByLabel("Fim da comparação", { exact: true })
+    .fill("2026-09-22");
+  await expect(
+    page.getByRole("article", { name: "Alcance médio diário", exact: true }),
+  ).toContainText("+150%");
+  for (const width of [1440, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(report.locator("canvas")).toHaveCount(7);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+    if (width === 1440 || width === 390) {
+      await page.screenshot({
+        path: "test-results/meta-dashboard-" + width + ".png",
+        fullPage: true,
+      });
+    }
+  }
+  await page
+    .getByRole("button", { name: "Importar dados", exact: true })
+    .click();
+  await page
+    .getByLabel("Selecionar planilhas da Meta")
+    .setInputFiles(metaFiles);
+  await expect(
+    page.getByRole("button", { name: "Confirmar importação", exact: true }),
+  ).toBeEnabled();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth <= innerWidth,
+    ),
+  ).toBe(true);
+  await page.screenshot({
+    path: "test-results/meta-import-320.png",
+    fullPage: false,
+  });
+  expect(errors).toEqual([]);
+});
+
+test("lacunas diárias não viram zero nem totais completos", async ({
+  page,
+}) => {
+  const value = dashboard();
+  value.dailyMetrics = importedDailyPoints().filter(
+    (point) => !(point.metric === "views" && point.date === "2026-09-23"),
+  );
+  await mockDashboards(page, [value]);
+  await login(page);
+  await expect(page.getByRole("navigation")).toBeVisible();
+  await page.goto("/?view=dashboards&dashboard=" + value.id);
+  await expect(
+    page
+      .getByRole("article", { name: "Visualizações", exact: true })
+      .locator("strong"),
+  ).toHaveText("—");
+  await expect(page.getByText(/Cobertura parcial:/)).toContainText(
+    "Visualizações: 2/3 dias",
+  );
 });

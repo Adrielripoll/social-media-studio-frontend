@@ -11,10 +11,12 @@ export const METRICS = [
   { key: "linkClicks", label: "Cliques no link" },
 ] as const;
 export type Metric = (typeof METRICS)[number]["key"];
-export type Period = { startDate: string; endDate: string } & Record<
-  Metric,
-  number | null
->;
+export type Period = {
+  startDate: string;
+  endDate: string;
+  interactions?: number | null;
+  reachBasis?: "daily-average";
+} & Record<Metric, number | null>;
 export interface Dashboard {
   id: string;
   name: string;
@@ -23,31 +25,51 @@ export interface Dashboard {
   accountName: string;
   notes: string;
   periods: Period[];
+  dailyMetrics?: DailyPoint[];
   revision: number;
   createdAt: string;
   updatedAt: string;
 }
-export type DashboardSummary = Omit<Dashboard, "periods" | "notes">;
+export type DashboardSummary = Omit<
+  Dashboard,
+  "periods" | "notes" | "dailyMetrics"
+>;
+export { DAILY_METRICS } from "./daily-metrics";
+import { DAILY_METRICS } from "./daily-metrics";
+import type { DailyMetric, DailyPoint } from "./daily-metrics";
+export type { DailyMetric, DailyPoint } from "./daily-metrics";
 export interface ImportSchema {
-  columns: { column: string; label: string; required: boolean; example: string }[];
+  metrics: typeof DAILY_METRICS;
+  maxFiles: number;
   maxRows: number;
   maxBytes: number;
-  exampleCsv: string;
 }
 export interface ImportPreview {
   valid: boolean;
-  sheetNames: string[];
-  selectedSheet: string;
-  rowCount: number;
-  periods: Period[];
-  issues: { row: number; column: string; message: string }[];
+  revision: number;
+  changes: { created: number; updated: number; unchanged: number };
+  files: {
+    filename: string;
+    metric: DailyMetric | null;
+    sheetNames: string[];
+    selectedSheet: string;
+    rowCount: number;
+    startDate: string | null;
+    endDate: string | null;
+    filledZeros: number;
+  }[];
+  points: DailyPoint[];
+  issues: { filename: string; row: number; column: string; message: string }[];
   issueCount: number;
   warnings: string[];
 }
 export async function listDashboards(signal?: AbortSignal) {
-  const value = await apiRequest<{ dashboards: DashboardSummary[] }>("/dashboards", {
-    signal,
-  });
+  const value = await apiRequest<{ dashboards: DashboardSummary[] }>(
+    "/dashboards",
+    {
+      signal,
+    },
+  );
   if (!Array.isArray(value?.dashboards)) throw new ApiError(502);
   return value.dashboards;
 }
@@ -62,7 +84,10 @@ export function createDashboard(name: string, clientId: string | null) {
 }
 export function updateDashboard(
   id: string,
-  body: Pick<Dashboard, "name" | "clientId" | "accountName" | "notes" | "revision">,
+  body: Pick<
+    Dashboard,
+    "name" | "clientId" | "accountName" | "notes" | "revision"
+  >,
 ) {
   return apiRequest<Dashboard>("/dashboards/" + id, { method: "PATCH", body });
 }
@@ -74,13 +99,15 @@ export function getImportSchema(signal?: AbortSignal) {
 }
 export function previewImport(
   id: string,
-  file: File,
-  sheet: string | undefined,
+  files: File[],
+  sheets: string[],
   signal?: AbortSignal,
 ) {
   const body = new FormData();
-  body.append("file", file);
-  if (sheet) body.append("sheet", sheet);
+  for (const file of files) {
+    body.append("files", file);
+  }
+  body.append("sheets", JSON.stringify(sheets));
   return apiRequest<ImportPreview>("/dashboards/" + id + "/import-preview", {
     method: "POST",
     body,
@@ -88,10 +115,14 @@ export function previewImport(
     timeoutMs: 30_000,
   });
 }
-export function confirmImport(id: string, revision: number, periods: Period[]) {
-  return apiRequest<Dashboard>("/dashboards/" + id + "/periods", {
+export function confirmImport(
+  id: string,
+  revision: number,
+  points: DailyPoint[],
+) {
+  return apiRequest<Dashboard>("/dashboards/" + id + "/metrics", {
     method: "PUT",
-    body: { revision, periods },
+    body: { revision, points },
   });
 }
 export const errorMessage = (reason: unknown) =>

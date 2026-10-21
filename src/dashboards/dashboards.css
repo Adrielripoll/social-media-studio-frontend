@@ -1284,3 +1284,99 @@
     padding: 16px;
   }
 }
+
+.dashboard-import-intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+}
+.dashboard-import-intro > svg {
+  flex-shrink: 0;
+  color: var(--color-accent, #7b5322);
+  margin-top: 4px;
+}
+.dashboard-import-intro h3 {
+  margin: 0 0 8px;
+}
+.dashboard-import-intro p {
+  margin: 0;
+}
+.dashboard-import-files {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr));
+  gap: 12px;
+}
+.dashboard-import-files li {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border: 1px solid #e8e0d5;
+  border-radius: 14px;
+  background: #faf8f5;
+  overflow-wrap: anywhere;
+}
+.dashboard-import-files li > span,
+.dashboard-import-files small {
+  color: #6e6052;
+}
+.dashboard-source {
+  display: grid;
+  gap: 8px;
+  margin: 24px 0 16px;
+  max-width: 360px;
+}
+.dashboard-daily-filters {
+  grid-template-columns: minmax(180px, 1fr) repeat(2, minmax(140px, 190px));
+  flex-wrap: wrap;
+}
+.dashboard-daily-filters label {
+  min-width: 0;
+}
+.dashboard-daily-filters input[type="date"] {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.dashboard-daily-filters .dashboard-compare-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  grid-column: 1 / -1;
+}
+.dashboard-compare-toggle input {
+  width: auto;
+}
+@media (max-width: 680px) {
+  .dashboard-daily-filters {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-daily-filters > * {
+    width: 100%;
+  }
+}
+
+.dashboard-daily-filters input[type="date"],
+.dashboard-source select,
+.dashboard-chart-controls select {
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #ded5c8;
+  border-radius: 10px;
+  background: #fffdfa;
+  color: #3d3024;
+  font: inherit;
+}
+.dashboard-daily-filters input[type="date"]:focus-visible,
+.dashboard-source select:focus-visible,
+.dashboard-chart-controls select:focus-visible {
+  outline: 2px solid #ac6a1b;
+  outline-offset: 2px;
+}
+.dashboard-compare-toggle input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #7b5322;
+}
