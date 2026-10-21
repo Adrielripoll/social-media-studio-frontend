@@ -367,10 +367,6 @@
   font-size: 12px;
   box-sizing: border-box;
 }
-.task-add-form input:focus,
-.task-edit-form input:focus {
-  outline: 2px solid var(--focus);
-}
 .task-form-actions {
   display: flex;
   flex-wrap: wrap;

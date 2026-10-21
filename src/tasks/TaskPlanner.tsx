@@ -26,6 +26,7 @@ import {
   todayDate,
   taskDateFromTimestamp,
 } from "./dates";
+import { Expandable } from "../components/MotionPresence";
 import TaskList, { TaskDateHeading } from "./TaskList";
 import "./tasks.css";
 
@@ -190,7 +191,9 @@ export default function TaskPlanner() {
     setMonthTasks((tasks) =>
       replace(
         tasks,
-        !!task && task.scheduledDate >= range.from && task.scheduledDate <= range.to,
+        !!task &&
+          task.scheduledDate >= range.from &&
+          task.scheduledDate <= range.to,
       ),
     );
     setTodayTasks((tasks) =>
@@ -199,11 +202,15 @@ export default function TaskPlanner() {
         !!task &&
           (task.scheduledDate === today ||
             (task.scheduledDate < today &&
-              (!task.completedAt || taskDateFromTimestamp(task.completedAt) === today))),
+              (!task.completedAt ||
+                taskDateFromTimestamp(task.completedAt) === today))),
       ),
     );
   }
-  async function mutate(action: () => Promise<Task | null>, id = ""): Promise<boolean> {
+  async function mutate(
+    action: () => Promise<Task | null>,
+    id = "",
+  ): Promise<boolean> {
     if (busy) return false;
     writing.current = true;
     setBusy(true);
@@ -253,7 +260,10 @@ export default function TaskPlanner() {
   );
   const completed = todayTasks.filter((task) => task.completedAt).length;
   return (
-    <section className="task-planner" aria-label="Calendário e tarefas pessoais">
+    <section
+      className="task-planner"
+      aria-label="Calendário e tarefas pessoais"
+    >
       <section className="task-today-card" aria-labelledby="today-title">
         <div className="task-card-heading">
           <div>
@@ -289,15 +299,17 @@ export default function TaskPlanner() {
                 : "Seu dia está livre. Adicione uma tarefa para começar."
           }
         />
-        {addingToday ? (
+        <Expandable open={addingToday}>
           <TaskCreateForm
             busy={busy || loading || loadFailed}
             onCreate={async (nextTitle) => {
-              if (await mutate(() => createTask(nextTitle, today))) setAddingToday(false);
+              if (await mutate(() => createTask(nextTitle, today)))
+                setAddingToday(false);
             }}
             onCancel={() => setAddingToday(false)}
           />
-        ) : (
+        </Expandable>
+        {!addingToday && (
           <button
             className="task-add-button"
             disabled={busy || loading || loadFailed}
@@ -325,7 +337,11 @@ export default function TaskPlanner() {
           </button>
         </div>
       )}
-      <section className="task-calendar-card" aria-label="Calendário" ref={calendar}>
+      <section
+        className="task-calendar-card"
+        aria-label="Calendário"
+        ref={calendar}
+      >
         <div className="task-calendar-heading">
           <div>
             <span className="task-eyebrow">ORGANIZE OS PRÓXIMOS DIAS</span>
@@ -372,8 +388,12 @@ export default function TaskPlanner() {
         <div className="task-calendar-grid">
           {cells.map((date, index) => {
             if (!date)
-              return <span className="task-calendar-blank" key={"blank-" + index} />;
-            const tasks = monthTasks.filter((task) => task.scheduledDate === date);
+              return (
+                <span className="task-calendar-blank" key={"blank-" + index} />
+              );
+            const tasks = monthTasks.filter(
+              (task) => task.scheduledDate === date,
+            );
             return (
               <button
                 key={date}
@@ -399,7 +419,9 @@ export default function TaskPlanner() {
                   <span
                     className={
                       "task-day-dot" +
-                      (tasks.every((task) => task.completedAt) ? " all-done" : "")
+                      (tasks.every((task) => task.completedAt)
+                        ? " all-done"
+                        : "")
                     }
                     aria-label={tasks.length + " tarefas"}
                   >
@@ -441,7 +463,9 @@ export default function TaskPlanner() {
             <div className="task-popover-list">
               <TaskList
                 {...actions}
-                tasks={monthTasks.filter((task) => task.scheduledDate === selected)}
+                tasks={monthTasks.filter(
+                  (task) => task.scheduledDate === selected,
+                )}
                 empty={
                   loadFailed
                     ? "Não foi possível consultar as tarefas deste dia."
@@ -449,7 +473,7 @@ export default function TaskPlanner() {
                 }
               />
             </div>
-            {adding ? (
+            <Expandable open={adding}>
               <TaskCreateForm
                 key={selected}
                 busy={busy}
@@ -459,7 +483,8 @@ export default function TaskPlanner() {
                 }}
                 onCancel={() => setAdding(false)}
               />
-            ) : (
+            </Expandable>
+            {!adding && (
               <button
                 className="task-add-button"
                 disabled={busy || loading || loadFailed || selected < today}

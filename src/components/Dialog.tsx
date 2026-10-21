@@ -1,6 +1,7 @@
-import { useEffect, useId, useRef } from "react";
+import { useLayoutEffect, useId, useRef } from "react";
 import type { ReactNode } from "react";
 import { X } from "lucide-react";
+import { useMotionExiting } from "./MotionPresence";
 
 export default function Dialog({
   title,
@@ -17,17 +18,41 @@ export default function Dialog({
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   const titleId = useId();
-  useEffect(() => {
-    const dialog = ref.current!;
+  const exiting = useMotionExiting();
+  useLayoutEffect(() => {
+    const dialog = ref.current;
+    if (!dialog) {
+      return;
+    }
+    const trigger = document.activeElement;
     dialog.showModal();
-    dialog.querySelector<HTMLElement>("[autofocus]")?.focus();
+    const candidates = dialog.querySelectorAll<HTMLElement>(
+      '[autofocus], input:not([disabled]):not([type="hidden"]), textarea:not([disabled]), select:not([disabled])',
+    );
+    const initialFocus = [...candidates].find(
+      (element) =>
+        element.getClientRects().length > 0 && !element.closest("[inert]"),
+    );
+    initialFocus?.focus({ preventScroll: true });
     return () => {
-      if (dialog.open) dialog.close();
+      if (dialog.open) {
+        dialog.close();
+      }
+      if (
+        trigger instanceof HTMLElement &&
+        trigger.isConnected &&
+        !document.querySelector("dialog[open]")
+      ) {
+        trigger.focus({ preventScroll: true });
+      }
     };
   }, []);
   return (
     <dialog
       ref={ref}
+      data-motion-state={exiting ? "exit" : "enter"}
+      aria-hidden={exiting || undefined}
+      inert={exiting}
       aria-labelledby={titleId}
       className={"dialog " + className}
       onCancel={(event) => {

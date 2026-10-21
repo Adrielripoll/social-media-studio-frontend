@@ -1,3 +1,4 @@
+import MotionPresence from "../components/MotionPresence";
 import { useEffect, useState } from "react";
 import {
   BarChart3,
@@ -175,61 +176,63 @@ export default function DashboardLibrary({
           </article>
         ))}
       </div>
-      {creating && (
-        <Dialog
-          title="Novo dashboard"
-          busy={busy}
-          onClose={() => setCreating(false)}
-          className="workspace-dialog dashboard-theme-dialog"
-        >
-          <form
-            className="workspace-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void create();
-            }}
+      <MotionPresence>
+        {creating && (
+          <Dialog
+            title="Novo dashboard"
+            busy={busy}
+            onClose={() => setCreating(false)}
+            className="workspace-dialog dashboard-theme-dialog"
           >
-            <label>
-              Nome do dashboard
-              <input
-                autoFocus
-                required
-                maxLength={80}
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                disabled={busy}
-                placeholder="Ex.: Resultados do Instagram"
-              />
-            </label>
-            <p className="workspace-muted">
-              {clientId
-                ? "Este dashboard será associado ao cliente selecionado."
-                : "Você poderá associar um cliente depois."}
-            </p>
-            {createError && (
-              <p className="workspace-error" role="alert">
-                {createError}
+            <form
+              className="workspace-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void create();
+              }}
+            >
+              <label>
+                Nome do dashboard
+                <input
+                  autoFocus
+                  required
+                  maxLength={80}
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  disabled={busy}
+                  placeholder="Ex.: Resultados do Instagram"
+                />
+              </label>
+              <p className="workspace-muted">
+                {clientId
+                  ? "Este dashboard será associado ao cliente selecionado."
+                  : "Você poderá associar um cliente depois."}
               </p>
-            )}
-            <div className="dialog-actions">
-              <button
-                type="button"
-                className="button secondary"
-                disabled={busy}
-                onClick={() => setCreating(false)}
-              >
-                Cancelar
-              </button>
-              <button
-                className="button primary"
-                disabled={busy || !name.trim()}
-              >
-                {busy ? "Criando…" : "Criar dashboard"}
-              </button>
-            </div>
-          </form>
-        </Dialog>
-      )}
+              {createError && (
+                <p className="workspace-error" role="alert">
+                  {createError}
+                </p>
+              )}
+              <div className="dialog-actions">
+                <button
+                  type="button"
+                  className="button secondary"
+                  disabled={busy}
+                  onClick={() => setCreating(false)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="button primary"
+                  disabled={busy || !name.trim()}
+                >
+                  {busy ? "Criando…" : "Criar dashboard"}
+                </button>
+              </div>
+            </form>
+          </Dialog>
+        )}
+      </MotionPresence>
     </section>
   );
 }

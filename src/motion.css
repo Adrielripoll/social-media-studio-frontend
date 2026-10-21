@@ -1,0 +1,124 @@
+:root {
+  --motion-fast: 140ms;
+  --motion-enter: 220ms;
+  --motion-exit: 180ms;
+  --motion-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.workspace-view {
+  min-width: 0;
+  animation: workspace-view-enter var(--motion-enter) var(--motion-ease)
+    backwards;
+}
+@keyframes workspace-view-enter {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dialog[open]:not(.viewer-dialog) {
+  animation: motion-dialog-enter var(--motion-enter) var(--motion-ease) both;
+}
+.dialog[open]:not(.viewer-dialog)::backdrop {
+  animation: motion-backdrop-enter var(--motion-enter) ease both;
+}
+.dialog[open][data-motion-state="exit"] {
+  animation: motion-dialog-exit var(--motion-exit) ease both;
+  pointer-events: none;
+}
+.dialog[open][data-motion-state="exit"]::backdrop {
+  animation: motion-backdrop-exit var(--motion-exit) ease both;
+}
+@keyframes motion-dialog-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes motion-dialog-exit {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(5px) scale(0.99);
+  }
+}
+@keyframes motion-backdrop-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes motion-backdrop-exit {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.motion-expand {
+  display: grid;
+  grid-template-rows: 1fr;
+  min-width: 0;
+  animation: motion-expand-enter var(--motion-enter) var(--motion-ease) both;
+}
+.motion-expand-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+.motion-expand[data-motion-state="exit"] {
+  pointer-events: none;
+  animation: motion-expand-exit var(--motion-exit) ease both;
+}
+@keyframes motion-expand-enter {
+  from {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+  to {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+}
+@keyframes motion-expand-exit {
+  from {
+    grid-template-rows: 1fr;
+    opacity: 1;
+  }
+  to {
+    grid-template-rows: 0fr;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-view,
+  .motion-expand,
+  .motion-expand[data-motion-state="exit"],
+  .dialog[open],
+  .dialog[open]::backdrop,
+  .dialog[open][data-motion-state="exit"],
+  .dialog[open][data-motion-state="exit"]::backdrop {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+.motion-expand[data-motion-state="enter"][data-motion-entry="static"] {
+  animation: none;
+}

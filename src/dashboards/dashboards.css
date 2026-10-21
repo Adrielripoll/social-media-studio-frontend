@@ -236,7 +236,7 @@
   padding-inline: 20px;
   margin-bottom: 24px;
 }
-.dashboard-settings > summary,
+.dashboard-settings-toggle,
 .dashboard-schema > summary {
   cursor: pointer;
   min-height: 44px;
@@ -245,7 +245,7 @@
   font-size: 11px;
   font-weight: 600;
 }
-.dashboard-settings[open] {
+.dashboard-settings.is-expanded {
   background: var(--surface);
 }
 .dashboard-settings .workspace-form {
@@ -1369,14 +1369,40 @@
   color: #3d3024;
   font: inherit;
 }
-.dashboard-daily-filters input[type="date"]:focus-visible,
-.dashboard-source select:focus-visible,
-.dashboard-chart-controls select:focus-visible {
-  outline: 2px solid #ac6a1b;
-  outline-offset: 2px;
-}
 .dashboard-compare-toggle input[type="checkbox"] {
   width: 18px;
   height: 18px;
   accent-color: #7b5322;
+}
+
+.dashboard-settings-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  font-family: inherit;
+}
+.dashboard-settings-toggle::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-right: 1px solid currentColor;
+  border-bottom: 1px solid currentColor;
+  transform: rotate(-45deg);
+  transition: transform var(--motion-fast) ease;
+}
+.dashboard-settings-toggle[aria-expanded="true"]::before {
+  transform: rotate(45deg);
+}
+.dashboard-settings-toggle:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: -2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-settings-toggle::before {
+    transition: none;
+  }
 }

@@ -1,3 +1,4 @@
+import MotionPresence from "../components/MotionPresence";
 import { useEffect, useState } from "react";
 import { FolderOpen, HardDrive, Trash2, RefreshCw } from "lucide-react";
 import { apiRequest, ApiError } from "../auth/api";
@@ -205,44 +206,46 @@ export default function StoragePanel() {
         </p>
       </section>
       <RetentionNotice />
-      {selected && (
-        <Dialog
-          title="Excluir feed e seus arquivos?"
-          className="account-dialog"
-          busy={busy}
-          onClose={() => setSelected(null)}
-        >
-          <p>
-            O feed <strong>{selected.name}</strong> e todas as suas imagens
-            serão excluídos. Essa ação não pode ser desfeita.
-          </p>
-          <p>
-            O espaço só será devolvido após a confirmação da exclusão no
-            armazenamento.
-          </p>
-          {deleteError && (
-            <p className="account-feedback error" role="alert">
-              {deleteError}
+      <MotionPresence>
+        {selected && (
+          <Dialog
+            title="Excluir feed e seus arquivos?"
+            className="account-dialog"
+            busy={busy}
+            onClose={() => setSelected(null)}
+          >
+            <p>
+              O feed <strong>{selected.name}</strong> e todas as suas imagens
+              serão excluídos. Essa ação não pode ser desfeita.
             </p>
-          )}
-          <div className="account-form-actions">
-            <button
-              className="button secondary"
-              disabled={busy}
-              onClick={() => setSelected(null)}
-            >
-              Manter feed
-            </button>
-            <button
-              className="button primary"
-              disabled={busy || !allowed}
-              onClick={() => void remove()}
-            >
-              {busy ? "Excluindo…" : "Confirmar exclusão"}
-            </button>
-          </div>
-        </Dialog>
-      )}
+            <p>
+              O espaço só será devolvido após a confirmação da exclusão no
+              armazenamento.
+            </p>
+            {deleteError && (
+              <p className="account-feedback error" role="alert">
+                {deleteError}
+              </p>
+            )}
+            <div className="account-form-actions">
+              <button
+                className="button secondary"
+                disabled={busy}
+                onClick={() => setSelected(null)}
+              >
+                Manter feed
+              </button>
+              <button
+                className="button primary"
+                disabled={busy || !allowed}
+                onClick={() => void remove()}
+              >
+                {busy ? "Excluindo…" : "Confirmar exclusão"}
+              </button>
+            </div>
+          </Dialog>
+        )}
+      </MotionPresence>
     </div>
   );
 }

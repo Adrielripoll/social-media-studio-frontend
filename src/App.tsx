@@ -1,3 +1,4 @@
+import MotionPresence from "./components/MotionPresence";
 import { useAccount } from "./account/AccountContext";
 import { workspaceReturnUrl } from "./workspace/navigation";
 import StudioImage from "./components/StudioImage";
@@ -930,189 +931,23 @@ export default function App({
         )}
       </main>
 
-      {dialog === "newFeed" && (
-        <Dialog
-          title="Um novo feed, novas ideias"
-          onClose={() => {
-            if (!busy) setDialog(null);
-          }}
-          className="small-dialog"
-        >
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              if (!newTitle.trim()) return;
-              setOperationError("");
-              void addFeed(newTitle.trim())
-                .then(() => {
-                  setSection("profile");
-                  setAvatarError("");
-                  setDialog(null);
-                })
-                .catch((error) =>
-                  setOperationError(
-                    error instanceof Error
-                      ? error.message
-                      : "Não foi possível criar o feed.",
-                  ),
-                );
+      <MotionPresence>
+        {dialog === "newFeed" && (
+          <Dialog
+            title="Um novo feed, novas ideias"
+            onClose={() => {
+              if (!busy) setDialog(null);
             }}
+            className="small-dialog"
           >
-            <p className="dialog-intro">
-              Crie um perfil fictício para uma marca ou campanha.
-            </p>
-            <label className="field">
-              <span>Nome do feed</span>
-              <input
-                autoFocus
-                required
-                maxLength={60}
-                value={newTitle}
-                placeholder="Ex.: Studio Flora"
-                onChange={(event) => setNewTitle(event.target.value)}
-              />
-            </label>
-            {operationError && (
-              <p className="form-error" role="alert">
-                {operationError}
-              </p>
-            )}
-            <div className="dialog-actions">
-              <button
-                type="button"
-                className="button secondary"
-                disabled={busy}
-                onClick={() => setDialog(null)}
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                className="button primary"
-                disabled={busy || !newTitle.trim()}
-              >
-                <Plus size={16} />
-                Criar feed
-              </button>
-            </div>
-          </form>
-        </Dialog>
-      )}
-
-      {dialog === "composer" && (
-        <PostComposer
-          post={editingPost}
-          prepareImage={
-            demo
-              ? undefined
-              : (file) => uploadFeedImage(project.id, file, "post")
-          }
-          discardMedia={
-            demo
-              ? undefined
-              : (ids) =>
-                  Promise.allSettled(
-                    ids.map((id) => deleteUnusedImage(project.id, id)),
-                  ).then(() => {})
-          }
-          onClose={() => setDialog(null)}
-          onSave={(post) => {
-            updateCurrentFeed((current) => ({
-              ...current,
-              posts: editingPost
-                ? current.posts.map((item) =>
-                    item.id === post.id ? post : item,
-                  )
-                : [post, ...current.posts],
-            }));
-            setDialog(null);
-            setSection("posts");
-          }}
-        />
-      )}
-
-      {viewedPost && (
-        <PostViewer
-          key={viewedPost.id}
-          post={viewedPost}
-          profile={profile}
-          mode={mode}
-          presentation={presentation}
-          onClose={() => setViewerId(null)}
-          onEdit={() => openComposer(viewedPost)}
-          onDelete={() => {
-            setViewerId(null);
-            setDeletePostId(viewedPost.id);
-          }}
-        />
-      )}
-
-      {deletePostId && (
-        <Dialog
-          title="Excluir esta publicação?"
-          onClose={() => setDeletePostId(null)}
-          className="small-dialog"
-        >
-          <p className="dialog-intro">
-            A publicação e suas imagens serão removidas deste feed.
-          </p>
-          <div className="dialog-actions">
-            <button
-              className="button secondary"
-              onClick={() => setDeletePostId(null)}
-            >
-              Cancelar
-            </button>
-            <button
-              className="button danger-button"
-              onClick={() => {
-                updateCurrentFeed((current) => ({
-                  ...current,
-                  posts: current.posts.filter(
-                    (post) => post.id !== deletePostId,
-                  ),
-                }));
-                setDeletePostId(null);
-              }}
-            >
-              Excluir publicação
-            </button>
-          </div>
-        </Dialog>
-      )}
-
-      {dialog === "deleteFeed" && (
-        <Dialog
-          title="Excluir este feed?"
-          onClose={() => {
-            if (!busy) setDialog(null);
-          }}
-          className="small-dialog"
-        >
-          <p className="dialog-intro">
-            O feed <strong>{project.title}</strong> e todas as suas publicações
-            serão removidos {demo ? "deste navegador" : "da sua conta"}.
-          </p>
-          {operationError && (
-            <p className="form-error" role="alert">
-              {operationError}
-            </p>
-          )}
-          <div className="dialog-actions">
-            <button
-              className="button secondary"
-              disabled={busy}
-              onClick={() => setDialog(null)}
-            >
-              Cancelar
-            </button>
-            <button
-              className="button danger-button"
-              disabled={busy}
-              onClick={() => {
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (!newTitle.trim()) return;
                 setOperationError("");
-                void removeFeed()
+                void addFeed(newTitle.trim())
                   .then(() => {
+                    setSection("profile");
                     setAvatarError("");
                     setDialog(null);
                   })
@@ -1120,16 +955,193 @@ export default function App({
                     setOperationError(
                       error instanceof Error
                         ? error.message
-                        : "Não foi possível excluir o feed.",
+                        : "Não foi possível criar o feed.",
                     ),
                   );
               }}
             >
-              Excluir feed
-            </button>
-          </div>
-        </Dialog>
-      )}
+              <p className="dialog-intro">
+                Crie um perfil fictício para uma marca ou campanha.
+              </p>
+              <label className="field">
+                <span>Nome do feed</span>
+                <input
+                  autoFocus
+                  required
+                  maxLength={60}
+                  value={newTitle}
+                  placeholder="Ex.: Studio Flora"
+                  onChange={(event) => setNewTitle(event.target.value)}
+                />
+              </label>
+              {operationError && (
+                <p className="form-error" role="alert">
+                  {operationError}
+                </p>
+              )}
+              <div className="dialog-actions">
+                <button
+                  type="button"
+                  className="button secondary"
+                  disabled={busy}
+                  onClick={() => setDialog(null)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="button primary"
+                  disabled={busy || !newTitle.trim()}
+                >
+                  <Plus size={16} />
+                  Criar feed
+                </button>
+              </div>
+            </form>
+          </Dialog>
+        )}
+      </MotionPresence>
+
+      <MotionPresence>
+        {dialog === "composer" && (
+          <PostComposer
+            post={editingPost}
+            prepareImage={
+              demo
+                ? undefined
+                : (file) => uploadFeedImage(project.id, file, "post")
+            }
+            discardMedia={
+              demo
+                ? undefined
+                : (ids) =>
+                    Promise.allSettled(
+                      ids.map((id) => deleteUnusedImage(project.id, id)),
+                    ).then(() => {})
+            }
+            onClose={() => setDialog(null)}
+            onSave={(post) => {
+              updateCurrentFeed((current) => ({
+                ...current,
+                posts: editingPost
+                  ? current.posts.map((item) =>
+                      item.id === post.id ? post : item,
+                    )
+                  : [post, ...current.posts],
+              }));
+              setDialog(null);
+              setSection("posts");
+            }}
+          />
+        )}
+      </MotionPresence>
+
+      <MotionPresence>
+        {viewedPost && (
+          <PostViewer
+            key={viewedPost.id}
+            post={viewedPost}
+            profile={profile}
+            mode={mode}
+            presentation={presentation}
+            onClose={() => setViewerId(null)}
+            onEdit={() => openComposer(viewedPost)}
+            onDelete={() => {
+              setViewerId(null);
+              setDeletePostId(viewedPost.id);
+            }}
+          />
+        )}
+      </MotionPresence>
+
+      <MotionPresence>
+        {deletePostId && (
+          <Dialog
+            title="Excluir esta publicação?"
+            onClose={() => setDeletePostId(null)}
+            className="small-dialog"
+          >
+            <p className="dialog-intro">
+              A publicação e suas imagens serão removidas deste feed.
+            </p>
+            <div className="dialog-actions">
+              <button
+                className="button secondary"
+                onClick={() => setDeletePostId(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="button danger-button"
+                onClick={() => {
+                  updateCurrentFeed((current) => ({
+                    ...current,
+                    posts: current.posts.filter(
+                      (post) => post.id !== deletePostId,
+                    ),
+                  }));
+                  setDeletePostId(null);
+                }}
+              >
+                Excluir publicação
+              </button>
+            </div>
+          </Dialog>
+        )}
+      </MotionPresence>
+
+      <MotionPresence>
+        {dialog === "deleteFeed" && (
+          <Dialog
+            title="Excluir este feed?"
+            onClose={() => {
+              if (!busy) setDialog(null);
+            }}
+            className="small-dialog"
+          >
+            <p className="dialog-intro">
+              O feed <strong>{project.title}</strong> e todas as suas
+              publicações serão removidos{" "}
+              {demo ? "deste navegador" : "da sua conta"}.
+            </p>
+            {operationError && (
+              <p className="form-error" role="alert">
+                {operationError}
+              </p>
+            )}
+            <div className="dialog-actions">
+              <button
+                className="button secondary"
+                disabled={busy}
+                onClick={() => setDialog(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                className="button danger-button"
+                disabled={busy}
+                onClick={() => {
+                  setOperationError("");
+                  void removeFeed()
+                    .then(() => {
+                      setAvatarError("");
+                      setDialog(null);
+                    })
+                    .catch((error) =>
+                      setOperationError(
+                        error instanceof Error
+                          ? error.message
+                          : "Não foi possível excluir o feed.",
+                      ),
+                    );
+                }}
+              >
+                Excluir feed
+              </button>
+            </div>
+          </Dialog>
+        )}
+      </MotionPresence>
     </div>
   );
 }

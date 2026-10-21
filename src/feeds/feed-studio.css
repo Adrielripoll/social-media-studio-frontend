@@ -291,7 +291,6 @@
 
 .feed-studio .field :is(input, textarea, select):focus {
   background: var(--surface);
-  border-color: var(--focus);
 }
 
 .feed-studio .input-with-prefix > span {

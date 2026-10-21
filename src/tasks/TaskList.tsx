@@ -1,3 +1,4 @@
+import { Expandable } from "../components/MotionPresence";
 import { useId, useState } from "react";
 import { Check, ChevronDown, ChevronUp, Pencil, Trash2, X } from "lucide-react";
 import type { Task } from "./api";
@@ -13,7 +14,13 @@ interface TaskListProps {
   visibleLimit?: number;
   referenceDate?: string;
 }
-function TaskTitle({ task, referenceDate }: { task: Task; referenceDate?: string }) {
+function TaskTitle({
+  task,
+  referenceDate,
+}: {
+  task: Task;
+  referenceDate?: string;
+}) {
   return (
     <span className="task-title">
       {task.title}
@@ -39,9 +46,9 @@ function TaskItem({
   const [editing, setEditing] = useState(false);
   const [removing, setRemoving] = useState(false);
   const [title, setTitle] = useState(task.title);
-  if (editing)
-    return (
-      <li className="task-item task-editing">
+  return (
+    <li className={"task-item" + (task.completedAt ? " task-completed" : "")}>
+      <Expandable open={editing}>
         <form
           className="task-edit-form"
           onSubmit={async (event) => {
@@ -74,70 +81,75 @@ function TaskItem({
             </button>
           </div>
         </form>
-      </li>
-    );
-  return (
-    <li className={"task-item" + (task.completedAt ? " task-completed" : "")}>
-      <div className="task-item-line">
-        <label className="task-check">
-          <input
-            type="checkbox"
-            checked={!!task.completedAt}
-            disabled={busy}
-            aria-label={(task.completedAt ? "Reabrir " : "Concluir ") + task.title}
-            onChange={() => void onComplete(task)}
-          />
-          <span aria-hidden="true">{task.completedAt && <Check size={13} />}</span>
-        </label>
-        <TaskTitle task={task} referenceDate={referenceDate} />
-        <div className="task-item-actions">
-          <button
-            className="task-icon-button"
-            aria-label={"Editar " + task.title}
-            disabled={busy}
-            onClick={() => {
-              setTitle(task.title);
-              setEditing(true);
-              setRemoving(false);
-            }}
-          >
-            <Pencil size={14} />
-          </button>
-          <button
-            className="task-icon-button"
-            aria-label={"Excluir " + task.title}
-            disabled={busy}
-            onClick={() => setRemoving(true)}
-          >
-            <Trash2 size={14} />
-          </button>
+      </Expandable>
+      <Expandable open={!editing} animateInitial={false}>
+        <div className="task-item-line">
+          <label className="task-check">
+            <input
+              type="checkbox"
+              checked={!!task.completedAt}
+              disabled={busy}
+              aria-label={
+                (task.completedAt ? "Reabrir " : "Concluir ") + task.title
+              }
+              onChange={() => void onComplete(task)}
+            />
+            <span aria-hidden="true">
+              {task.completedAt && <Check size={13} />}
+            </span>
+          </label>
+          <TaskTitle task={task} referenceDate={referenceDate} />
+          <div className="task-item-actions">
+            <button
+              className="task-icon-button"
+              aria-label={"Editar " + task.title}
+              disabled={busy}
+              onClick={() => {
+                setTitle(task.title);
+                setEditing(true);
+                setRemoving(false);
+              }}
+            >
+              <Pencil size={14} />
+            </button>
+            <button
+              className="task-icon-button"
+              aria-label={"Excluir " + task.title}
+              disabled={busy}
+              onClick={() => setRemoving(true)}
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
         </div>
-      </div>
-      {task.completedAt && <span className="task-completed-note">Concluída</span>}
-      {removing && (
-        <div
-          className="task-delete-confirm"
-          role="alertdialog"
-          aria-label={"Excluir tarefa " + task.title}
-        >
-          <p>Excluir esta tarefa?</p>
-          <button
-            className="button danger-button"
-            disabled={busy}
-            onClick={() => void onDelete(task)}
+        {task.completedAt && (
+          <span className="task-completed-note">Concluída</span>
+        )}
+        <Expandable open={removing && !editing}>
+          <div
+            className="task-delete-confirm"
+            role="alertdialog"
+            aria-label={"Excluir tarefa " + task.title}
           >
-            Confirmar exclusão
-          </button>
-          <button
-            className="task-icon-button"
-            aria-label="Cancelar exclusão"
-            disabled={busy}
-            onClick={() => setRemoving(false)}
-          >
-            <X size={16} />
-          </button>
-        </div>
-      )}
+            <p>Excluir esta tarefa?</p>
+            <button
+              className="button danger-button"
+              disabled={busy}
+              onClick={() => void onDelete(task)}
+            >
+              Confirmar exclusão
+            </button>
+            <button
+              className="task-icon-button"
+              aria-label="Cancelar exclusão"
+              disabled={busy}
+              onClick={() => setRemoving(false)}
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </Expandable>
+      </Expandable>
     </li>
   );
 }
@@ -168,11 +180,14 @@ export default function TaskList(props: TaskListProps) {
             <div
               key={task.id}
               className={
-                "task-preview-item" + (task.completedAt ? " task-completed" : "")
+                "task-preview-item" +
+                (task.completedAt ? " task-completed" : "")
               }
             >
               <span
-                className={"task-preview-dot" + (task.completedAt ? " is-completed" : "")}
+                className={
+                  "task-preview-dot" + (task.completedAt ? " is-completed" : "")
+                }
               >
                 {task.completedAt && <Check size={13} />}
               </span>

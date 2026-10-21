@@ -1,5 +1,6 @@
 export type WorkspaceView =
-  | { kind: "home" | "clients" | "feeds" | "dashboards" }
+  | { kind: "home" | "clients" }
+  | { kind: "feeds" | "dashboards"; clientId?: string }
   | { kind: "client"; id: string }
   | { kind: "dashboard"; id: string; clientId?: string };
 
@@ -13,8 +14,11 @@ export function workspaceView(search = window.location.search): WorkspaceView {
       id: dashboard,
       ...(client ? { clientId: client } : {}),
     };
-  if (client) return { kind: "client", id: client };
   const view = params.get("view");
+  if (client && (view === "feeds" || view === "dashboards")) {
+    return { kind: view, clientId: client };
+  }
+  if (client) return { kind: "client", id: client };
   return {
     kind:
       view === "clients" || view === "feeds" || view === "dashboards"
@@ -34,6 +38,11 @@ export function workspaceUrl(view: WorkspaceView) {
     );
   if (view.kind === "client")
     return "/?" + new URLSearchParams({ client: view.id });
+  if ((view.kind === "feeds" || view.kind === "dashboards") && view.clientId) {
+    return (
+      "/?" + new URLSearchParams({ view: view.kind, client: view.clientId })
+    );
+  }
   return view.kind === "home" ? "/" : "/?view=" + view.kind;
 }
 export function feedEditorUrl(id: string, view: WorkspaceView) {

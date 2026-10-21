@@ -1,4 +1,5 @@
 import { feedEditorUrl } from "../workspace/navigation";
+import type { WorkspaceView } from "../workspace/navigation";
 import FeedCardPreview from "./FeedCardPreview";
 import { useEffect, useState } from "react";
 import { LayoutGrid, Plus, RefreshCw } from "lucide-react";
@@ -6,7 +7,13 @@ import { ApiError } from "../auth/api";
 import { createFeed, listFeeds, deleteFeed } from "./api";
 import type { FeedSummary } from "./api";
 
-export default function FeedLibrary({ clientId }: { clientId?: string }) {
+export default function FeedLibrary({
+  clientId,
+  returnView,
+}: {
+  clientId?: string;
+  returnView?: WorkspaceView;
+}) {
   const [feeds, setFeeds] = useState<FeedSummary[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -54,7 +61,8 @@ export default function FeedLibrary({ clientId }: { clientId?: string }) {
       window.location.assign(
         feedEditorUrl(
           feed.id,
-          clientId ? { kind: "client", id: clientId } : { kind: "feeds" },
+          returnView ??
+            (clientId ? { kind: "client", id: clientId } : { kind: "feeds" }),
         ),
       );
     } catch (reason) {
@@ -162,9 +170,10 @@ export default function FeedLibrary({ clientId }: { clientId?: string }) {
                   className="button secondary"
                   href={feedEditorUrl(
                     feed.id,
-                    clientId
-                      ? { kind: "client", id: clientId }
-                      : { kind: "feeds" },
+                    returnView ??
+                      (clientId
+                        ? { kind: "client", id: clientId }
+                        : { kind: "feeds" }),
                   )}
                 >
                   <LayoutGrid size={16} />

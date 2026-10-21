@@ -1,3 +1,5 @@
+import MotionPresence from "../components/MotionPresence";
+import { useMediaQuery } from "../components/use-media-query";
 import ClientLogo from "./ClientLogo";
 import DashboardLibrary from "../dashboards/DashboardLibrary";
 import DashboardDetail from "../dashboards/DashboardDetail";
@@ -115,6 +117,24 @@ export default function Workspace({ children }: { children: ReactNode }) {
     return () => document.body.classList.remove("dashboard-experience");
   }, [dashboardExperience]);
   const [clientsExpanded, setClientsExpanded] = useState(false);
+  const compactNavigation = useMediaQuery("(max-width: 600px)");
+  const [expandedClients, setExpandedClients] = useState<
+    Record<string, boolean>
+  >({});
+  const activeClientId =
+    view.kind === "client"
+      ? view.id
+      : "clientId" in view
+        ? view.clientId
+        : undefined;
+  const globalDashboardsActive =
+    (view.kind === "dashboards" || view.kind === "dashboard") &&
+    !activeClientId;
+  useEffect(() => {
+    if (activeClientId) {
+      setExpandedClients((current) => ({ ...current, [activeClientId]: true }));
+    }
+  }, [activeClientId]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -227,9 +247,7 @@ export default function Workspace({ children }: { children: ReactNode }) {
     });
   }
   const selectedClient =
-    view.kind === "client"
-      ? clients.find((client) => client.id === view.id)
-      : null;
+    clients.find((client) => client.id === activeClientId) ?? null;
   const visibleClients = view.kind === "client" ? [] : clients;
   const disabled = busy || loading;
   function clientActions(client: Client) {
@@ -285,11 +303,13 @@ export default function Workspace({ children }: { children: ReactNode }) {
             <button
               className={
                 "workspace-nav-button" +
-                (view.kind === "feeds" ? " is-active" : "")
+                (view.kind === "feeds" && !view.clientId ? " is-active" : "")
               }
               disabled={busy}
               onClick={() => navigate({ kind: "feeds" })}
-              aria-current={view.kind === "feeds" ? "page" : undefined}
+              aria-current={
+                view.kind === "feeds" && !view.clientId ? "page" : undefined
+              }
             >
               <span className="workspace-nav-icon" aria-hidden="true">
                 <LayoutGrid size={17} />
@@ -304,17 +324,11 @@ export default function Workspace({ children }: { children: ReactNode }) {
             <button
               className={
                 "workspace-nav-button" +
-                (view.kind === "dashboards" || view.kind === "dashboard"
-                  ? " is-active"
-                  : "")
+                (globalDashboardsActive ? " is-active" : "")
               }
               disabled={busy}
               onClick={() => navigate({ kind: "dashboards" })}
-              aria-current={
-                view.kind === "dashboards" || view.kind === "dashboard"
-                  ? "page"
-                  : undefined
-              }
+              aria-current={globalDashboardsActive ? "page" : undefined}
             >
               <span className="workspace-nav-icon" aria-hidden="true">
                 <BarChart3 size={17} />
@@ -363,54 +377,133 @@ export default function Workspace({ children }: { children: ReactNode }) {
             </div>
             <div
               id="workspace-clients-list"
+              aria-hidden={
+                compactNavigation && !clientsExpanded ? true : undefined
+              }
+              inert={compactNavigation && !clientsExpanded}
               className={
                 "workspace-clients-list" +
                 (clientsExpanded ? " is-expanded" : "")
               }
             >
-              {loading ? (
-                <p className="workspace-muted" role="status">
-                  Carregando seu espaço…
-                </p>
-              ) : (
-                clients.length === 0 && (
-                  <p className="workspace-muted">
-                    Seus clientes aparecerão aqui.
+              <div className="workspace-clients-list-inner">
+                {loading ? (
+                  <p className="workspace-muted" role="status">
+                    Carregando seu espaço…
                   </p>
-                )
-              )}
-              {clients.map((client) => (
-                <div className="workspace-client-group" key={client.id}>
-                  <button
-                    className={
-                      "workspace-client-link" +
-                      (view.kind === "client" && view.id === client.id
-                        ? " is-active"
-                        : "")
-                    }
-                    disabled={busy}
-                    onClick={() => navigate({ kind: "client", id: client.id })}
-                    aria-current={
-                      view.kind === "client" && view.id === client.id
-                        ? "page"
-                        : undefined
-                    }
-                  >
-                    <span
-                      className="workspace-client-initials"
-                      aria-hidden="true"
-                    >
-                      {clientInitials(client.name)}
-                    </span>
-                    <span className="workspace-client-name">{client.name}</span>
-                    <ChevronRight
-                      className="workspace-client-arrow"
-                      size={14}
-                      aria-hidden="true"
-                    />
-                  </button>
-                </div>
-              ))}
+                ) : (
+                  clients.length === 0 && (
+                    <p className="workspace-muted">
+                      Seus clientes aparecerão aqui.
+                    </p>
+                  )
+                )}
+                {clients.map((client) => {
+                  const expanded = Boolean(expandedClients[client.id]);
+                  const submenuId = "workspace-client-tools-" + client.id;
+                  return (
+                    <div className="workspace-client-group" key={client.id}>
+                      <div className="workspace-client-row">
+                        <button
+                          className={
+                            "workspace-client-link" +
+                            (activeClientId === client.id ? " is-active" : "")
+                          }
+                          disabled={busy}
+                          onClick={() =>
+                            navigate({ kind: "client", id: client.id })
+                          }
+                          aria-current={
+                            view.kind === "client" && view.id === client.id
+                              ? "page"
+                              : undefined
+                          }
+                        >
+                          <span
+                            className="workspace-client-initials"
+                            aria-hidden="true"
+                          >
+                            {clientInitials(client.name)}
+                          </span>
+                          <span className="workspace-client-name">
+                            {client.name}
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          className="workspace-client-toggle"
+                          aria-label={"Ferramentas de " + client.name}
+                          aria-expanded={expanded}
+                          aria-controls={submenuId}
+                          disabled={busy}
+                          onClick={() =>
+                            setExpandedClients((current) => ({
+                              ...current,
+                              [client.id]: !current[client.id],
+                            }))
+                          }
+                        >
+                          <ChevronRight
+                            className="workspace-client-arrow"
+                            size={16}
+                            aria-hidden="true"
+                          />
+                        </button>
+                      </div>
+                      <div
+                        id={submenuId}
+                        className={
+                          "workspace-client-tools" +
+                          (expanded ? " is-expanded" : "")
+                        }
+                        aria-hidden={!expanded}
+                        inert={!expanded}
+                      >
+                        <div className="workspace-client-tools-inner">
+                          <button
+                            type="button"
+                            disabled={busy}
+                            className="workspace-client-tool"
+                            aria-current={
+                              view.kind === "feeds" &&
+                              view.clientId === client.id
+                                ? "page"
+                                : undefined
+                            }
+                            onClick={() =>
+                              navigate({ kind: "feeds", clientId: client.id })
+                            }
+                          >
+                            <LayoutGrid size={15} aria-hidden="true" />
+                            Feeds
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busy}
+                            className="workspace-client-tool"
+                            aria-current={
+                              (view.kind === "dashboards" ||
+                                view.kind === "dashboard") &&
+                              view.clientId === client.id
+                                ? "page"
+                                : undefined
+                            }
+                            onClick={() =>
+                              navigate({
+                                kind: "dashboards",
+                                clientId: client.id,
+                              })
+                            }
+                          >
+                            <BarChart3 size={15} aria-hidden="true" />
+                            Dashboards
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </section>
         </nav>
@@ -429,192 +522,226 @@ export default function Workspace({ children }: { children: ReactNode }) {
             </button>
           </div>
         )}
-        {view.kind === "home" ? (
-          children
-        ) : view.kind === "dashboards" ? (
-          <DashboardLibrary
-            onOpen={(id) => navigate({ kind: "dashboard", id })}
-          />
-        ) : view.kind === "dashboard" ? (
-          <DashboardDetail
-            key={view.id}
-            id={view.id}
-            clients={clients}
-            onDirtyChange={(value) => {
-              dashboardDirty.current = value;
-            }}
-            onBack={() =>
-              navigate(
-                view.clientId
-                  ? { kind: "client", id: view.clientId }
-                  : { kind: "dashboards" },
-              )
-            }
-          />
-        ) : view.kind === "feeds" ? (
-          <FeedLibrary />
-        ) : (
-          <section aria-label="Gerenciar clientes" className="workspace-page">
-            <header
-              className="workspace-page-heading studio-page-heading studio-hero"
-              role={selectedClient ? "article" : undefined}
-              aria-label={
-                selectedClient ? "Cliente " + selectedClient.name : undefined
-              }
-            >
-              <div>
-                <span className="task-eyebrow">SEU ESPAÇO DE TRABALHO</span>
-                <h1>{selectedClient?.name ?? "Clientes"}</h1>
-                <p>
-                  {selectedClient
-                    ? "Seus feeds e resultados, reunidos em um só lugar."
-                    : "Organize suas marcas e mantenha cada trabalho por perto."}
-                </p>
-              </div>
-              {selectedClient && clientActions(selectedClient)}
-              {view.kind === "clients" && (
+        <div className="workspace-view" key={workspaceUrl(view)}>
+          {selectedClient &&
+            (view.kind === "feeds" || view.kind === "dashboards") && (
+              <div className="workspace-client-context">
                 <button
-                  className="button primary"
-                  disabled={disabled}
-                  onClick={() => openEditor()}
+                  className="text-button"
+                  onClick={() =>
+                    navigate({ kind: "client", id: selectedClient.id })
+                  }
                 >
-                  <Plus size={16} />
-                  Cadastrar cliente
+                  {selectedClient.name}
                 </button>
-              )}
-            </header>
-            {selectedClient && (
-              <ClientLogo
-                key={selectedClient.id}
-                id={selectedClient.id}
-                name={selectedClient.name}
-              />
+                <ChevronRight size={14} aria-hidden="true" />
+                <span>{view.kind === "feeds" ? "Feeds" : "Dashboards"}</span>
+              </div>
             )}
-            {loading && (
-              <p className="workspace-muted" role="status">
-                <LoaderCircle className="spin" size={16} />
-                Carregando…
-              </p>
-            )}
-            {!loading &&
-              !error &&
-              view.kind === "client" &&
-              !selectedClient && (
-                <div className="workspace-empty">
-                  <p>Este cliente não está disponível no seu espaço.</p>
-                  <button
-                    className="button secondary"
-                    onClick={() => navigate({ kind: "clients" })}
-                  >
-                    Ver clientes
-                  </button>
+          {view.kind === "home" ? (
+            children
+          ) : view.kind === "dashboards" ? (
+            <DashboardLibrary
+              key={view.clientId ?? "all-dashboards"}
+              clientId={view.clientId}
+              onOpen={(id) =>
+                navigate({
+                  kind: "dashboard",
+                  id,
+                  ...(view.clientId ? { clientId: view.clientId } : {}),
+                })
+              }
+            />
+          ) : view.kind === "dashboard" ? (
+            <DashboardDetail
+              key={view.id}
+              id={view.id}
+              clients={clients}
+              onDirtyChange={(value) => {
+                dashboardDirty.current = value;
+              }}
+              onBack={() =>
+                navigate(
+                  view.clientId
+                    ? { kind: "client", id: view.clientId }
+                    : { kind: "dashboards" },
+                )
+              }
+            />
+          ) : view.kind === "feeds" ? (
+            <FeedLibrary
+              key={view.clientId ?? "all-feeds"}
+              clientId={view.clientId}
+              returnView={view}
+            />
+          ) : (
+            <section aria-label="Gerenciar clientes" className="workspace-page">
+              <header
+                className="workspace-page-heading studio-page-heading studio-hero"
+                role={selectedClient ? "article" : undefined}
+                aria-label={
+                  selectedClient ? "Cliente " + selectedClient.name : undefined
+                }
+              >
+                <div>
+                  <span className="task-eyebrow">SEU ESPAÇO DE TRABALHO</span>
+                  <h1>{selectedClient?.name ?? "Clientes"}</h1>
+                  <p>
+                    {selectedClient
+                      ? "Seus feeds e resultados, reunidos em um só lugar."
+                      : "Organize suas marcas e mantenha cada trabalho por perto."}
+                  </p>
                 </div>
+                {selectedClient && clientActions(selectedClient)}
+                {view.kind === "clients" && (
+                  <button
+                    className="button primary"
+                    disabled={disabled}
+                    onClick={() => openEditor()}
+                  >
+                    <Plus size={16} />
+                    Cadastrar cliente
+                  </button>
+                )}
+              </header>
+              {selectedClient && (
+                <ClientLogo
+                  key={selectedClient.id}
+                  id={selectedClient.id}
+                  name={selectedClient.name}
+                />
               )}
-            <div className="workspace-cards workspace-client-cards">
+              {loading && (
+                <p className="workspace-muted" role="status">
+                  <LoaderCircle className="spin" size={16} />
+                  Carregando…
+                </p>
+              )}
               {!loading &&
                 !error &&
-                view.kind === "clients" &&
-                !visibleClients.length && (
-                  <p className="workspace-empty">
-                    Nenhum cliente cadastrado. Adicione o primeiro para começar.
-                  </p>
-                )}
-              {visibleClients.map((client) => (
-                <article
-                  key={client.id}
-                  className="workspace-card workspace-client-card"
-                  aria-label={"Cliente " + client.name}
-                >
-                  <ClientLogo id={client.id} name={client.name} compact />
-                  <div className="workspace-client-info">
-                    <span className="workspace-card-label">CLIENTE</span>
-                    <h2>{client.name}</h2>
+                view.kind === "client" &&
+                !selectedClient && (
+                  <div className="workspace-empty">
+                    <p>Este cliente não está disponível no seu espaço.</p>
+                    <button
+                      className="button secondary"
+                      onClick={() => navigate({ kind: "clients" })}
+                    >
+                      Ver clientes
+                    </button>
                   </div>
-                  {clientActions(client)}
-                </article>
-              ))}
-            </div>
-            {selectedClient && (
-              <>
-                <FeedLibrary
-                  key={selectedClient.id}
-                  clientId={selectedClient.id}
-                />
-                <DashboardLibrary
-                  key={"dashboards-" + selectedClient.id}
-                  clientId={selectedClient.id}
-                  onOpen={(id) =>
-                    navigate({
-                      kind: "dashboard",
-                      id,
-                      clientId: selectedClient.id,
-                    })
-                  }
-                />
-              </>
-            )}
-          </section>
-        )}
+                )}
+              <div className="workspace-cards workspace-client-cards">
+                {!loading &&
+                  !error &&
+                  view.kind === "clients" &&
+                  !visibleClients.length && (
+                    <p className="workspace-empty">
+                      Nenhum cliente cadastrado. Adicione o primeiro para
+                      começar.
+                    </p>
+                  )}
+                {visibleClients.map((client) => (
+                  <article
+                    key={client.id}
+                    className="workspace-card workspace-client-card"
+                    aria-label={"Cliente " + client.name}
+                  >
+                    <ClientLogo id={client.id} name={client.name} compact />
+                    <div className="workspace-client-info">
+                      <span className="workspace-card-label">CLIENTE</span>
+                      <h2>{client.name}</h2>
+                    </div>
+                    {clientActions(client)}
+                  </article>
+                ))}
+              </div>
+              {selectedClient && (
+                <>
+                  <FeedLibrary
+                    key={selectedClient.id}
+                    clientId={selectedClient.id}
+                  />
+                  <DashboardLibrary
+                    key={"dashboards-" + selectedClient.id}
+                    clientId={selectedClient.id}
+                    onOpen={(id) =>
+                      navigate({
+                        kind: "dashboard",
+                        id,
+                        clientId: selectedClient.id,
+                      })
+                    }
+                  />
+                </>
+              )}
+            </section>
+          )}
+        </div>
       </main>
-      {editor && (
-        <ClientForm
-          client={editor.client}
-          busy={busy}
-          error={error}
-          onSave={save}
-          onClose={() => {
-            if (!busy) {
-              setEditor(null);
-              setError("");
-            }
-          }}
-        />
-      )}
-      {removal && (
-        <Dialog
-          title="Excluir cliente?"
-          onClose={() => {
-            if (!busy) {
-              setRemoval(null);
-              setError("");
-            }
-          }}
-          className="workspace-dialog"
-        >
-          <div className="workspace-form">
-            <p>
-              Excluir <strong>{removal.name}</strong>?
-            </p>
-            <p className="workspace-muted">
-              Esta ação remove o cliente da sua conta.
-            </p>
-            {error && (
-              <p className="workspace-error" role="alert">
-                {error}
+      <MotionPresence>
+        {editor && (
+          <ClientForm
+            client={editor.client}
+            busy={busy}
+            error={error}
+            onSave={save}
+            onClose={() => {
+              if (!busy) {
+                setEditor(null);
+                setError("");
+              }
+            }}
+          />
+        )}
+      </MotionPresence>
+      <MotionPresence>
+        {removal && (
+          <Dialog
+            title="Excluir cliente?"
+            onClose={() => {
+              if (!busy) {
+                setRemoval(null);
+                setError("");
+              }
+            }}
+            className="workspace-dialog"
+          >
+            <div className="workspace-form">
+              <p>
+                Excluir <strong>{removal.name}</strong>?
               </p>
-            )}
-            <div className="workspace-form-actions">
-              <button
-                className="button danger-button"
-                disabled={busy}
-                onClick={() => void remove()}
-              >
-                {busy ? "Excluindo…" : "Confirmar exclusão"}
-              </button>
-              <button
-                className="button secondary"
-                disabled={busy}
-                onClick={() => {
-                  setRemoval(null);
-                  setError("");
-                }}
-              >
-                Cancelar
-              </button>
+              <p className="workspace-muted">
+                Esta ação remove o cliente da sua conta.
+              </p>
+              {error && (
+                <p className="workspace-error" role="alert">
+                  {error}
+                </p>
+              )}
+              <div className="workspace-form-actions">
+                <button
+                  className="button danger-button"
+                  disabled={busy}
+                  onClick={() => void remove()}
+                >
+                  {busy ? "Excluindo…" : "Confirmar exclusão"}
+                </button>
+                <button
+                  className="button secondary"
+                  disabled={busy}
+                  onClick={() => {
+                    setRemoval(null);
+                    setError("");
+                  }}
+                >
+                  Cancelar
+                </button>
+              </div>
             </div>
-          </div>
-        </Dialog>
-      )}
+          </Dialog>
+        )}
+      </MotionPresence>
     </div>
   );
 }

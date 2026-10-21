@@ -1,3 +1,4 @@
+import MotionPresence from "../components/MotionPresence";
 import RetentionNotice from "../account/RetentionNotice";
 import { useEffect, useState } from "react";
 import { CreditCard, LockKeyhole, RefreshCw } from "lucide-react";
@@ -432,101 +433,109 @@ export default function BillingPanel({
           </ul>
         </section>
       )}
-      {resumeConfirmation && (
-        <Dialog
-          title="Retomar assinatura?"
-          onClose={() => setResumeConfirmation(null)}
-          busy={busy}
-        >
-          {resumeConfirmation.mode === "renewal" ? (
+      <MotionPresence>
+        {resumeConfirmation && (
+          <Dialog
+            title="Retomar assinatura?"
+            onClose={() => setResumeConfirmation(null)}
+            busy={busy}
+          >
+            {resumeConfirmation.mode === "renewal" ? (
+              <p>
+                <strong>Nenhuma cobrança será feita agora.</strong> Seu ciclo já
+                está pago. A próxima cobrança será de{" "}
+                {money(resumeConfirmation.priceCents ?? 0)} em{" "}
+                {date(resumeConfirmation.nextChargeDate)}, no início do próximo
+                ciclo. Depois disso, a renovação será mensal.
+              </p>
+            ) : (
+              <p>
+                Seu ciclo anterior terminou. Você será direcionado ao Asaas para
+                pagar {money(resumeConfirmation.priceCents ?? 0)} agora e
+                iniciar um novo ciclo mensal. O acesso será liberado após a
+                confirmação do pagamento.
+              </p>
+            )}
+            <div className="billing-actions">
+              <button
+                className="button secondary"
+                disabled={busy}
+                onClick={() => setResumeConfirmation(null)}
+              >
+                Voltar
+              </button>
+              <button
+                className="button primary"
+                disabled={busy}
+                onClick={() =>
+                  requestSubscription("resume", resumeConfirmation)
+                }
+              >
+                {busy
+                  ? "Aguarde…"
+                  : resumeConfirmation.mode === "renewal"
+                    ? "Confirmar retomada"
+                    : "Continuar para pagamento"}
+              </button>
+            </div>
+            {error && <p role="alert">{error}</p>}
+          </Dialog>
+        )}
+      </MotionPresence>
+      <MotionPresence>
+        {pendingSubscription && (
+          <Dialog
+            title="Antes de continuar"
+            onClose={() => setPendingSubscription(null)}
+            busy={policyBusy}
+          >
+            <RetentionNotice
+              onBusyChange={setPolicyBusy}
+              onAccepted={() => {
+                const pending = pendingSubscription;
+                setPendingSubscription(null);
+                void action(pending.kind, pending.offer);
+              }}
+            />
+          </Dialog>
+        )}
+      </MotionPresence>
+      <MotionPresence>
+        {confirm && (
+          <Dialog
+            title="Cancelar assinatura?"
+            onClose={() => setConfirm(false)}
+            busy={busy}
+          >
             <p>
-              <strong>Nenhuma cobrança será feita agora.</strong> Seu ciclo já
-              está pago. A próxima cobrança será de{" "}
-              {money(resumeConfirmation.priceCents ?? 0)} em{" "}
-              {date(resumeConfirmation.nextChargeDate)}, no início do próximo
-              ciclo. Depois disso, a renovação será mensal.
+              As próximas renovações serão encerradas. O acesso ao período já
+              pago será preservado
+              {access?.paidUntil
+                ? " até " +
+                  date(new Date(Date.parse(access.paidUntil) - 1).toISOString())
+                : ""}
+              .
             </p>
-          ) : (
-            <p>
-              Seu ciclo anterior terminou. Você será direcionado ao Asaas para
-              pagar {money(resumeConfirmation.priceCents ?? 0)} agora e iniciar
-              um novo ciclo mensal. O acesso será liberado após a confirmação do
-              pagamento.
-            </p>
-          )}
-          <div className="billing-actions">
-            <button
-              className="button secondary"
-              disabled={busy}
-              onClick={() => setResumeConfirmation(null)}
-            >
-              Voltar
-            </button>
-            <button
-              className="button primary"
-              disabled={busy}
-              onClick={() => requestSubscription("resume", resumeConfirmation)}
-            >
-              {busy
-                ? "Aguarde…"
-                : resumeConfirmation.mode === "renewal"
-                  ? "Confirmar retomada"
-                  : "Continuar para pagamento"}
-            </button>
-          </div>
-          {error && <p role="alert">{error}</p>}
-        </Dialog>
-      )}
-      {pendingSubscription && (
-        <Dialog
-          title="Antes de continuar"
-          onClose={() => setPendingSubscription(null)}
-          busy={policyBusy}
-        >
-          <RetentionNotice
-            onBusyChange={setPolicyBusy}
-            onAccepted={() => {
-              const pending = pendingSubscription;
-              setPendingSubscription(null);
-              void action(pending.kind, pending.offer);
-            }}
-          />
-        </Dialog>
-      )}
-      {confirm && (
-        <Dialog
-          title="Cancelar assinatura?"
-          onClose={() => setConfirm(false)}
-          busy={busy}
-        >
-          <p>
-            As próximas renovações serão encerradas. O acesso ao período já pago
-            será preservado
-            {access?.paidUntil
-              ? " até " +
-                date(new Date(Date.parse(access.paidUntil) - 1).toISOString())
-              : ""}
-            .
-          </p>
-          <div className="billing-actions">
-            <button
-              className="button secondary"
-              disabled={busy}
-              onClick={() => setConfirm(false)}
-            >
-              Manter assinatura
-            </button>
-            <button
-              className="button primary"
-              disabled={busy}
-              onClick={() => void action("cancel")}
-            >
-              {busy ? "Cancelando…" : "Confirmar cancelamento"}
-            </button>
-          </div>
-          {error && <p role="alert">{error}</p>}
-        </Dialog>
-      )}
+            <div className="billing-actions">
+              <button
+                className="button secondary"
+                disabled={busy}
+                onClick={() => setConfirm(false)}
+              >
+                Manter assinatura
+              </button>
+              <button
+                className="button primary"
+                disabled={busy}
+                onClick={() => void action("cancel")}
+              >
+                {busy ? "Cancelando…" : "Confirmar cancelamento"}
+              </button>
+            </div>
+            {error && <p role="alert">{error}</p>}
+          </Dialog>
+        )}
+      </MotionPresence>
     </div>
   );
 }

@@ -1,4 +1,5 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import MotionPresence, { Expandable } from "../components/MotionPresence";
+import { lazy, Suspense, useEffect, useId, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -90,6 +91,8 @@ export default function DashboardDetail({
     [importing, setImporting] = useState(false),
     [removing, setRemoving] = useState(false);
   const [presenting, setPresenting] = useState(false);
+  const [settingsExpanded, setSettingsExpanded] = useState(false);
+  const settingsId = useId();
   const [currentKey, setCurrentKey] = useState(""),
     [previousKey, setPreviousKey] = useState("");
   const [legacy, setLegacy] = useState(false);
@@ -386,105 +389,119 @@ export default function DashboardDetail({
         </p>
       )}
       {!presenting && (
-        <details className="dashboard-settings">
-          <summary>Editar informações do dashboard</summary>
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              void save();
-            }}
-            className="workspace-form"
+        <section
+          className={
+            "dashboard-settings" + (settingsExpanded ? " is-expanded" : "")
+          }
+        >
+          <button
+            type="button"
+            className="dashboard-settings-toggle"
+            aria-expanded={settingsExpanded}
+            aria-controls={settingsId}
+            onClick={() => setSettingsExpanded((value) => !value)}
           >
-            <fieldset disabled={busy}>
-              <div className="dashboard-metadata-grid">
+            Editar informações do dashboard
+          </button>
+          <Expandable open={settingsExpanded} id={settingsId}>
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                void save();
+              }}
+              className="workspace-form"
+            >
+              <fieldset disabled={busy}>
+                <div className="dashboard-metadata-grid">
+                  <label>
+                    Nome do dashboard
+                    <input
+                      required
+                      maxLength={80}
+                      value={draft.name}
+                      onChange={(event) =>
+                        setDraft({ ...draft, name: event.target.value })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Perfil analisado
+                    <input
+                      maxLength={120}
+                      value={draft.accountName}
+                      onChange={(event) =>
+                        setDraft({ ...draft, accountName: event.target.value })
+                      }
+                      placeholder="Ex.: @cafeaurora"
+                    />
+                  </label>
+                  <label>
+                    Cliente associado
+                    <select
+                      aria-label="Cliente associado"
+                      value={draft.clientId ?? ""}
+                      onChange={(event) =>
+                        setDraft({
+                          ...draft,
+                          clientId: event.target.value || null,
+                        })
+                      }
+                    >
+                      <option value="">Sem cliente</option>
+                      {clients.map((item) => (
+                        <option value={item.id} key={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
                 <label>
-                  Nome do dashboard
-                  <input
-                    required
-                    maxLength={80}
-                    value={draft.name}
+                  Análise do profissional
+                  <textarea
+                    aria-label="Análise do profissional"
+                    rows={5}
+                    maxLength={6000}
+                    value={draft.notes}
                     onChange={(event) =>
-                      setDraft({ ...draft, name: event.target.value })
+                      setDraft({ ...draft, notes: event.target.value })
                     }
+                    placeholder="Explique os resultados e os próximos passos para seu cliente."
                   />
                 </label>
-                <label>
-                  Perfil analisado
-                  <input
-                    maxLength={120}
-                    value={draft.accountName}
-                    onChange={(event) =>
-                      setDraft({ ...draft, accountName: event.target.value })
-                    }
-                    placeholder="Ex.: @cafeaurora"
-                  />
-                </label>
-                <label>
-                  Cliente associado
-                  <select
-                    aria-label="Cliente associado"
-                    value={draft.clientId ?? ""}
-                    onChange={(event) =>
-                      setDraft({
-                        ...draft,
-                        clientId: event.target.value || null,
-                      })
-                    }
-                  >
-                    <option value="">Sem cliente</option>
-                    {clients.map((item) => (
-                      <option value={item.id} key={item.id}>
-                        {item.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+              </fieldset>
+              <div className="dashboard-settings-actions">
+                <button
+                  className="button primary"
+                  disabled={busy || !dirty || !draft.name.trim()}
+                >
+                  <Save size={16} />
+                  {busy ? "Salvando…" : "Salvar informações"}
+                </button>
+                <button
+                  type="button"
+                  className="button secondary"
+                  disabled={busy || !dirty}
+                  onClick={() => setDraft(metadataOf(dashboard))}
+                >
+                  Descartar alterações
+                </button>
+                <button
+                  type="button"
+                  className="button danger-button"
+                  disabled={busy}
+                  onClick={() => {
+                    setError("");
+                    setRemoving(true);
+                  }}
+                >
+                  <Trash2 size={16} />
+                  Excluir dashboard
+                </button>
               </div>
-              <label>
-                Análise do profissional
-                <textarea
-                  aria-label="Análise do profissional"
-                  rows={5}
-                  maxLength={6000}
-                  value={draft.notes}
-                  onChange={(event) =>
-                    setDraft({ ...draft, notes: event.target.value })
-                  }
-                  placeholder="Explique os resultados e os próximos passos para seu cliente."
-                />
-              </label>
-            </fieldset>
-            <div className="dashboard-settings-actions">
-              <button
-                className="button primary"
-                disabled={busy || !dirty || !draft.name.trim()}
-              >
-                <Save size={16} />
-                {busy ? "Salvando…" : "Salvar informações"}
-              </button>
-              <button
-                type="button"
-                className="button secondary"
-                disabled={busy || !dirty}
-                onClick={() => setDraft(metadataOf(dashboard))}
-              >
-                Descartar alterações
-              </button>
-              <button
-                type="button"
-                className="button danger-button"
-                disabled={busy}
-                onClick={() => {
-                  setError("");
-                  setRemoving(true);
-                }}
-              >
-                <Trash2 size={16} />
-                Excluir dashboard
-              </button>
-            </div>
-          </form>
-        </details>
+            </form>
+          </Expandable>
+        </section>
       )}
       {dailyPoints.length > 0 && dashboard.periods.length > 0 && (
         <label className="dashboard-source">
@@ -756,59 +773,65 @@ export default function DashboardDetail({
           </p>
         </div>
       )}
-      {importing && (
-        <DashboardImport
-          dashboard={dashboard}
-          onClose={() => setImporting(false)}
-          onImported={(value) => {
-            accept(value);
-            setLegacy(false);
-            setRangeStart("");
-            setRangeEnd("");
-            setComparing(false);
-            setCurrentKey("");
-            setPreviousKey("");
-            setImporting(false);
-            setSuccess("Resultados importados. O arquivo não foi armazenado.");
-          }}
-        />
-      )}
-      {removing && (
-        <Dialog
-          title="Excluir dashboard?"
-          busy={busy}
-          onClose={() => setRemoving(false)}
-          className="workspace-dialog"
-        >
-          <div className="workspace-form">
-            <p>
-              Excluir <strong>{dashboard.name}</strong> e todos os seus
-              períodos? Esta ação não pode ser desfeita.
-            </p>
-            {error && (
-              <p className="workspace-error" role="alert">
-                {error}
+      <MotionPresence>
+        {importing && (
+          <DashboardImport
+            dashboard={dashboard}
+            onClose={() => setImporting(false)}
+            onImported={(value) => {
+              accept(value);
+              setLegacy(false);
+              setRangeStart("");
+              setRangeEnd("");
+              setComparing(false);
+              setCurrentKey("");
+              setPreviousKey("");
+              setImporting(false);
+              setSuccess(
+                "Resultados importados. O arquivo não foi armazenado.",
+              );
+            }}
+          />
+        )}
+      </MotionPresence>
+      <MotionPresence>
+        {removing && (
+          <Dialog
+            title="Excluir dashboard?"
+            busy={busy}
+            onClose={() => setRemoving(false)}
+            className="workspace-dialog"
+          >
+            <div className="workspace-form">
+              <p>
+                Excluir <strong>{dashboard.name}</strong> e todos os seus
+                períodos? Esta ação não pode ser desfeita.
               </p>
-            )}
-            <div className="dialog-actions">
-              <button
-                className="button secondary"
-                disabled={busy}
-                onClick={() => setRemoving(false)}
-              >
-                Cancelar
-              </button>
-              <button
-                className="button danger-button"
-                disabled={busy}
-                onClick={() => void remove()}
-              >
-                {busy ? "Excluindo…" : "Confirmar exclusão"}
-              </button>
+              {error && (
+                <p className="workspace-error" role="alert">
+                  {error}
+                </p>
+              )}
+              <div className="dialog-actions">
+                <button
+                  className="button secondary"
+                  disabled={busy}
+                  onClick={() => setRemoving(false)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  className="button danger-button"
+                  disabled={busy}
+                  onClick={() => void remove()}
+                >
+                  {busy ? "Excluindo…" : "Confirmar exclusão"}
+                </button>
+              </div>
             </div>
-          </div>
-        </Dialog>
-      )}
+          </Dialog>
+        )}
+      </MotionPresence>
     </section>
   );
 }

@@ -166,10 +166,6 @@
   font-size: 13px;
   color: var(--text-primary);
 }
-.workspace-form input:focus,
-.workspace-form select:focus {
-  outline: 2px solid var(--focus);
-}
 .workspace-form small {
   font-size: 11px;
   color: var(--text-secondary);
