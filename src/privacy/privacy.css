@@ -1,0 +1,120 @@
+.privacy-feedback {
+  display: grid;
+  gap: 14px;
+  margin-block: 20px;
+}
+.privacy-feedback textarea {
+  resize: vertical;
+  min-height: 96px;
+}
+.privacy-email {
+  margin-block: 12px 20px;
+}
+.profile-email-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 10px;
+  align-items: end;
+}
+.profile-email-row > .field {
+  min-width: 0;
+  grid-column: 1;
+}
+.privacy-email-inline {
+  grid-column: 1 / -1;
+  margin: 0;
+}
+.privacy-email-inline.is-verified {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  min-height: 46px;
+}
+.privacy-email-badge {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  color: var(--success);
+}
+.privacy-email-badge:focus-visible {
+  outline: 2px solid var(--success);
+  outline-offset: 2px;
+  border-radius: 50%;
+}
+.privacy-email-tooltip {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 8px);
+  z-index: 5;
+  width: max-content;
+  padding: 7px 10px;
+  border-radius: 7px;
+  background: var(--text-primary);
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 500;
+  line-height: 1.4;
+  white-space: nowrap;
+  box-shadow: 0 4px 14px #231b1a24;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(3px);
+  transition:
+    opacity var(--motion-fast, 140ms) ease,
+    transform var(--motion-fast, 140ms) ease,
+    visibility var(--motion-fast, 140ms) ease;
+}
+.privacy-email-tooltip::after {
+  content: "";
+  position: absolute;
+  inset: 100% 0 -8px;
+}
+.privacy-email-badge:is(:hover, :focus-within):not(
+    [data-tooltip-dismissed="true"]
+  )
+  .privacy-email-tooltip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .privacy-email-tooltip {
+    transition: none;
+    transform: none;
+  }
+}
+.privacy-email .success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.privacy-panel p {
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.privacy-document {
+  width: min(760px, calc(100% - 40px));
+  margin: 36px auto 80px;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.privacy-document .studio-brand {
+  display: block;
+  width: 200px;
+  margin-bottom: 24px;
+}
+.privacy-document h1 {
+  margin-block: 28px 12px;
+  line-height: 1.25;
+}
+.privacy-document h2 {
+  margin-block: 32px 8px;
+  line-height: 1.35;
+}
+.privacy-document a {
+  text-underline-offset: 3px;
+}

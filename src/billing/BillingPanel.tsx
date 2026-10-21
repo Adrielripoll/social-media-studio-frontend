@@ -1,3 +1,9 @@
+import ExitFeedback from "../privacy/ExitFeedback";
+import type { ExitFeedbackValue } from "../privacy/ExitFeedback";
+import EmailVerification, {
+  checkEmailVerification,
+} from "../privacy/EmailVerification";
+import "../privacy/privacy.css";
 import MotionPresence from "../components/MotionPresence";
 import RetentionNotice from "../account/RetentionNotice";
 import { useEffect, useState } from "react";
@@ -65,6 +71,9 @@ export default function BillingPanel({
   blocked?: boolean;
 }) {
   const state = useAccount();
+  const [feedback, setFeedback] = useState<ExitFeedbackValue>({});
+  const [verificationOpen, setVerificationOpen] = useState(false);
+  const [verificationBusy, setVerificationBusy] = useState(false);
   const [billing, setBilling] = useState<Billing | null>(null),
     [error, setError] = useState(""),
     [loadError, setLoadError] = useState(""),
@@ -107,10 +116,29 @@ export default function BillingPanel({
     kind: "checkout" | "resume";
     offer?: ResumptionOffer;
   } | null>(null);
-  function requestSubscription(
+  async function requestSubscription(
     kind: "checkout" | "resume",
     offer?: ResumptionOffer,
   ) {
+    if (verificationBusy || busy) return;
+    setVerificationBusy(true);
+    setError("");
+    try {
+      if (!(await checkEmailVerification())) {
+        setResumeConfirmation(null);
+        setVerificationOpen(true);
+        return;
+      }
+    } catch (reason) {
+      setError(
+        reason instanceof ApiError
+          ? reason.message
+          : "Não foi possível verificar seu email. Tente novamente.",
+      );
+      return;
+    } finally {
+      setVerificationBusy(false);
+    }
     if (!state?.account?.retention?.acceptedAt) {
       setResumeConfirmation(null);
       setPendingSubscription({ kind, offer });
@@ -131,14 +159,18 @@ export default function BillingPanel({
         url?: string;
         kind?: "resumed" | "checkout";
         nextChargeDate?: string | null;
+        canceled?: boolean;
+        processing?: boolean;
       }>("/billing/" + kind, {
         method: "POST",
         body:
           kind === "checkout"
             ? { plan: "basic" }
-            : offer
-              ? { mode: offer.mode }
-              : undefined,
+            : kind === "cancel"
+              ? feedback
+              : offer
+                ? { mode: offer.mode }
+                : undefined,
         timeoutMs: 60_000,
       });
       if (
@@ -166,10 +198,27 @@ export default function BillingPanel({
       }
       setNotice(
         kind === "cancel"
-          ? "Cancelamento confirmado. Seu acesso continua até o término do ciclo pago."
+          ? result.canceled
+            ? "Sua assinatura foi cancelada. " +
+              (access?.paidUntil && Date.parse(access.paidUntil) > Date.now()
+                ? "Você pode continuar usando o Serga Studio até " +
+                  date(
+                    new Date(Date.parse(access.paidUntil) - 1).toISOString(),
+                  ) +
+                  ". Se mudar de ideia, pode retomar pela sua conta."
+                : "As próximas renovações foram interrompidas.")
+            : "Recebemos seu pedido. O cancelamento ainda está em processamento e esta página será atualizada automaticamente."
           : "Verificação solicitada. A confirmação pode levar alguns minutos; esta página será atualizada automaticamente.",
       );
     } catch (reason) {
+      if (
+        reason instanceof ApiError &&
+        reason.code === "email_verification_required"
+      ) {
+        setPendingSubscription(null);
+        setResumeConfirmation(null);
+        setVerificationOpen(true);
+      }
       setRevision((value) => value + 1);
       state?.refresh();
       if (
@@ -329,6 +378,7 @@ export default function BillingPanel({
               className="button primary"
               disabled={
                 busy ||
+                verificationBusy ||
                 !billing?.available ||
                 !!loadError ||
                 !priceCents ||
@@ -381,7 +431,7 @@ export default function BillingPanel({
             ["active", "pending"].includes(subscription.status) && (
               <button
                 className="button secondary"
-                disabled={busy || !billing?.available}
+                disabled={busy || verificationBusy || !billing?.available}
                 onClick={() => setConfirm(true)}
               >
                 Cancelar assinatura
@@ -501,28 +551,59 @@ export default function BillingPanel({
         )}
       </MotionPresence>
       <MotionPresence>
+        {verificationOpen && (
+          <Dialog
+            title="Verifique seu email antes de assinar"
+            onClose={() => setVerificationOpen(false)}
+          >
+            <p>
+              A confirmação do email é necessária para contratar ou retomar sua
+              assinatura.
+            </p>
+            <EmailVerification forceUnverified />
+            <button
+              className="button secondary"
+              onClick={() => setVerificationOpen(false)}
+            >
+              Voltar à minha conta
+            </button>
+          </Dialog>
+        )}
+      </MotionPresence>
+      <MotionPresence>
         {confirm && (
           <Dialog
-            title="Cancelar assinatura?"
+            title="Quer continuar com a gente?"
             onClose={() => setConfirm(false)}
             busy={busy}
           >
             <p>
-              As próximas renovações serão encerradas. O acesso ao período já
-              pago será preservado
-              {access?.paidUntil
-                ? " até " +
-                  date(new Date(Date.parse(access.paidUntil) - 1).toISOString())
-                : ""}
-              .
+              Com o Serga Studio, você reúne feeds, dashboards e ferramentas
+              para organizar o trabalho dos seus clientes.
             </p>
+            <p>
+              Se preferir cancelar, a renovação automática será interrompida.
+              {access?.paidUntil && Date.parse(access.paidUntil) > Date.now()
+                ? " Seu acesso continuará disponível até " +
+                  date(
+                    new Date(Date.parse(access.paidUntil) - 1).toISOString(),
+                  ) +
+                  "."
+                : " O cancelamento não inicia um novo período de acesso."}
+            </p>
+            <ExitFeedback
+              context="subscription_cancellation"
+              value={feedback}
+              onChange={setFeedback}
+              disabled={busy}
+            />
             <div className="billing-actions">
               <button
                 className="button secondary"
                 disabled={busy}
                 onClick={() => setConfirm(false)}
               >
-                Manter assinatura
+                Manter minha assinatura
               </button>
               <button
                 className="button primary"

@@ -487,7 +487,7 @@ test("apresenta política antes do checkout e só continua após aceite persisti
           ...summary().retention,
           acceptedAt: accepted ? "2026-10-20T12:00:00Z" : null,
           policy: {
-            version: "2026-10-16.v1",
+            version: "2026-10-21.v2",
             paragraphs: [
               "Contas de teste: 1 mês. Assinaturas encerradas: 6 meses.",
             ],
@@ -510,7 +510,7 @@ test("apresenta política antes do checkout e só continua após aceite persisti
   );
   await page.route(apiUrl + "/account/retention/accept", (route) => {
     expect(route.request().postDataJSON()).toEqual({
-      version: "2026-10-16.v1",
+      version: "2026-10-21.v2",
       accepted: true,
     });
     accepted = true;

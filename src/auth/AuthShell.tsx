@@ -62,7 +62,10 @@ export default function AuthShell({ children }: { children: ReactNode }) {
           <StudioBrand />
         </div>
         <div className="auth-card">{children}</div>
-        <p className="auth-footer">Planeje com calma. Crie com intenção.</p>
+        <p className="auth-footer">
+          Planeje com calma. Crie com intenção.{" "}
+          <a href="/privacidade">Privacidade</a>
+        </p>
       </main>
     </div>
   );

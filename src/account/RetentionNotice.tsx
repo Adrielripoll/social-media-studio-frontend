@@ -77,7 +77,9 @@ export default function RetentionNotice({
       </p>
       <p>
         A exclusão dos arquivos é definitiva. Seu cadastro e os textos e dados
-        das ferramentas serão preservados. Entrar na conta não reinicia o prazo.
+        das ferramentas seguem prazos próprios de 12 meses após o teste sem
+        contratação ou 24 meses após o último período pago. Entrar na conta não
+        reinicia o prazo.
       </p>
       {retention?.purgedAt && (
         <p className="account-feedback warning" role="status">

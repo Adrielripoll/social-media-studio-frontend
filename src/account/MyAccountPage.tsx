@@ -9,6 +9,7 @@ import {
 import PlatformHeader from "../components/PlatformHeader";
 import { useAuth } from "../auth/AuthContext";
 import { useAccount } from "./AccountContext";
+import PrivacyPanel from "../privacy/PrivacyPanel";
 import ProfilePanel from "./ProfilePanel";
 import StoragePanel from "./StoragePanel";
 import BillingPanel from "../billing/BillingPanel";
@@ -156,7 +157,12 @@ export default function MyAccountPage({
                 </button>
               </div>
             )}
-            {section === "profile" && <ProfilePanel />}
+            {section === "profile" && (
+              <div className="account-profile-content">
+                <ProfilePanel />
+                <PrivacyPanel />
+              </div>
+            )}
             {section === "subscription" && (
               <>
                 <BillingPanel blocked={blocked} />

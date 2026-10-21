@@ -85,7 +85,23 @@ export async function mockAuth(
     const saved = await page.context().cookies(apiUrl);
     const access = saved.some((item) => item.name === "studio_access");
     const refresh = saved.some((item) => item.name === "studio_refresh");
-    if (path === "/account/storage") {
+    if (path === "/account/email-verification") {
+      value = { verified: true };
+    } else if (path === "/account/exit-reasons") {
+      value = {
+        reasons: [
+          {
+            id: "10000000-0000-4000-8000-000000000001",
+            label: "Outro motivo.",
+          },
+        ],
+      };
+    } else if (path === "/account/privacy") {
+      value = {
+        contact: "sergastudio@outlook.com",
+        workRetention: { months: 12, status: "protected", purgeAt: null },
+      };
+    } else if (path === "/account/storage") {
       value = { resources: [] };
     } else if (path === "/account") {
       value = {

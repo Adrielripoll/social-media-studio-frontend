@@ -138,6 +138,21 @@
 .account-main {
   min-width: 0;
 }
+.account-profile-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+  width: 100%;
+  max-width: 44rem;
+  min-width: 0;
+}
+.account-profile-content .account-section-stack {
+  grid-template-columns: minmax(0, 1fr);
+  min-width: 0;
+}
+.account-profile-content .account-card {
+  min-width: 0;
+}
 .account-section-stack {
   display: grid;
   gap: 24px;

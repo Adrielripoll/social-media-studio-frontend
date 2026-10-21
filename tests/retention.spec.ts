@@ -10,7 +10,7 @@ function retention(acceptedAt: string | null = null) {
     automaticPurgeEnabled: false,
     acceptedAt,
     policy: {
-      version: "2026-10-16.v1",
+      version: "2026-10-21.v2",
       title: "Política de retenção de arquivos",
       paragraphs: [
         "Os arquivos são excluídos definitivamente 1 mês após o teste ou 6 meses após o último acesso pago.",
@@ -84,7 +84,7 @@ test("mostra política, exige aceite explícito e só então permite contratar",
   await page.getByRole("checkbox", { name: /Li e aceito a política/ }).check();
   await accept.click();
   await expect(contract).toBeEnabled();
-  expect(acceptedBody).toEqual({ version: "2026-10-16.v1", accepted: true });
+  expect(acceptedBody).toEqual({ version: "2026-10-21.v2", accepted: true });
   await page.reload();
   await expect(
     page.getByText("Política de retenção aceita", { exact: false }),

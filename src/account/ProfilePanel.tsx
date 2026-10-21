@@ -1,3 +1,4 @@
+import EmailVerification from "../privacy/EmailVerification";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { UserRound, ShieldCheck, Eye, EyeOff } from "lucide-react";
@@ -104,16 +105,19 @@ export default function ProfilePanel() {
               aria-describedby={field === "name" ? "profile-error" : undefined}
             />
           </label>
-          <label className="field">
-            <span>Email de acesso</span>
-            <input
-              type="email"
-              value={identity.email ?? ""}
-              readOnly
-              autoComplete="email"
-              aria-describedby="profile-email-help"
-            />
-          </label>
+          <div className="profile-email-row">
+            <label className="field">
+              <span>Email de acesso</span>
+              <input
+                type="email"
+                value={identity.email ?? ""}
+                readOnly
+                autoComplete="email"
+                aria-describedby="profile-email-help"
+              />
+            </label>
+            <EmailVerification inline />
+          </div>
           <p className="account-field-help" id="profile-email-help">
             O email é sua identificação de acesso e não pode ser alterado nesta
             tela.

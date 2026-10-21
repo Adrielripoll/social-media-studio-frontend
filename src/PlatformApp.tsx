@@ -1,3 +1,4 @@
+import PrivacyPage, { DeletionReceipt } from "./privacy/PrivacyPage";
 import { AccountAccessBoundary } from "./account/AccountAccessBoundary";
 import { AccountProvider } from "./account/AccountContext";
 import PlatformHeader from "./components/PlatformHeader";
@@ -141,6 +142,9 @@ function AuthContent() {
 }
 
 export default function PlatformApp() {
+  if (window.location.pathname === "/privacidade") return <PrivacyPage />;
+  if (window.location.pathname === "/conta-excluida")
+    return <DeletionReceipt />;
   if (window.location.pathname === "/demonstracao") return <Simulator demo />;
   if (!authConfiguration.configured)
     return (

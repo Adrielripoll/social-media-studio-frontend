@@ -1,3 +1,9 @@
+# Uso obrigatório das skills de frontend
+
+Em qualquer tarefa que envolva frontend, consulte e aplique as skills instaladas em `.agents/skills/`, inclusive em ajustes pequenos. Use `frontend-design` para decisões visuais e `web-design-engineer` para layout, componentes e revisão da interface, conforme o escopo. Reaproveite instruções já lidas quando estiverem atuais.
+
+Em correções pontuais, preserve o design system, componentes e contratos existentes. Não transforme uma correção de layout em um redesign. Registre decisões reutilizáveis em `docs/design/`.
+
 # Padrão de movimento do frontend
 
 Animações suaves fazem parte do padrão aprovado do Serga Studio. Reaplique esse padrão em novos menus, formulários, modais e transições quando ajudar a explicar a ação do usuário.
