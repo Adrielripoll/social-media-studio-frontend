@@ -3,7 +3,15 @@ import { UserRound } from "lucide-react";
 import { apiRequest, ApiError } from "../auth/api";
 import { useAccount } from "../account/AccountContext";
 
-export default function ClientLogo({ id, name }: { id: string; name: string }) {
+export default function ClientLogo({
+  id,
+  name,
+  compact = false,
+}: {
+  id: string;
+  name: string;
+  compact?: boolean;
+}) {
   const account = useAccount();
   const input = useRef<HTMLInputElement>(null);
   const [url, setUrl] = useState<string | null>(null);
@@ -71,6 +79,24 @@ export default function ClientLogo({ id, name }: { id: string; name: string }) {
     } finally {
       setBusy(false);
     }
+  }
+
+  if (compact) {
+    return (
+      <span className="workspace-client-avatar" aria-busy={loading}>
+        {url ? (
+          <img
+            src={url}
+            alt={`Logo de ${name}`}
+            loading="lazy"
+            decoding="async"
+            onError={() => setUrl(null)}
+          />
+        ) : (
+          <UserRound size={24} aria-hidden="true" />
+        )}
+      </span>
+    );
   }
 
   return (

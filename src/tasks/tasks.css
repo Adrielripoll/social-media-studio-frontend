@@ -289,7 +289,7 @@
   background: #fff;
   border: 1px solid var(--line);
   border-radius: var(--radius-card);
-  box-shadow: 0 12px 40px #151b3e20;
+  box-shadow: 0 12px 40px #1c181520;
   display: flex;
   flex-direction: column;
 }

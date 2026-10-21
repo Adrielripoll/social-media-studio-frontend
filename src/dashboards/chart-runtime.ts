@@ -36,14 +36,14 @@ export type ChartConfig = ChartConfiguration<
   string
 >;
 export const palette = {
-  primary: "#7863ee",
-  hero: "#b5a1ff",
-  comparison: "#c4c8e5",
-  teal: "#20ad94",
-  amber: "#efb052",
-  blue: "#df76b2",
-  grid: "#eceef7",
-  text: "#69728b",
+  primary: "#7b5322",
+  hero: "#ecc38a",
+  comparison: "#c7b8a6",
+  teal: "#4c3923",
+  amber: "#ac6a1b",
+  blue: "#1c1815",
+  grid: "#e8e0d5",
+  text: "#6e6052",
 };
 export const interactionMetrics = [
   { key: "likes", label: "Curtidas", color: palette.primary },
@@ -70,7 +70,7 @@ export function chartOptions(
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: "#202641",
+        backgroundColor: "#1c1815",
         titleColor: "#fff",
         bodyColor: "#fff",
         padding: 12,
@@ -94,7 +94,7 @@ export function chartOptions(
         grid: { display: false },
         border: { display: false },
         ticks: {
-          color: dark ? "#b8c1e0" : palette.text,
+          color: dark ? "#d6c6b3" : palette.text,
           font: { size: 11 },
           maxRotation: 0,
           autoSkip: true,
@@ -106,7 +106,7 @@ export function chartOptions(
         border: { display: false },
         grid: { color: dark ? "#ffffff12" : palette.grid },
         ticks: {
-          color: dark ? "#b8c1e0" : palette.text,
+          color: dark ? "#d6c6b3" : palette.text,
           font: { size: 11 },
           maxTicksLimit: 5,
           ...(rate

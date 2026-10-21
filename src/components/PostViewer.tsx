@@ -1,5 +1,5 @@
 import StudioImage from "./StudioImage";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -12,6 +12,12 @@ import type { Post, Profile } from "../types";
 import { formatNumber } from "../storage";
 import { Avatar } from "./ProfilePreview";
 import Dialog from "./Dialog";
+
+interface ImageSlide {
+  index: number;
+  previousIndex: number | null;
+  direction: "next" | "previous";
+}
 
 export default function PostViewer({
   post,
@@ -30,21 +36,90 @@ export default function PostViewer({
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const [index, setIndex] = useState(0);
+  const [slide, setSlide] = useState<ImageSlide>({
+    index: 0,
+    previousIndex: null,
+    direction: "next",
+  });
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
+  const swipeStart = useRef<{ x: number; y: number } | null>(null);
+  const { index } = slide;
+  const previousImage =
+    slide.previousIndex === null ? undefined : post.images[slide.previousIndex];
+
+  useEffect(() => {
+    const adjacentImages = [post.images[index - 1], post.images[index + 1]];
+
+    for (const source of adjacentImages) {
+      if (source) {
+        const image = new Image();
+        image.src = source;
+      }
+    }
+  }, [index, post.images]);
+
+  useEffect(() => {
+    const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+    function updateMotion(event: MediaQueryListEvent): void {
+      if (event.matches) {
+        setSlide((current) => ({ ...current, previousIndex: null }));
+      }
+    }
+
+    preference.addEventListener("change", updateMotion);
+    return () => preference.removeEventListener("change", updateMotion);
+  }, []);
+
+  const navigateImage = useCallback(
+    (destination: number | "next" | "previous"): void => {
+      const reduceMotion = window.matchMedia(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+
+      setSlide((current) => {
+        const offset = destination === "previous" ? -1 : 1;
+        const requestedIndex =
+          typeof destination === "number"
+            ? destination
+            : current.index + offset;
+        const nextIndex = Math.max(
+          0,
+          Math.min(requestedIndex, post.images.length - 1),
+        );
+
+        if (nextIndex === current.index) {
+          return current;
+        }
+
+        return {
+          index: nextIndex,
+          previousIndex: reduceMotion ? null : current.index,
+          direction: nextIndex > current.index ? "next" : "previous",
+        };
+      });
+    },
+    [post.images.length],
+  );
+
   useEffect(() => {
     function handleKey(event: KeyboardEvent) {
-      if (event.key === "ArrowRight")
-        setIndex((current) =>
-          Math.max(0, Math.min(current + 1, post.images.length - 1)),
-        );
-      if (event.key === "ArrowLeft")
-        setIndex((current) => Math.max(current - 1, 0));
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        navigateImage("next");
+      }
+
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        navigateImage("previous");
+      }
     }
+
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);
-  }, [post.images.length]);
+  }, [navigateImage]);
+
   return (
     <Dialog
       title="Publicação"
@@ -52,25 +127,89 @@ export default function PostViewer({
       className={"viewer-dialog viewer-" + mode}
     >
       <div className="viewer-body">
-        <div className="viewer-media">
-          <StudioImage
-            src={post.images[index]}
-            alt={
-              post.images.length
-                ? "Imagem " + (index + 1) + " de " + post.images.length
-                : "Arquivos removidos"
+        <div
+          className="viewer-media"
+          role="region"
+          aria-label="Imagens da publicação"
+          aria-roledescription="carrossel"
+          onPointerDown={(event) => {
+            swipeStart.current = null;
+
+            if (
+              event.pointerType !== "touch" ||
+              (event.target instanceof Element &&
+                event.target.closest("button"))
+            ) {
+              return;
             }
-            fallback={
-              post.images.length
-                ? undefined
-                : "Arquivos removidos. O texto desta publicação foi preservado."
+
+            swipeStart.current = { x: event.clientX, y: event.clientY };
+          }}
+          onPointerUp={(event) => {
+            const start = swipeStart.current;
+            swipeStart.current = null;
+
+            if (!start) {
+              return;
             }
-          />
+
+            const distanceX = event.clientX - start.x;
+            const distanceY = event.clientY - start.y;
+
+            if (
+              Math.abs(distanceX) < 48 ||
+              Math.abs(distanceX) <= Math.abs(distanceY)
+            ) {
+              return;
+            }
+
+            navigateImage(distanceX < 0 ? "next" : "previous");
+          }}
+          onPointerCancel={() => {
+            swipeStart.current = null;
+          }}
+        >
+          {previousImage && (
+            <div
+              key={"previous-" + slide.previousIndex}
+              className="viewer-slide-previous"
+              data-direction={slide.direction}
+              aria-hidden="true"
+              style={{
+                backgroundImage: `url(${JSON.stringify(previousImage)})`,
+              }}
+            />
+          )}
+          <div
+            key={index}
+            className="viewer-slide"
+            data-direction={slide.direction}
+            data-animating={slide.previousIndex !== null}
+            onAnimationEnd={(event) => {
+              if (event.target === event.currentTarget) {
+                setSlide((current) => ({ ...current, previousIndex: null }));
+              }
+            }}
+          >
+            <StudioImage
+              src={post.images[index]}
+              alt={
+                post.images.length
+                  ? "Imagem " + (index + 1) + " de " + post.images.length
+                  : "Arquivos removidos"
+              }
+              fallback={
+                post.images.length
+                  ? undefined
+                  : "Arquivos removidos. O texto desta publicação foi preservado."
+              }
+            />
+          </div>
           {index > 0 && (
             <button
               className="carousel-arrow prev"
               aria-label="Imagem anterior"
-              onClick={() => setIndex(index - 1)}
+              onClick={() => navigateImage("previous")}
             >
               <ChevronLeft size={22} />
             </button>
@@ -79,14 +218,22 @@ export default function PostViewer({
             <button
               className="carousel-arrow next"
               aria-label="Próxima imagem"
-              onClick={() => setIndex(index + 1)}
+              onClick={() => navigateImage("next")}
             >
               <ChevronRight size={22} />
             </button>
           )}
           {post.images.length > 1 && (
-            <span className="carousel-count">
-              {index + 1}/{post.images.length}
+            <span
+              className="carousel-count"
+              aria-live="polite"
+              aria-atomic="true"
+            >
+              <span className="visually-hidden">Imagem </span>
+              {index + 1}
+              <span aria-hidden="true">/</span>
+              <span className="visually-hidden"> de </span>
+              {post.images.length}
             </span>
           )}
         </div>
@@ -130,13 +277,13 @@ export default function PostViewer({
             </div>
             {post.images.length > 1 && (
               <div className="carousel-dots">
-                {post.images.map((_, i) => (
+                {post.images.map((_, imageIndex) => (
                   <button
-                    key={i}
-                    aria-label={"Ver imagem " + (i + 1)}
-                    aria-current={i === index ? "true" : undefined}
-                    className={i === index ? "active" : ""}
-                    onClick={() => setIndex(i)}
+                    key={imageIndex}
+                    aria-label={"Ver imagem " + (imageIndex + 1)}
+                    aria-current={imageIndex === index ? "true" : undefined}
+                    className={imageIndex === index ? "active" : ""}
+                    onClick={() => navigateImage(imageIndex)}
                   />
                 ))}
               </div>

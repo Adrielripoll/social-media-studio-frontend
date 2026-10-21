@@ -36,7 +36,7 @@ export function InteractionComposition({ current }: Props) {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: "#202641",
+          backgroundColor: "#1c1815",
           padding: 12,
           cornerRadius: 8,
           callbacks: {

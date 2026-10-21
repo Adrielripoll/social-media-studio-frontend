@@ -28,18 +28,18 @@
     transform 0.18s;
 }
 :is(.dashboard-page, .dashboard-library) .text-button {
-  color: #646b85;
+  color: var(--text-secondary);
   font-weight: 600;
   font-size: 12px;
 }
 .dashboard-hero-profile {
-  color: #c1c6df;
+  color: var(--hero-muted);
   font-size: 12px;
   line-height: 1.7;
   margin-top: 16px;
 }
 .dashboard-eyebrow {
-  color: #756291;
+  color: var(--accent);
   font-size: 10px;
   letter-spacing: 1.5px;
   font-weight: 700;

@@ -145,7 +145,7 @@ export default function PlatformApp() {
   if (!authConfiguration.configured)
     return (
       <AuthShell>
-        <span className="auth-eyebrow">SOCIAL STUDIO</span>
+        <span className="auth-eyebrow">SERGA STUDIO</span>
         <h2>Seu espaço está sendo preparado.</h2>
         <p className="auth-description">
           O acesso estará disponível em breve. Enquanto isso, você pode explorar

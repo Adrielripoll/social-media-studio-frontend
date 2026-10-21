@@ -1,6 +1,7 @@
 import type { FeedWorkspace } from "./types";
 
-const DATABASE = "social-studio-demo";
+const DATABASE = "serga-studio-demo";
+const LEGACY_DATABASE = "social-studio-demo";
 const STORE = "workspace";
 let connection: Promise<IDBDatabase> | undefined;
 
@@ -30,13 +31,54 @@ function openDatabase() {
   return connection;
 }
 
+async function loadLegacyWorkspace(): Promise<FeedWorkspace | undefined> {
+  const databases = await indexedDB.databases();
+  if (!databases.some((database) => database.name === LEGACY_DATABASE)) {
+    return undefined;
+  }
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(LEGACY_DATABASE);
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => {
+      const database = request.result;
+      if (!database.objectStoreNames.contains(STORE)) {
+        database.close();
+        resolve(undefined);
+        return;
+      }
+      const transaction = database.transaction(STORE, "readonly");
+      const workspace = transaction.objectStore(STORE).get("current");
+      transaction.oncomplete = () => {
+        database.close();
+        resolve(workspace.result as FeedWorkspace | undefined);
+      };
+      transaction.onerror = () => {
+        database.close();
+        reject(transaction.error);
+      };
+    };
+  });
+}
+
 export async function loadWorkspace(): Promise<FeedWorkspace | undefined> {
   const db = await openDatabase();
   return new Promise((resolve, reject) => {
     const transaction = db.transaction(STORE, "readonly");
     const request = transaction.objectStore(STORE).get("current");
-    request.onsuccess = () =>
-      resolve(request.result as FeedWorkspace | undefined);
+    request.onsuccess = () => {
+      if (request.result !== undefined) {
+        resolve(request.result as FeedWorkspace);
+        return;
+      }
+      void loadLegacyWorkspace()
+        .then(async (workspace) => {
+          if (workspace) {
+            await saveWorkspace(workspace);
+          }
+          resolve(workspace);
+        })
+        .catch(reject);
+    };
     request.onerror = () => reject(request.error);
   });
 }

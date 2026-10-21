@@ -1,0 +1,180 @@
+.viewer-dialog[open] {
+  animation: post-viewer-enter 180ms ease-out;
+}
+
+.viewer-dialog::backdrop {
+  animation: post-viewer-backdrop 180ms ease-out;
+}
+
+.viewer-dialog .viewer-media {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--text-primary);
+  touch-action: pan-y pinch-zoom;
+}
+
+.viewer-slide,
+.viewer-slide-previous {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.viewer-slide {
+  z-index: 1;
+  display: grid;
+  place-items: center;
+}
+
+.viewer-slide > img {
+  object-fit: contain;
+}
+
+.viewer-slide-previous {
+  pointer-events: none;
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+  animation: post-slide-out-left 280ms cubic-bezier(0.2, 0.65, 0.3, 1) both;
+}
+
+.viewer-slide[data-animating="true"] {
+  animation: post-slide-in-right 280ms cubic-bezier(0.2, 0.65, 0.3, 1) both;
+}
+
+.viewer-slide[data-animating="true"][data-direction="previous"] {
+  animation-name: post-slide-in-left;
+}
+
+.viewer-slide-previous[data-direction="previous"] {
+  animation-name: post-slide-out-right;
+}
+
+.viewer-dialog .carousel-arrow {
+  z-index: 3;
+  background: #fffffff0;
+  color: var(--text-primary);
+  box-shadow: 0 3px 16px #0003;
+  backdrop-filter: blur(8px);
+  transition:
+    background 180ms,
+    transform 180ms;
+}
+
+.viewer-dialog .carousel-arrow:hover {
+  background: #fff;
+  transform: translateY(-50%) scale(1.06);
+}
+
+.viewer-dialog .carousel-count {
+  z-index: 3;
+  padding: 7px 11px;
+  background: #1c1815a6;
+  backdrop-filter: blur(8px);
+  font-size: 12px;
+}
+
+.viewer-dialog .carousel-dots button::before {
+  transition:
+    width 200ms,
+    background 200ms;
+}
+
+.viewer-dialog .carousel-dots button.active::before {
+  width: 18px;
+  border-radius: 8px;
+  background: var(--accent);
+}
+
+.viewer-dialog .viewer-edit {
+  border-color: var(--line);
+}
+
+.viewer-dialog .viewer-reactions button[aria-pressed="true"] svg {
+  animation: post-reaction-enter 220ms ease-out;
+}
+
+@keyframes post-slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0.65;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes post-slide-in-left {
+  from {
+    transform: translateX(-100%);
+    opacity: 0.65;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes post-slide-out-left {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-25%);
+    opacity: 0;
+  }
+}
+
+@keyframes post-slide-out-right {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(25%);
+    opacity: 0;
+  }
+}
+
+@keyframes post-viewer-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes post-viewer-backdrop {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes post-reaction-enter {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.16);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .viewer-dialog,
+  .viewer-dialog::backdrop,
+  .viewer-dialog * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

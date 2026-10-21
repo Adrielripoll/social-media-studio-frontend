@@ -47,7 +47,7 @@
 }
 .account-status-pill.is-blocked {
   background: #fff0df;
-  color: #8a4b12;
+  color: var(--warning);
 }
 .my-account-layout {
   display: grid;
@@ -88,8 +88,8 @@
   height: 60px;
   border-radius: 21px;
   margin-bottom: 6px;
-  background: linear-gradient(135deg, #7360e5, #469ccf);
-  box-shadow: 0 6px 18px #6650dc26;
+  background: linear-gradient(135deg, var(--accent-highlight), var(--accent));
+  box-shadow: 0 6px 18px #7b532226;
   color: white;
   font-family: "Space Grotesk Variable", sans-serif;
   font-size: 1.3rem;
@@ -123,7 +123,7 @@
   flex: none;
 }
 .account-sidebar nav a[aria-current] {
-  background: linear-gradient(100deg, #eeeaff, #eef5ff);
+  background: linear-gradient(100deg, var(--accent-soft), var(--surface-soft));
   color: var(--accent);
 }
 .account-sidebar nav a:hover {
@@ -148,7 +148,7 @@
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 20px;
-  box-shadow: 0 5px 24px #2b2e5d06;
+  box-shadow: 0 5px 24px #1c181506;
 }
 .account-card-heading,
 .account-section-title {
@@ -180,11 +180,11 @@
   height: 46px;
   border-radius: 15px;
   color: var(--accent);
-  background: linear-gradient(140deg, #eeeaff, #f4f1ff);
+  background: linear-gradient(140deg, var(--accent-soft), var(--surface-soft));
 }
 .account-card-icon.blue {
-  background: linear-gradient(140deg, #e5f3ff, #eef2ff);
-  color: #287eb5;
+  background: linear-gradient(140deg, #f0e8da, var(--surface-soft));
+  color: var(--accent-hover);
 }
 .account-form {
   max-width: 650px;
@@ -294,7 +294,7 @@
   margin: 0;
   padding: 22px;
   border-color: var(--line);
-  box-shadow: 0 5px 24px #2b2e5d06;
+  box-shadow: 0 5px 24px #1c181506;
 }
 .account-main > .account-retention {
   margin-top: 24px;
@@ -304,8 +304,12 @@
   color: var(--accent);
 }
 .account-experience .billing-blocked {
-  background: linear-gradient(110deg, #fff5e9, var(--danger-surface));
-  border-color: #f1d7c4;
+  background: linear-gradient(
+    110deg,
+    var(--warning-surface),
+    var(--danger-surface)
+  );
+  border-color: var(--warning-border);
 }
 .account-experience .billing-card > svg {
   color: var(--accent);
@@ -339,7 +343,7 @@
   color: var(--text-secondary);
 }
 .account-empty svg {
-  color: #8374cd;
+  color: var(--accent-highlight);
 }
 .account-empty h3 {
   font-size: 1rem;
@@ -403,7 +407,7 @@
   justify-content: center;
 }
 .account-resource-pending {
-  color: #8a4b12 !important;
+  color: var(--warning) !important;
 }
 .account-danger-button {
   color: var(--danger) !important;

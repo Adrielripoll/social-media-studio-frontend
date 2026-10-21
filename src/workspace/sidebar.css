@@ -1,0 +1,478 @@
+.workspace-sidebar {
+  --sidebar-background: var(--surface);
+  --sidebar-text: var(--text-primary);
+  --sidebar-muted: var(--text-secondary);
+  --sidebar-accent: var(--accent);
+  --sidebar-line: var(--line);
+  --sidebar-hover: var(--surface-soft);
+  position: relative;
+  align-self: stretch;
+  min-width: 0;
+  min-height: calc(100dvh - 90px);
+  padding: 28px 16px;
+  border-right: 1px solid var(--sidebar-line);
+  background: var(--sidebar-background);
+  box-shadow: inset -1px 0
+    color-mix(in srgb, var(--hero-accent) 7%, transparent);
+  color: var(--sidebar-text);
+  scrollbar-width: thin;
+  scrollbar-color: var(--sidebar-line) transparent;
+}
+
+.workspace-sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 28px 0 28px auto;
+  width: 1px;
+  background: linear-gradient(
+    transparent,
+    color-mix(in srgb, var(--hero-accent) 35%, transparent) 24%,
+    transparent 72%
+  );
+  pointer-events: none;
+}
+
+.workspace-sidebar nav {
+  position: sticky;
+  top: 24px;
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sidebar-line) transparent;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.workspace-primary-nav {
+  display: grid;
+  gap: 5px;
+}
+
+.workspace-menu-label,
+.workspace-clients-label {
+  color: var(--sidebar-muted);
+  font-family: var(--heading-font);
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.6;
+  letter-spacing: 1.6px;
+}
+
+.workspace-clients-label {
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+.workspace-menu-label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 14px 10px;
+}
+
+.workspace-menu-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, var(--sidebar-line), transparent);
+}
+
+.workspace-nav-button,
+.workspace-client-link {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--sidebar-text);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-align: left;
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.workspace-nav-button {
+  padding: 9px 12px;
+}
+
+.workspace-sidebar svg {
+  flex-shrink: 0;
+}
+
+.workspace-nav-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--sidebar-line);
+  border-radius: 10px;
+  background: var(--surface-soft);
+  color: var(--sidebar-muted);
+  box-shadow: inset 0 1px
+    color-mix(in srgb, var(--surface-soft) 4%, transparent);
+  transition:
+    border-color 160ms ease,
+    color 160ms ease;
+}
+
+.workspace-nav-label {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.workspace-nav-indicator {
+  margin-left: auto;
+  color: var(--sidebar-accent);
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.workspace-nav-button:is(:hover, :focus-visible, .is-active)
+  .workspace-nav-indicator {
+  opacity: 1;
+}
+
+.workspace-nav-button:hover:not(:disabled) .workspace-nav-icon {
+  border-color: color-mix(in srgb, var(--hero-accent) 40%, transparent);
+  color: var(--sidebar-accent);
+}
+
+.workspace-nav-button:hover:not(:disabled),
+.workspace-client-link:hover:not(:disabled) {
+  background: var(--sidebar-hover);
+  color: var(--sidebar-text);
+}
+
+.workspace-sidebar .workspace-nav-button.is-active {
+  border-color: var(--sidebar-accent);
+  background: linear-gradient(
+    110deg,
+    color-mix(in srgb, var(--hero-accent) 88%, white),
+    var(--hero-accent)
+  );
+  box-shadow:
+    0 4px 14px #0002,
+    inset 0 1px #fff5;
+  color: var(--text-primary);
+  font-weight: 700;
+}
+
+.workspace-sidebar .workspace-nav-button.is-active .workspace-nav-icon {
+  border-color: color-mix(in srgb, var(--text-primary) 14%, transparent);
+  background: color-mix(in srgb, var(--text-primary) 7%, transparent);
+  color: var(--text-primary);
+  box-shadow: inset 0 1px #fff3;
+}
+
+.workspace-nav-button.is-active > svg {
+  color: currentColor;
+}
+
+.workspace-sidebar-clients {
+  min-width: 0;
+  padding: 8px 6px;
+  border: 1px solid var(--sidebar-line);
+  border-radius: 16px;
+  background: linear-gradient(
+    135deg,
+    var(--surface-soft),
+    var(--sidebar-background)
+  );
+  box-shadow: inset 0 1px
+    color-mix(in srgb, var(--surface-soft) 4%, transparent);
+}
+
+.workspace-sidebar-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+  padding-left: 6px;
+}
+
+.workspace-clients-label-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.workspace-client-count {
+  display: grid;
+  place-items: center;
+  min-width: 23px;
+  min-height: 23px;
+  padding-inline: 5px;
+  border: 1px solid var(--sidebar-line);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--hero-accent) 6%, transparent);
+  color: var(--sidebar-muted);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.workspace-sidebar .task-icon-button {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--sidebar-line);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--hero-accent) 5%, transparent);
+  color: var(--sidebar-accent);
+  box-shadow: inset 0 1px
+    color-mix(in srgb, var(--surface-soft) 4%, transparent);
+  transition:
+    background-color 160ms ease,
+    border-color 160ms ease;
+}
+
+.workspace-sidebar .task-icon-button:hover:not(:disabled) {
+  border-color: var(--sidebar-line);
+  background: var(--sidebar-hover);
+  color: var(--sidebar-accent);
+}
+
+.workspace-clients-list {
+  display: grid;
+  gap: 4px;
+  max-height: min(50dvh, 480px);
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--sidebar-line) transparent;
+}
+
+.workspace-client-group {
+  min-width: 0;
+}
+
+.workspace-client-link {
+  gap: 10px;
+  min-height: 46px;
+  padding: 7px 8px;
+  border-radius: 10px;
+  color: var(--sidebar-muted);
+  font-size: 13px;
+}
+
+.workspace-client-initials {
+  display: grid;
+  place-items: center;
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--sidebar-line);
+  border-radius: 9px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--hero-accent) 13%, transparent),
+    var(--sidebar-hover)
+  );
+  box-shadow: inset 0 1px
+    color-mix(in srgb, var(--surface-soft) 7%, transparent);
+  color: var(--sidebar-text);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+}
+
+.workspace-client-name {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.workspace-client-arrow {
+  opacity: 0;
+  color: var(--sidebar-accent);
+  transition: opacity 160ms ease;
+}
+
+.workspace-sidebar .workspace-client-link.is-active {
+  border-color: var(--sidebar-line);
+  background: color-mix(in srgb, var(--hero-accent) 11%, transparent);
+  color: var(--sidebar-text);
+  font-weight: 600;
+}
+
+.workspace-client-link.is-active .workspace-client-initials {
+  border-color: var(--sidebar-accent);
+  background: var(--hero-accent);
+  color: var(--text-primary);
+}
+
+.workspace-client-link:is(:hover, :focus-visible, .is-active)
+  .workspace-client-arrow {
+  opacity: 1;
+}
+
+.workspace-clients-toggle {
+  display: none;
+}
+
+.workspace-sidebar .workspace-muted {
+  padding: 10px 12px;
+  color: var(--sidebar-muted);
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.workspace-sidebar
+  :is(
+    .workspace-nav-button,
+    .workspace-client-link,
+    .workspace-clients-toggle,
+    .task-icon-button
+  ):focus-visible {
+  outline: 2px solid var(--sidebar-accent);
+  outline-offset: -2px;
+}
+
+.workspace-sidebar .workspace-nav-button.is-active:focus-visible {
+  outline-color: var(--text-primary);
+  outline-offset: -5px;
+}
+
+.workspace-sidebar button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+@media (min-width: 601px) and (max-width: 1100px) {
+  .workspace-sidebar {
+    padding: 24px 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .workspace-sidebar {
+    position: static;
+    min-height: 0;
+    max-height: none;
+    overflow: visible;
+    padding: 12px 16px;
+    border-right: 0;
+    border-bottom: 1px solid var(--sidebar-line);
+  }
+
+  .workspace-sidebar nav {
+    position: static;
+    max-height: none;
+    overflow: visible;
+    gap: 8px;
+  }
+
+  .workspace-primary-nav {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--sidebar-line);
+    border-radius: 15px;
+    background: var(--surface-soft);
+  }
+
+  .workspace-menu-label,
+  .workspace-clients-label-group {
+    display: none;
+  }
+
+  .workspace-nav-button {
+    flex-direction: column;
+    justify-content: center;
+    gap: 6px;
+    min-height: 62px;
+    padding: 7px 3px;
+    border-radius: 11px;
+    font-size: 11px;
+  }
+
+  .workspace-nav-icon {
+    flex-basis: 26px;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+  }
+
+  .workspace-nav-label {
+    flex: initial;
+  }
+
+  .workspace-nav-indicator {
+    display: none;
+  }
+
+  .workspace-sidebar-clients {
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  .workspace-sidebar-heading {
+    margin-bottom: 0;
+    padding-left: 4px;
+  }
+
+  .workspace-clients-toggle {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+    min-height: 44px;
+    padding: 8px 4px;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--sidebar-text);
+    font: inherit;
+    font-size: 13px;
+    text-align: left;
+    overflow-wrap: anywhere;
+  }
+
+  .workspace-clients-toggle svg {
+    margin-left: auto;
+    color: var(--sidebar-muted);
+    transition: transform 160ms ease;
+  }
+
+  .workspace-clients-toggle[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+  }
+
+  .workspace-clients-list {
+    display: none;
+    max-height: 240px;
+  }
+
+  .workspace-clients-list.is-expanded {
+    display: grid;
+    padding-top: 6px;
+    border-top: 1px solid var(--sidebar-line);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .workspace-sidebar *,
+  .workspace-sidebar *::before,
+  .workspace-sidebar *::after {
+    transition: none;
+    animation: none;
+  }
+}

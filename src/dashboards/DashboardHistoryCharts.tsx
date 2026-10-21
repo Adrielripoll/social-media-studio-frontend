@@ -194,7 +194,7 @@ export function FollowersHistory({ periods, current }: Props) {
           label: "Novos seguidores",
           data: periods.map((period) => period.newFollowers),
           backgroundColor: periods.map((period) =>
-            isSelected(period, current) ? palette.teal : "#b6e4d8",
+            isSelected(period, current) ? palette.teal : "#d9be98",
           ),
           borderRadius: 5,
           maxBarThickness: 44,

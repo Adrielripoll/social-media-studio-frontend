@@ -9,13 +9,13 @@ import {
   CalendarDays,
   BarChart3,
   ChevronDown,
+  ChevronRight,
   LayoutGrid,
   LoaderCircle,
   Pencil,
   Plus,
   RefreshCw,
   Trash2,
-  Users,
 } from "lucide-react";
 import Dialog from "../components/Dialog";
 import { ApiError } from "../auth/api";
@@ -23,6 +23,16 @@ import { listClients, saveClient, deleteClient } from "./api";
 import type { Client } from "./api";
 import "./workspace.css";
 import FeedLibrary from "../feeds/FeedLibrary";
+
+function clientInitials(name: string): string {
+  return name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join("")
+    .toLocaleUpperCase("pt-BR");
+}
 
 function sortClients(items: Client[]) {
   return [...items].sort(
@@ -251,120 +261,158 @@ export default function Workspace({ children }: { children: ReactNode }) {
     <div className="platform-layout">
       <aside className="workspace-sidebar">
         <nav aria-label="Navegação do espaço de trabalho">
-          <button
-            className={
-              "workspace-nav-button" +
-              (view.kind === "home" ? " is-active" : "")
-            }
-            disabled={busy}
-            onClick={() => navigate({ kind: "home" })}
-            aria-current={view.kind === "home" ? "page" : undefined}
-          >
-            <CalendarDays size={17} />
-            Início
-          </button>
-          <button
-            className={
-              "workspace-nav-button" +
-              (view.kind === "clients" ? " is-active" : "")
-            }
-            disabled={busy}
-            onClick={() => navigate({ kind: "clients" })}
-            aria-current={view.kind === "clients" ? "page" : undefined}
-          >
-            <Users size={17} />
-            Clientes
-          </button>
-          <button
-            className={
-              "workspace-nav-button" +
-              (view.kind === "feeds" ? " is-active" : "")
-            }
-            disabled={busy}
-            onClick={() => navigate({ kind: "feeds" })}
-            aria-current={view.kind === "feeds" ? "page" : undefined}
-          >
-            <LayoutGrid size={17} />
-            Feeds
-          </button>
-          <button
-            className={
-              "workspace-nav-button" +
-              (view.kind === "dashboards" || view.kind === "dashboard"
-                ? " is-active"
-                : "")
-            }
-            disabled={busy}
-            onClick={() => navigate({ kind: "dashboards" })}
-            aria-current={
-              view.kind === "dashboards" || view.kind === "dashboard"
-                ? "page"
-                : undefined
-            }
-          >
-            <BarChart3 size={17} />
-            Dashboards
-          </button>
-          <div className="workspace-sidebar-heading">
-            <span className="workspace-clients-label">SEUS CLIENTES</span>
+          <div className="workspace-primary-nav">
+            <span className="workspace-menu-label">PRINCIPAL</span>
             <button
-              className="workspace-clients-toggle"
-              aria-expanded={clientsExpanded}
-              aria-controls="workspace-clients-list"
-              onClick={() => setClientsExpanded((value) => !value)}
+              className={
+                "workspace-nav-button" +
+                (view.kind === "home" ? " is-active" : "")
+              }
+              disabled={busy}
+              onClick={() => navigate({ kind: "home" })}
+              aria-current={view.kind === "home" ? "page" : undefined}
             >
-              {selectedClient?.name ?? "Seus clientes"}
-              <ChevronDown size={18} aria-hidden="true" />
+              <span className="workspace-nav-icon" aria-hidden="true">
+                <CalendarDays size={17} />
+              </span>
+              <span className="workspace-nav-label">Início</span>
+              <ChevronRight
+                className="workspace-nav-indicator"
+                size={14}
+                aria-hidden="true"
+              />
             </button>
             <button
-              className="task-icon-button"
-              aria-label="Novo cliente"
-              disabled={disabled}
-              onClick={() => openEditor()}
+              className={
+                "workspace-nav-button" +
+                (view.kind === "feeds" ? " is-active" : "")
+              }
+              disabled={busy}
+              onClick={() => navigate({ kind: "feeds" })}
+              aria-current={view.kind === "feeds" ? "page" : undefined}
             >
-              <Plus size={16} />
+              <span className="workspace-nav-icon" aria-hidden="true">
+                <LayoutGrid size={17} />
+              </span>
+              <span className="workspace-nav-label">Feeds</span>
+              <ChevronRight
+                className="workspace-nav-indicator"
+                size={14}
+                aria-hidden="true"
+              />
+            </button>
+            <button
+              className={
+                "workspace-nav-button" +
+                (view.kind === "dashboards" || view.kind === "dashboard"
+                  ? " is-active"
+                  : "")
+              }
+              disabled={busy}
+              onClick={() => navigate({ kind: "dashboards" })}
+              aria-current={
+                view.kind === "dashboards" || view.kind === "dashboard"
+                  ? "page"
+                  : undefined
+              }
+            >
+              <span className="workspace-nav-icon" aria-hidden="true">
+                <BarChart3 size={17} />
+              </span>
+              <span className="workspace-nav-label">Dashboards</span>
+              <ChevronRight
+                className="workspace-nav-indicator"
+                size={14}
+                aria-hidden="true"
+              />
             </button>
           </div>
-          <div
-            id="workspace-clients-list"
-            className={
-              "workspace-clients-list" + (clientsExpanded ? " is-expanded" : "")
-            }
+          <section
+            className="workspace-sidebar-clients"
+            aria-label="Seus clientes"
           >
-            {loading ? (
-              <p className="workspace-muted" role="status">
-                Carregando seu espaço…
-              </p>
-            ) : (
-              clients.length === 0 && (
-                <p className="workspace-muted">
-                  Seus clientes aparecerão aqui.
-                </p>
-              )
-            )}
-            {clients.map((client) => (
-              <div className="workspace-client-group" key={client.id}>
-                <button
-                  className={
-                    "workspace-client-link" +
-                    (view.kind === "client" && view.id === client.id
-                      ? " is-active"
-                      : "")
-                  }
-                  disabled={busy}
-                  onClick={() => navigate({ kind: "client", id: client.id })}
-                  aria-current={
-                    view.kind === "client" && view.id === client.id
-                      ? "page"
-                      : undefined
-                  }
-                >
-                  <Users size={14} />
-                  <span>{client.name}</span>
-                </button>
+            <div className="workspace-sidebar-heading">
+              <div className="workspace-clients-label-group">
+                <span className="workspace-clients-label">SEUS CLIENTES</span>
+                {!loading && (
+                  <span
+                    className="workspace-client-count"
+                    aria-label={`${clients.length} clientes cadastrados`}
+                  >
+                    {clients.length}
+                  </span>
+                )}
               </div>
-            ))}
-          </div>
+              <button
+                className="workspace-clients-toggle"
+                aria-expanded={clientsExpanded}
+                aria-controls="workspace-clients-list"
+                onClick={() => setClientsExpanded((value) => !value)}
+              >
+                {selectedClient?.name ?? "Seus clientes"}
+                <ChevronDown size={18} aria-hidden="true" />
+              </button>
+              <button
+                className="task-icon-button"
+                aria-label="Novo cliente"
+                disabled={disabled}
+                onClick={() => openEditor()}
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+            <div
+              id="workspace-clients-list"
+              className={
+                "workspace-clients-list" +
+                (clientsExpanded ? " is-expanded" : "")
+              }
+            >
+              {loading ? (
+                <p className="workspace-muted" role="status">
+                  Carregando seu espaço…
+                </p>
+              ) : (
+                clients.length === 0 && (
+                  <p className="workspace-muted">
+                    Seus clientes aparecerão aqui.
+                  </p>
+                )
+              )}
+              {clients.map((client) => (
+                <div className="workspace-client-group" key={client.id}>
+                  <button
+                    className={
+                      "workspace-client-link" +
+                      (view.kind === "client" && view.id === client.id
+                        ? " is-active"
+                        : "")
+                    }
+                    disabled={busy}
+                    onClick={() => navigate({ kind: "client", id: client.id })}
+                    aria-current={
+                      view.kind === "client" && view.id === client.id
+                        ? "page"
+                        : undefined
+                    }
+                  >
+                    <span
+                      className="workspace-client-initials"
+                      aria-hidden="true"
+                    >
+                      {clientInitials(client.name)}
+                    </span>
+                    <span className="workspace-client-name">{client.name}</span>
+                    <ChevronRight
+                      className="workspace-client-arrow"
+                      size={14}
+                      aria-hidden="true"
+                    />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </section>
         </nav>
       </aside>
       <main className="platform-content workspace-content">
@@ -477,9 +525,7 @@ export default function Workspace({ children }: { children: ReactNode }) {
                   className="workspace-card workspace-client-card"
                   aria-label={"Cliente " + client.name}
                 >
-                  <span className="workspace-client-avatar" aria-hidden="true">
-                    {client.name.trim().charAt(0).toLocaleUpperCase("pt-BR")}
-                  </span>
+                  <ClientLogo id={client.id} name={client.name} compact />
                   <div className="workspace-client-info">
                     <span className="workspace-card-label">CLIENTE</span>
                     <h2>{client.name}</h2>

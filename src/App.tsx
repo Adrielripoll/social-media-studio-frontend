@@ -24,7 +24,6 @@ import {
   Pencil,
   Eye,
   Sparkles,
-  FolderOpen,
 } from "lucide-react";
 import type { Post, Profile, Feed } from "./types";
 import { reorderPosts } from "./data";
@@ -274,7 +273,7 @@ export default function App({
   return (
     <div
       className={
-        "app mobile-view-" +
+        "app feed-studio mobile-view-" +
         mobileView +
         " " +
         (presentation ? "is-presenting" : "")
@@ -285,39 +284,6 @@ export default function App({
         onSignOut={onSignOut}
         disabled={switchingDisabled}
       >
-        {!presentation && (
-          <div className="project-switcher">
-            <FolderOpen size={16} />
-            <select
-              aria-label="Feed atual"
-              value={project.id}
-              disabled={switchingDisabled}
-              onChange={(event) => {
-                void selectFeed(event.target.value);
-                setViewerId(null);
-                setAvatarError("");
-              }}
-            >
-              {workspace.feeds.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.title}
-                </option>
-              ))}
-            </select>
-            <button
-              className="icon-button"
-              aria-label="Criar feed"
-              disabled={switchingDisabled}
-              onClick={() => {
-                setNewTitle("");
-                setOperationError("");
-                setDialog("newFeed");
-              }}
-            >
-              <Plus size={18} />
-            </button>
-          </div>
-        )}
         <div className="header-right">
           {status}
           {presentation && (
@@ -363,20 +329,20 @@ export default function App({
             {loadError || clientError}
           </p>
         )}
-        {!demo && (
+        {!demo && !presentation && (
           <a className="text-button" href={workspaceReturnUrl()}>
             ← Voltar ao espaço de trabalho
           </a>
         )}
         {!presentation && (
-          <div className="page-heading studio-page-heading studio-hero">
+          <div className="page-heading feed-intro">
             <div>
               <div className="eyebrow">
                 <span />
-                SEU ESTÚDIO CRIATIVO
+                FEED STUDIO
               </div>
               <h1>Ideias que ganham um feed.</h1>
-              <p>Monte, experimente e apresente sua próxima ideia.</p>
+              <p>Um espaço para experimentar. Uma prévia para apresentar.</p>
             </div>
             <div className="heading-actions">
               <button
@@ -419,15 +385,131 @@ export default function App({
           </div>
         )}
         <div className="studio-layout">
+          <section className="preview-panel" aria-label="Prévia do Instagram">
+            <div className="preview-toolbar">
+              <div className="preview-label">
+                <span className="live-dot" />
+                <strong>
+                  {presentation ? project.title : "Seu feed, em tempo real"}
+                </strong>
+                {!presentation && (
+                  <span className="preview-subtitle">Instagram</span>
+                )}
+              </div>
+              <div
+                className="mode-toggle"
+                role="group"
+                aria-label="Visualização"
+              >
+                <button
+                  aria-pressed={mode === "desktop"}
+                  className={mode === "desktop" ? "active" : ""}
+                  onClick={() => setMode("desktop")}
+                >
+                  <Monitor size={15} />
+                  <span>Desktop</span>
+                </button>
+                <button
+                  aria-pressed={mode === "mobile"}
+                  className={mode === "mobile" ? "active" : ""}
+                  onClick={() => setMode("mobile")}
+                >
+                  <Smartphone size={15} />
+                  <span>Mobile</span>
+                </button>
+              </div>
+            </div>
+            <div className={"preview-canvas mode-" + mode}>
+              <div className="preview-artboard" key={mode}>
+                {mode === "mobile" ? (
+                  <div className="phone-frame">
+                    <div className="phone-status">
+                      <b>9:41</b>
+                      <div className="phone-island" />
+                      <span>▮▮▮ ▰</span>
+                    </div>
+                    <ProfilePreview
+                      key={project.id}
+                      project={project}
+                      mode={mode}
+                      presentation={presentation}
+                      onOpenPost={setViewerId}
+                      onAddPost={() => openComposer()}
+                      onReorder={reorder}
+                    />
+                    <div className="phone-home" />
+                  </div>
+                ) : (
+                  <ProfilePreview
+                    key={project.id}
+                    project={project}
+                    mode={mode}
+                    presentation={presentation}
+                    onOpenPost={setViewerId}
+                    onAddPost={() => openComposer()}
+                    onReorder={reorder}
+                  />
+                )}
+              </div>
+            </div>
+            {!presentation && (
+              <div className="preview-footer">
+                <GripVertical size={14} />
+                <span>
+                  Arraste os posts para experimentar novas combinações.
+                </span>
+                <span className="preview-count">
+                  {posts.length}{" "}
+                  {posts.length === 1 ? "publicação" : "publicações"}
+                </span>
+              </div>
+            )}
+            {presentation && (
+              <p className="presentation-hint">
+                Clique nas publicações para explorar · Esc para voltar à edição
+              </p>
+            )}
+          </section>
           {!presentation && (
             <aside className="editor-panel">
               <fieldset disabled={busy} className="editor-fieldset">
                 <div className="editor-heading">
-                  <div>
-                    <span className="eyebrow">FEED</span>
-                    <h2>{project.title}</h2>
+                  <div className="editor-feed-identity">
+                    <span className="eyebrow">PERSONALIZE SEU FEED</span>
+                    <h2 aria-label={project.title}>
+                      <select
+                        className="editor-feed-picker"
+                        aria-label="Feed atual"
+                        title={project.title}
+                        value={project.id}
+                        disabled={switchingDisabled}
+                        onChange={(event) => {
+                          void selectFeed(event.target.value);
+                          setViewerId(null);
+                          setAvatarError("");
+                        }}
+                      >
+                        {workspace.feeds.map((item) => (
+                          <option key={item.id} value={item.id}>
+                            {item.title}
+                          </option>
+                        ))}
+                      </select>
+                    </h2>
                   </div>
-                  <SlidersHorizontal size={18} />
+                  <button
+                    className="icon-button editor-create-feed"
+                    aria-label="Criar feed"
+                    title="Criar feed"
+                    disabled={switchingDisabled}
+                    onClick={() => {
+                      setNewTitle("");
+                      setOperationError("");
+                      setDialog("newFeed");
+                    }}
+                  >
+                    <Plus size={18} />
+                  </button>
                 </div>
                 <div
                   className="editor-tabs"
@@ -834,90 +916,6 @@ export default function App({
               </fieldset>
             </aside>
           )}
-
-          <section className="preview-panel" aria-label="Prévia do Instagram">
-            <div className="preview-toolbar">
-              <div className="preview-label">
-                <span className="live-dot" />
-                <strong>
-                  {presentation ? project.title : "Prévia do perfil"}
-                </strong>
-                {!presentation && (
-                  <span className="preview-subtitle">Instagram</span>
-                )}
-              </div>
-              <div
-                className="mode-toggle"
-                role="group"
-                aria-label="Visualização"
-              >
-                <button
-                  aria-pressed={mode === "desktop"}
-                  className={mode === "desktop" ? "active" : ""}
-                  onClick={() => setMode("desktop")}
-                >
-                  <Monitor size={15} />
-                  <span>Desktop</span>
-                </button>
-                <button
-                  aria-pressed={mode === "mobile"}
-                  className={mode === "mobile" ? "active" : ""}
-                  onClick={() => setMode("mobile")}
-                >
-                  <Smartphone size={15} />
-                  <span>Mobile</span>
-                </button>
-              </div>
-            </div>
-            <div className={"preview-canvas mode-" + mode}>
-              {mode === "mobile" ? (
-                <div className="phone-frame">
-                  <div className="phone-status">
-                    <b>9:41</b>
-                    <div className="phone-island" />
-                    <span>▮▮▮ ▰</span>
-                  </div>
-                  <ProfilePreview
-                    key={project.id}
-                    project={project}
-                    mode={mode}
-                    presentation={presentation}
-                    onOpenPost={setViewerId}
-                    onAddPost={() => openComposer()}
-                    onReorder={reorder}
-                  />
-                  <div className="phone-home" />
-                </div>
-              ) : (
-                <ProfilePreview
-                  key={project.id}
-                  project={project}
-                  mode={mode}
-                  presentation={presentation}
-                  onOpenPost={setViewerId}
-                  onAddPost={() => openComposer()}
-                  onReorder={reorder}
-                />
-              )}
-            </div>
-            {!presentation && (
-              <div className="preview-footer">
-                <GripVertical size={14} />
-                <span>
-                  Arraste os posts para experimentar novas combinações.
-                </span>
-                <span className="preview-count">
-                  {posts.length}{" "}
-                  {posts.length === 1 ? "publicação" : "publicações"}
-                </span>
-              </div>
-            )}
-            {presentation && (
-              <p className="presentation-hint">
-                Clique nas publicações para explorar · Esc para voltar à edição
-              </p>
-            )}
-          </section>
         </div>
         {!presentation && (
           <footer className="app-footer">

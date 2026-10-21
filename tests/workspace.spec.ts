@@ -39,9 +39,7 @@ test("cadastra e renomeia cliente, com persistência após recarregar", async ({
 }) => {
   const { state, requests } = await mockWorkspace(page);
   await login(page);
-  await nav(page)
-    .getByRole("button", { name: "Clientes", exact: true })
-    .click();
+  await page.goto("/?view=clients");
   await page.getByRole("button", { name: "Cadastrar cliente" }).click();
   await page
     .getByRole("dialog")
@@ -94,9 +92,7 @@ test("exclui cliente com confirmação e preserva os outros", async ({
     client("Preservar"),
   ]);
   await login(page);
-  await nav(page)
-    .getByRole("button", { name: "Clientes", exact: true })
-    .click();
+  await page.goto("/?view=clients");
   await page
     .getByRole("button", { name: "Excluir cliente Excluir", exact: true })
     .click();
@@ -171,9 +167,7 @@ test("funciona no mobile sem rolagem horizontal", async ({ page }) => {
 test("apresenta conflito da API sem remover o cliente", async ({ page }) => {
   const { state } = await mockWorkspace(page, [client("Cliente em uso")]);
   await login(page);
-  await nav(page)
-    .getByRole("button", { name: "Clientes", exact: true })
-    .click();
+  await page.goto("/?view=clients");
   state.deleteConflict = true;
   await page
     .getByRole("button", { name: "Excluir cliente Cliente em uso" })

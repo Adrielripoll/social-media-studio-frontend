@@ -56,6 +56,8 @@ try {
   for (const storage of [localStorage, sessionStorage]) {
     for (const key of Object.keys(storage)) {
       if (
+        key === "serga-studio-auth" ||
+        key.startsWith("serga-studio-auth-") ||
         key === "social-media-studio-auth" ||
         key.startsWith("social-media-studio-auth-")
       )

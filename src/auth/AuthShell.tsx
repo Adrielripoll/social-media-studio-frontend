@@ -1,15 +1,10 @@
-import { CalendarDays, Check, Layers, LayoutGrid } from "lucide-react";
+import { CalendarDays, Check, LayoutGrid } from "lucide-react";
 import type { ReactNode } from "react";
 
 export function StudioBrand() {
   return (
-    <a className="studio-brand" href="/">
-      <span>
-        <Layers size={22} />
-      </span>
-      <strong>
-        social<span>studio</span>
-      </strong>
+    <a className="studio-brand" href="/" aria-label="Serga Studio — início">
+      <img src="/logo.png" alt="Serga Studio" width={2000} height={333} />
     </a>
   );
 }

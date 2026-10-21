@@ -22,12 +22,12 @@
   color: white;
   border-radius: var(--radius-card);
 }
-.studio-brand strong {
-  font-weight: 750;
-}
-.studio-brand strong > span {
-  font-weight: 400;
-  color: var(--text-secondary);
+.studio-brand > img {
+  display: block;
+  width: 200px;
+  max-width: 100%;
+  height: auto;
+  object-fit: contain;
 }
 .auth-story {
   --text-secondary: var(--hero-muted);
@@ -74,12 +74,12 @@
   margin: 45px 0 35px;
 }
 .scene-card {
-  --text-secondary: #616981;
+  --text-secondary: #6e6052;
   color: var(--text-primary);
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 14px;
-  box-shadow: 0 15px 32px #151b3e20;
+  box-shadow: 0 15px 32px #1c181520;
 }
 .scene-calendar {
   position: absolute;
@@ -163,13 +163,13 @@
   width: 32px;
   height: 43px;
   border-radius: 4px;
-  background: #8270d9;
+  background: var(--accent-highlight);
 }
 .scene-feed i:nth-child(2) {
-  background: #c9bafa;
+  background: var(--accent-border);
 }
 .scene-feed i:nth-child(3) {
-  background: #5b83bc;
+  background: var(--accent-hover);
 }
 .auth-story-footer {
   font-size: 10px;
@@ -508,6 +508,9 @@
   }
   .platform-header {
     padding: 20px;
+  }
+  .studio-brand > img {
+    width: 170px;
   }
   .platform-header .studio-brand {
     font-size: 20px;

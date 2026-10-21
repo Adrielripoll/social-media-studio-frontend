@@ -17,38 +17,42 @@
 }
 
 :root {
-  --accent: #6650dc;
-  --accent-hover: #5039bf;
-  --accent-soft: #eeebff;
-  --accent-border: #d9d0fa;
-  --accent-gradient: linear-gradient(115deg, #7258ed, #5e45d3);
-  --text-primary: #1a2039;
-  --text-secondary: #616981;
-  --muted: #65708a;
+  --accent: #7b5322;
+  --accent-hover: #4c3923;
+  --accent-highlight: #ac6a1b;
+  --accent-soft: #f4e9d9;
+  --accent-soft-hover: #ecdbc2;
+  --accent-border: #d9be98;
+  --accent-gradient: linear-gradient(115deg, #7b5322, #93601f);
+  --text-primary: #1c1815;
+  --text-secondary: #6e6052;
+  --muted: #786a5c;
   --surface: #fff;
-  --surface-soft: #f4f5fc;
-  --canvas: #f0f2f9;
+  --surface-soft: #f8f5f0;
+  --canvas: #f3efe9;
   --canvas-background:
-    radial-gradient(ellipse at 95% 4%, #e9e5fc 0, transparent 38%),
+    radial-gradient(ellipse at 95% 4%, #eee2d2 0, transparent 38%),
     var(--canvas);
   --hero-background:
-    radial-gradient(ellipse at 98% 5%, #8355bf70, transparent 48%),
-    radial-gradient(ellipse at 70% 120%, #395fd177, transparent 55%),
-    linear-gradient(115deg, #151b30, #28254e);
-  --hero-muted: #c1c6df;
-  --line: #e4e7f2;
-  --control-border: #bcc3db;
-  --danger: #b23257;
-  --danger-hover: #902543;
-  --danger-surface: #fff0f4;
-  --danger-border: #efc3d1;
+    radial-gradient(ellipse at 98% 5%, #ac6a1b33, transparent 48%),
+    radial-gradient(ellipse at 70% 120%, #7b532244, transparent 55%),
+    linear-gradient(115deg, #1c1815, #4c3923);
+  --hero-muted: #d6c6b3;
+  --hero-accent: #ecc38a;
+  --hero-accent-hover: #f4d8b2;
+  --line: #e8e0d5;
+  --control-border: #c7b8a6;
+  --danger: #9c3e32;
+  --danger-hover: #7e2f25;
+  --danger-surface: #fcf0ed;
+  --danger-border: #e7c3bb;
   --success: #157259;
   --success-surface: #e9f8f1;
   --success-border: #c0e8d5;
-  --warning: #805025;
-  --warning-surface: #fff5e7;
-  --warning-border: #f0dbba;
-  --focus: #7961ed;
+  --warning: #7b5322;
+  --warning-surface: #fbf2e5;
+  --warning-border: #e5cba6;
+  --focus: #ac6a1b;
   --heading-font: "Space Grotesk Variable", sans-serif;
   --dashboard-heading-font: var(--heading-font);
   --text-xs: 0.75rem;
@@ -64,8 +68,8 @@
   --radius-control: 11px;
   --radius-card: 20px;
   --radius-dialog: 22px;
-  --shadow-card: 0 5px 24px rgb(43 46 93 / 4%);
-  --shadow-dialog: 0 28px 90px #151b3e40;
+  --shadow-card: 0 5px 24px rgb(28 24 21 / 4%);
+  --shadow-dialog: 0 28px 90px #1c181540;
   font-family: "Manrope Variable", sans-serif;
   color: var(--text-primary);
   background: var(--canvas);
@@ -108,7 +112,7 @@ p {
 .studio-brand > span {
   background: var(--accent-gradient);
   border-radius: 12px;
-  box-shadow: 0 4px 12px #6e4ad328;
+  box-shadow: 0 4px 12px #7b532228;
 }
 
 /* Shared controls. The simulated Instagram retains its own type scale. */
@@ -136,11 +140,11 @@ p {
   background-image: var(--accent-gradient);
   color: #fff;
   border-color: transparent;
-  box-shadow: 0 4px 12px #6e4ad328;
+  box-shadow: 0 4px 12px #7b532228;
 }
 .button.primary:hover:not(:disabled) {
   background: var(--accent-hover);
-  box-shadow: 0 6px 18px #6e4ad338;
+  box-shadow: 0 6px 18px #7b532238;
 }
 .button.secondary {
   background: var(--surface);
@@ -221,7 +225,7 @@ select:focus,
 .task-add-form input:focus,
 .task-edit-form input:focus {
   border-color: var(--focus);
-  box-shadow: 0 0 0 3px #7961ed14;
+  box-shadow: 0 0 0 3px #ac6a1b1f;
 }
 .field input,
 .field select,
@@ -355,7 +359,7 @@ select:focus-visible,
   background: var(--surface);
 }
 .dialog::backdrop {
-  background: #181c3f70;
+  background: #1c181570;
   backdrop-filter: blur(5px);
 }
 .dialog-heading h2 {
@@ -445,11 +449,6 @@ select:focus-visible,
   padding-left: 12px;
 }
 
-.workspace-sidebar .is-active,
-.workspace-nav-button:hover,
-.workspace-client-link:hover {
-  color: var(--accent);
-}
 .studio-hero,
 .dashboard-hero {
   --text-secondary: var(--hero-muted);
@@ -459,7 +458,7 @@ select:focus-visible,
   border-radius: 24px;
   background: var(--hero-background);
   color: #fff;
-  box-shadow: 0 16px 30px #20244315;
+  box-shadow: 0 16px 30px #1c181515;
   border: 1px solid #ffffff14;
 }
 .studio-hero::before,
@@ -471,13 +470,13 @@ select:focus-visible,
   width: 350px;
   height: 350px;
   border-radius: 50%;
-  border: 1px solid #c3b5ff16;
+  border: 1px solid #ecc38a16;
   right: -65px;
   top: -160px;
   box-shadow:
-    0 0 0 35px #b9a8ff06,
-    0 0 0 70px #b9a8ff04,
-    0 0 0 105px #b9a8ff03;
+    0 0 0 35px #ecc38a06,
+    0 0 0 70px #ecc38a04,
+    0 0 0 105px #ecc38a03;
 }
 .studio-hero .task-eyebrow,
 .studio-hero .auth-eyebrow,
@@ -489,7 +488,7 @@ select:focus-visible,
   font:
     600 10px "Manrope Variable",
     sans-serif;
-  color: #d7cbff;
+  color: var(--hero-accent);
   letter-spacing: 1.7px;
   line-height: 1.6;
   margin-bottom: 16px;
@@ -502,22 +501,22 @@ select:focus-visible,
 }
 .studio-hero .button.primary,
 .dashboard-hero .button.primary {
-  background: #b8a3fc;
-  background-image: linear-gradient(110deg, #c2aeff, #a994f7);
-  color: #211c42;
-  border: 1px solid #dfd4ff7a;
-  box-shadow: 0 4px 20px #9470ef22;
+  background: var(--hero-accent);
+  background-image: linear-gradient(110deg, #f2d6ae, var(--hero-accent));
+  color: var(--text-primary);
+  border: 1px solid #f2d6ae7a;
+  box-shadow: 0 4px 20px #ac6a1b22;
 }
 .studio-hero .button.primary:hover:not(:disabled),
 .dashboard-hero .button.primary:hover:not(:disabled) {
-  background: #d2c3ff;
-  color: #211c42;
+  background: var(--hero-accent-hover);
+  color: var(--text-primary);
 }
 .studio-hero .button.secondary,
 .dashboard-hero .button.secondary {
   background: #ffffff0c;
   border-color: #ffffff30;
-  color: #f2efff;
+  color: #fcf6ed;
 }
 .studio-hero .button.secondary:hover:not(:disabled),
 .dashboard-hero .button.secondary:hover:not(:disabled) {
@@ -570,7 +569,7 @@ select:focus-visible,
   margin-top: 10px;
 }
 .studio-hero .task-icon-button {
-  color: #e5ddff;
+  color: #f2d6ae;
   background: #ffffff0c;
   border: 1px solid #ffffff30;
 }
@@ -579,8 +578,8 @@ select:focus-visible,
   background: #ffffff20;
 }
 .studio-hero .task-icon-button.danger:hover:not(:disabled) {
-  color: #ffd4df;
-  background: #b2325733;
+  color: #f5c8bf;
+  background: #9c3e3233;
 }
 .editor-tabs button,
 .mode-toggle button {
@@ -609,19 +608,6 @@ select:focus-visible,
   background: var(--canvas-background);
 }
 
-/* Compact navigation and a single client heading. */
-.workspace-nav-button,
-.workspace-client-link {
-  min-height: 44px;
-  font-size: var(--text-sm);
-}
-.workspace-clients-list {
-  display: grid;
-  gap: var(--space-2);
-}
-.workspace-clients-toggle {
-  display: none;
-}
 .workspace-page-heading .workspace-card-actions {
   display: flex;
 }
@@ -794,7 +780,7 @@ select:focus-visible,
 .preview-canvas.mode-mobile {
   background: radial-gradient(
     ellipse at 50% 45%,
-    #e7e3f8,
+    var(--accent-soft),
     var(--surface-soft) 68%
   );
 }
@@ -820,7 +806,7 @@ select:focus-visible,
   font-size: var(--text-sm);
 }
 .add-content:hover:not(:disabled) {
-  background: #e3dcff;
+  background: var(--accent-soft-hover);
 }
 .upload-area {
   background: var(--surface-soft);
@@ -929,7 +915,7 @@ select:focus-visible,
   background: transparent;
 }
 .carousel-dots button.active::before {
-  background: #1877b3;
+  background: var(--accent);
 }
 .viewer-reactions .icon-button {
   min-width: 44px;
@@ -1108,62 +1094,6 @@ select:focus-visible,
   }
   .studio-page-heading .heading-actions {
     width: 100%;
-  }
-  .workspace-sidebar {
-    max-height: none;
-    overflow: visible;
-    padding: var(--space-3) var(--space-4);
-    border-color: var(--line);
-  }
-  .workspace-sidebar nav {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: var(--space-2);
-  }
-  .workspace-nav-button {
-    padding: var(--space-2) 0;
-    flex-direction: column;
-    gap: var(--space-1);
-    justify-content: center;
-    font-size: var(--text-xs);
-  }
-  .workspace-sidebar .is-active {
-    box-shadow: none;
-  }
-  .workspace-sidebar-heading {
-    grid-column: 1 / -1;
-    margin-top: 0;
-    padding-left: 0;
-  }
-  .workspace-clients-label {
-    display: none;
-  }
-  .workspace-clients-toggle {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    min-height: 44px;
-    flex: 1;
-    min-width: 0;
-    border: 0;
-    background: transparent;
-    font-size: var(--text-sm);
-    text-align: left;
-    color: var(--text-secondary);
-  }
-  .workspace-clients-toggle svg {
-    margin-left: auto;
-  }
-  .workspace-clients-toggle[aria-expanded="true"] svg {
-    transform: rotate(180deg);
-  }
-  .workspace-clients-list {
-    grid-column: 1 / -1;
-    display: none;
-    max-height: 260px;
-    overflow-y: auto;
-  }
-  .workspace-clients-list.is-expanded {
-    display: grid;
   }
   .workspace-content {
     padding: var(--space-6) var(--space-4);
