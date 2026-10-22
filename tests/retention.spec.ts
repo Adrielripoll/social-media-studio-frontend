@@ -22,7 +22,7 @@ function retention(acceptedAt: string | null = null) {
 const summary = (acceptedAt: string | null = null) => ({
   plan: {
     code: "basic",
-    name: "Plano Básico",
+    name: "Essentials",
     storageLimitBytes: 2.5e9,
     features: { images: true, videos: false },
   },
@@ -68,7 +68,7 @@ test("mostra política, exige aceite explícito e só então permite contratar",
     return route.fulfill({ json: retention(acceptedAt), headers: corsHeaders });
   });
   await login(page);
-  const contract = page.getByRole("button", { name: "Contratar Plano Básico" });
+  const contract = page.getByRole("button", { name: "Contratar Essentials" });
   await expect(contract).toBeDisabled();
   await page.getByText("Ler política de retenção", { exact: false }).click();
   await expect(
@@ -131,7 +131,7 @@ test("falha no aceite mantém contratação bloqueada e permite nova tentativa",
     "Não foi possível registrar",
   );
   await expect(
-    page.getByRole("button", { name: "Contratar Plano Básico" }),
+    page.getByRole("button", { name: "Contratar Essentials" }),
   ).toBeDisabled();
   await expect(
     page.getByRole("button", { name: "Aceitar política de retenção" }),

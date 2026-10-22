@@ -142,7 +142,7 @@ test("editor é utilizável de 320 a 1440 px, com status visível e botões aces
         .getByRole("button", { name: "Ver prévia", exact: true })
         .click();
       await expect(
-        page.getByRole("region", { name: "Prévia do Instagram" }),
+        page.getByRole("region", { name: "Prévia do feed" }),
       ).toBeVisible();
       await expect(page.locator(".editor-panel")).not.toBeVisible();
       await page

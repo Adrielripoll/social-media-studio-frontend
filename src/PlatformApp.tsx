@@ -46,11 +46,11 @@ function Home() {
         <TaskPlanner />
         <section className="platform-demo">
           <div>
-            <span className="demo-pill">FEED STUDIO</span>
+            <span className="demo-pill">PLANEJADOR DE FEED</span>
             <h2>Dê forma às suas ideias.</h2>
             <p>
-              Monte perfis fictícios e organize suas publicações. Seus feeds
-              ficam salvos na sua conta.
+              Planeje e visualize como suas publicações podem aparecer no
+              Instagram. Seus feeds ficam salvos na sua conta.
             </p>
           </div>
           <a className="button secondary" href="/simulador">

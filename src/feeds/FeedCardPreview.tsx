@@ -1,9 +1,10 @@
-import StudioImage from "../components/StudioImage";
+import StudioMedia from "../components/StudioMedia";
 import { useEffect, useState } from "react";
 import { Copy, LayoutGrid, RefreshCw } from "lucide-react";
 import { Avatar } from "../components/ProfilePreview";
 import type { Feed } from "../types";
 import { getFeed } from "./api";
+import { isMediaPending } from "./media-refresh";
 
 export default function FeedCardPreview({
   feedId,
@@ -33,6 +34,29 @@ export default function FeedCardPreview({
     return () => controller.abort();
   }, [feedId, reload]);
 
+  const pending = feed?.posts.some((post) => post.media?.some(isMediaPending));
+  useEffect(() => {
+    if (!pending) return;
+    const controller = new AbortController();
+    let refreshing = false;
+    const timer = setInterval(() => {
+      if (refreshing) return;
+      refreshing = true;
+      void getFeed(feedId, controller.signal)
+        .then((fresh) => {
+          if (!controller.signal.aborted) setFeed(fresh);
+        })
+        .catch(() => undefined)
+        .finally(() => {
+          refreshing = false;
+        });
+    }, 10000);
+    return () => {
+      clearInterval(timer);
+      controller.abort();
+    };
+  }, [feedId, pending]);
+
   return (
     <section
       className="feed-card-preview"
@@ -40,7 +64,10 @@ export default function FeedCardPreview({
       aria-busy={loading}
     >
       {loading ? (
-        <div className="feed-preview-content feed-preview-loading" role="status">
+        <div
+          className="feed-preview-content feed-preview-loading"
+          role="status"
+        >
           <span className="visually-hidden">Carregando prévia…</span>
           <div
             className="feed-preview-profile preview-skeleton-profile"
@@ -61,7 +88,10 @@ export default function FeedCardPreview({
       ) : failed || !feed ? (
         <div className="feed-preview-content feed-preview-empty" role="alert">
           <p>Não foi possível carregar a prévia.</p>
-          <button className="text-button" onClick={() => setReload((value) => value + 1)}>
+          <button
+            className="text-button"
+            onClick={() => setReload((value) => value + 1)}
+          >
             <RefreshCw size={14} />
             Tentar novamente
           </button>
@@ -72,7 +102,9 @@ export default function FeedCardPreview({
             <Avatar src={feed.profile.avatar} name={feed.profile.name} />
             <div>
               <strong>
-                {feed.profile.username ? "@" + feed.profile.username : feed.profile.name}
+                {feed.profile.username
+                  ? "@" + feed.profile.username
+                  : feed.profile.name}
               </strong>
               <span>{feed.profile.name}</span>
               <small>
@@ -85,18 +117,20 @@ export default function FeedCardPreview({
             <div className="feed-preview-grid">
               {feed.posts.slice(0, 9).map((post, index) => (
                 <div className="feed-preview-post" key={post.id}>
-                  <StudioImage
+                  <StudioMedia
+                    media={post.media?.[0]}
                     src={post.images[0]}
                     alt={
                       "Publicação " +
                       (index + 1) +
                       (post.caption ? ": " + post.caption.slice(0, 100) : "")
                     }
-                    loading="lazy"
-                    decoding="async"
                   />
                   {post.images.length > 1 && (
-                    <span className="feed-preview-carousel" aria-label="Carrossel">
+                    <span
+                      className="feed-preview-carousel"
+                      aria-label="Carrossel"
+                    >
                       <Copy size={15} />
                     </span>
                   )}

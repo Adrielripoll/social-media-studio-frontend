@@ -114,7 +114,7 @@ export async function mockAuth(
         },
         plan: {
           code: "basic",
-          name: "Plano Básico",
+          name: "Essentials",
           storageLimitBytes: 2500000000,
           features: { images: true, videos: false },
         },

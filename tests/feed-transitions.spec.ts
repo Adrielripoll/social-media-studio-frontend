@@ -14,19 +14,19 @@ test("carrossel mantém a imagem correta ao alternar setas, teclado e indicadore
   const image = dialog.locator(".viewer-media img");
   const caption = await dialog.locator(".viewer-caption").textContent();
 
-  await dialog.getByRole("button", { name: "Próxima imagem" }).click();
+  await dialog.getByRole("button", { name: "Próxima mídia" }).click();
   await expect(image).toHaveAttribute("src", "/demo/07.svg");
   await page.keyboard.press("ArrowLeft");
   await expect(image).toHaveAttribute("src", "/demo/02.svg");
   await dialog
-    .getByRole("button", { name: "Ver imagem 2", exact: true })
+    .getByRole("button", { name: "Ver mídia 2", exact: true })
     .click();
   await page.keyboard.press("ArrowRight");
   await expect(image).toHaveAttribute("src", "/demo/07.svg");
   await expect(
-    dialog.getByRole("button", { name: "Ver imagem 2", exact: true }),
+    dialog.getByRole("button", { name: "Ver mídia 2", exact: true }),
   ).toHaveAttribute("aria-current", "true");
-  await dialog.getByRole("button", { name: "Imagem anterior" }).click();
+  await dialog.getByRole("button", { name: "Mídia anterior" }).click();
   await expect(image).toHaveAttribute("src", "/demo/02.svg");
   await expect(dialog.locator(".viewer-slide-previous")).toHaveCount(0);
   await expect(dialog.locator(".viewer-caption")).toHaveText(caption ?? "");
@@ -45,7 +45,7 @@ test("carrossel mantém a imagem correta ao alternar setas, teclado e indicadore
 test("gesto horizontal troca fotos e gesto vertical preserva a imagem atual", async ({
   page,
 }) => {
-  const media = page.getByRole("region", { name: "Imagens da publicação" });
+  const media = page.getByRole("region", { name: "Mídias da publicação" });
   const image = media.locator("img");
 
   await media.dispatchEvent("pointerdown", {
@@ -91,7 +91,7 @@ test("preferência por movimento reduzido mantém navegação sem acumular a fot
   await page.emulateMedia({ reducedMotion: "reduce" });
   const dialog = page.getByRole("dialog", { name: "Publicação", exact: true });
 
-  await dialog.getByRole("button", { name: "Próxima imagem" }).click();
+  await dialog.getByRole("button", { name: "Próxima mídia" }).click();
   await expect(dialog.locator(".viewer-media img")).toHaveAttribute(
     "src",
     "/demo/07.svg",

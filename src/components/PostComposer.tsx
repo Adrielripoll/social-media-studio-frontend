@@ -1,5 +1,9 @@
-import StudioImage from "./StudioImage";
-import { useState, useRef } from "react";
+import StudioMedia from "./StudioMedia";
+import { useEffect, useState, useRef } from "react";
+import { getFeedVideo } from "../feeds/api";
+import { ApiError } from "../auth/api";
+import { isMediaProcessing, refreshPendingMedia } from "../feeds/media-refresh";
+import { useMotionExiting } from "./MotionPresence";
 import {
   ImagePlus,
   X,
@@ -8,89 +12,160 @@ import {
   LoaderCircle,
   Plus,
 } from "lucide-react";
-import type { Post } from "../types";
+import type { Post, PostMedia } from "../types";
 import { uid } from "../data";
 import { readImage } from "../storage";
 import Dialog from "./Dialog";
 
 export default function PostComposer({
   post,
+  feedId,
   onClose,
   onSave,
   prepareImage,
   discardMedia,
 }: {
-  prepareImage?: (file: File) => Promise<{ id: string; url: string }>;
+  prepareImage?: (
+    file: File,
+    onProgress?: (percent: number) => void,
+  ) => Promise<PostMedia>;
   discardMedia?: (ids: string[]) => Promise<void>;
   post?: Post;
+  feedId?: string;
   onClose: () => void;
   onSave: (post: Post) => void;
 }) {
-  const [images, setImages] = useState<string[]>(post?.images ?? []);
-  const [mediaIds, setMediaIds] = useState<string[]>(post?.mediaIds ?? []);
+  const [media, setMedia] = useState<PostMedia[]>(
+    post?.media ??
+      post?.images.map((url, index) => ({
+        id: post.mediaIds?.[index],
+        url,
+        mediaType: "image" as const,
+        status: "ready" as const,
+      })) ??
+      [],
+  );
   const addedMedia = useRef(new Set<string>());
-  function close() {
-    if (discardMedia) void discardMedia([...addedMedia.current]);
-    onClose();
-  }
   const [caption, setCaption] = useState(post?.caption ?? "");
   const [location, setLocation] = useState(post?.location ?? "");
   const [likes, setLikes] = useState(post?.likes ?? 128);
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState<number | null>(null);
   const [error, setError] = useState("");
   const [dropActive, setDropActive] = useState(false);
   const input = useRef<HTMLInputElement>(null);
+  const [previewError, setPreviewError] = useState("");
+  const exiting = useMotionExiting();
+  const pendingMediaIds = media
+    .filter(isMediaProcessing)
+    .flatMap((item) => (item.id ? [item.id] : []))
+    .sort()
+    .join(",");
 
-  async function addImages(files: File[]) {
+  useEffect(() => {
+    if (!feedId || !pendingMediaIds || exiting) return;
+    const currentFeedId = feedId;
+    const controller = new AbortController();
+    const ids = pendingMediaIds.split(",");
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    async function refreshPreviews() {
+      const updates = new Map<string, PostMedia>();
+      let unavailable = false;
+      await Promise.all(
+        ids.map(async (id) => {
+          try {
+            const updated = await getFeedVideo(
+              currentFeedId,
+              id,
+              controller.signal,
+            );
+            updates.set(id, updated);
+          } catch (reason) {
+            if (controller.signal.aborted) return;
+            if (reason instanceof ApiError && reason.status === 404) {
+              updates.set(id, {
+                id,
+                url: "",
+                mediaType: "video",
+                status: "failed",
+              });
+            } else {
+              unavailable = true;
+            }
+          }
+        }),
+      );
+      if (controller.signal.aborted) return;
+      setMedia((current) => refreshPendingMedia(current, updates));
+      setPreviewError(
+        unavailable
+          ? "Não foi possível atualizar a prévia. Tentando novamente."
+          : "",
+      );
+      const stillPending = ids.some((id) => {
+        const updated = updates.get(id);
+        return !updated || isMediaProcessing(updated);
+      });
+      if (stillPending) timer = setTimeout(() => void refreshPreviews(), 5000);
+    }
+
+    void refreshPreviews();
+    return () => {
+      controller.abort();
+      if (timer) clearTimeout(timer);
+    };
+  }, [feedId, pendingMediaIds, exiting]);
+
+  function close() {
+    if (discardMedia) void discardMedia([...addedMedia.current]);
+    onClose();
+  }
+
+  async function addFiles(files: File[]) {
     if (busy || !files.length) return;
-    if (files.length + images.length > 10) {
-      setError("Um carrossel pode ter até 10 imagens.");
+    if (files.length + media.length > 10) {
+      setError("Um carrossel pode ter até 10 imagens ou vídeos.");
       return;
     }
     setBusy(true);
     setError("");
+    const added: PostMedia[] = [];
     try {
-      const added: { url: string; id?: string }[] = [];
-      try {
-        for (const file of files)
-          added.push(
-            prepareImage ? await prepareImage(file) : { url: await readImage(file) },
-          );
-      } catch (reason) {
-        if (discardMedia)
-          await discardMedia(added.flatMap((item) => (item.id ? [item.id] : [])));
-        throw reason;
+      for (const file of files) {
+        const item = prepareImage
+          ? await prepareImage(file, setProgress)
+          : { url: await readImage(file), mediaType: "image" as const };
+        added.push(item);
+        if (item.id) addedMedia.current.add(item.id);
       }
-      for (const item of added) if (item.id) addedMedia.current.add(item.id);
-      setImages((current) => [...current, ...added.map((item) => item.url)]);
-      setMediaIds((current) => [
-        ...current,
-        ...added.flatMap((item) => (item.id ? [item.id] : [])),
-      ]);
+      setMedia((current) => [...current, ...added]);
     } catch (reason) {
+      if (discardMedia) {
+        const ids = added.flatMap((item) => (item.id ? [item.id] : []));
+        await discardMedia(ids);
+        for (const id of ids) addedMedia.current.delete(id);
+      }
       setError(
         reason instanceof Error
           ? reason.message
-          : "Não foi possível carregar as imagens.",
+          : "Não foi possível enviar os arquivos.",
       );
     } finally {
       setBusy(false);
+      setProgress(null);
       if (input.current) input.current.value = "";
     }
   }
+
   function move(index: number, offset: number) {
-    setMediaIds((current) => {
-      if (!current.length) return current;
-      const next = [...current];
-      [next[index], next[index + offset]] = [next[index + offset], next[index]];
-      return next;
-    });
-    setImages((current) => {
+    setMedia((current) => {
       const next = [...current];
       [next[index], next[index + offset]] = [next[index + offset], next[index]];
       return next;
     });
   }
+
   return (
     <Dialog
       title={post ? "Editar publicação" : "Nova publicação"}
@@ -101,34 +176,46 @@ export default function PostComposer({
       <form
         onSubmit={(event) => {
           event.preventDefault();
-          if (!images.length || busy) return;
+          if (!media.length || busy) return;
           onSave({
             id: post?.id ?? uid(),
-            images,
+            images: media.map((item) => item.url),
+            media,
             caption,
             location,
             likes,
-            ...(prepareImage ? { mediaIds } : {}),
+            ...(prepareImage
+              ? {
+                  mediaIds: media.flatMap((item) => (item.id ? [item.id] : [])),
+                }
+              : {}),
           });
         }}
       >
         <p className="dialog-intro">
-          Uma imagem conta uma história. Um carrossel conta o resto.
+          Organize até 10 mídias. Após o envio, os vídeos são processados em
+          segundo plano.
         </p>
         <input
           ref={input}
           className="visually-hidden"
           type="file"
           multiple
-          accept="image/jpeg,image/png,image/webp"
-          aria-label="Selecionar imagens da publicação"
-          onChange={(event) => void addImages(Array.from(event.target.files ?? []))}
+          accept={
+            prepareImage
+              ? "image/jpeg,image/png,image/webp,.mp4,.mov,.avi,.mkv,.wmv"
+              : "image/jpeg,image/png,image/webp"
+          }
+          aria-label="Selecionar arquivos da publicação"
+          onChange={(event) =>
+            void addFiles(Array.from(event.target.files ?? []))
+          }
           disabled={busy}
         />
         <button
           className={"upload-area " + (dropActive ? "is-dragging" : "")}
           type="button"
-          disabled={busy || images.length >= 10}
+          disabled={busy || media.length >= 10}
           onClick={() => input.current?.click()}
           onDragOver={(event) => {
             event.preventDefault();
@@ -138,46 +225,58 @@ export default function PostComposer({
           onDrop={(event) => {
             event.preventDefault();
             setDropActive(false);
-            void addImages(Array.from(event.dataTransfer.files));
+            void addFiles(Array.from(event.dataTransfer.files));
           }}
         >
-          {busy ? <LoaderCircle className="spin" size={30} /> : <ImagePlus size={30} />}
+          {busy ? (
+            <LoaderCircle className="spin" size={30} />
+          ) : (
+            <ImagePlus size={30} />
+          )}
           <strong>
             {busy
-              ? "Preparando imagens…"
-              : images.length
-                ? "Adicionar mais imagens"
-                : "Arraste suas imagens para cá"}
+              ? progress === null
+                ? "Enviando arquivos…"
+                : "Enviando vídeo: " + progress + "%"
+              : media.length
+                ? "Adicionar mais arquivos"
+                : "Arraste seus arquivos para cá"}
           </strong>
           <span>
-            {images.length
-              ? images.length + " de 10 imagens · a primeira será a capa"
-              : "ou clique para escolher · JPG, PNG ou WebP"}
+            {media.length
+              ? media.length + " de 10 mídias · a primeira será a capa"
+              : "ou clique para escolher"}
           </span>
-          <small>Até 10 imagens, com até 20 MB cada</small>
+          <small>
+            {prepareImage
+              ? "Imagens: JPG, PNG e WebP até 20 MB. Vídeos: MP4, MOV, AVI, MKV e WMV até 200 MB e 3 minutos."
+              : "Até 10 imagens, com até 20 MB cada"}
+          </small>
         </button>
-        {images.length > 0 && (
+        {media.length > 0 && (
           <div className="image-strip">
-            {images.map((image, index) => (
-              <div className="image-thumb" key={index}>
-                <StudioImage
-                  src={image}
-                  alt={"Imagem " + (index + 1) + " do carrossel"}
+            {media.map((item, index) => (
+              <div className="image-thumb" key={item.id ?? index}>
+                <StudioMedia
+                  media={item}
+                  alt={"Mídia " + (index + 1) + " do carrossel"}
                 />
-                <span className="thumb-order">{index === 0 ? "Capa" : index + 1}</span>
+                <span className="thumb-order">
+                  {index === 0 ? "Capa" : index + 1}
+                </span>
                 <button
                   type="button"
                   className="thumb-remove"
                   aria-label={"Remover imagem " + (index + 1)}
                   disabled={busy}
                   onClick={() => {
-                    const id = mediaIds[index];
-                    if (id && addedMedia.current.has(id)) {
-                      addedMedia.current.delete(id);
-                      if (discardMedia) void discardMedia([id]);
+                    if (item.id && addedMedia.current.has(item.id)) {
+                      addedMedia.current.delete(item.id);
+                      if (discardMedia) void discardMedia([item.id]);
                     }
-                    setMediaIds((current) => current.filter((_, i) => i !== index));
-                    setImages((current) => current.filter((_, i) => i !== index));
+                    setMedia((current) =>
+                      current.filter((_, position) => position !== index),
+                    );
                   }}
                 >
                   <X size={13} />
@@ -185,7 +284,9 @@ export default function PostComposer({
                 <div className="thumb-arrows">
                   <button
                     type="button"
-                    aria-label={"Mover imagem " + (index + 1) + " para a esquerda"}
+                    aria-label={
+                      "Mover imagem " + (index + 1) + " para a esquerda"
+                    }
                     disabled={index === 0 || busy}
                     onClick={() => move(index, -1)}
                   >
@@ -193,8 +294,10 @@ export default function PostComposer({
                   </button>
                   <button
                     type="button"
-                    aria-label={"Mover imagem " + (index + 1) + " para a direita"}
-                    disabled={index === images.length - 1 || busy}
+                    aria-label={
+                      "Mover imagem " + (index + 1) + " para a direita"
+                    }
+                    disabled={index === media.length - 1 || busy}
                     onClick={() => move(index, 1)}
                   >
                     <ChevronRight size={13} />
@@ -203,6 +306,24 @@ export default function PostComposer({
               </div>
             ))}
           </div>
+        )}
+        {media.some(isMediaProcessing) && (
+          <p className="video-upload-note" role="status">
+            Upload concluído. Você pode adicionar a publicação e continuar
+            usando o Studio enquanto o vídeo é processado.
+          </p>
+        )}
+        {!media.some(isMediaProcessing) &&
+          media.some((item) => item.status === "processed") && (
+            <p className="video-upload-note" role="status">
+              Vídeo preparado. Ele será armazenado ao adicionar a publicação ao
+              feed.
+            </p>
+          )}
+        {previewError && pendingMediaIds && (
+          <p className="video-upload-note" role="status">
+            {previewError}
+          </p>
         )}
         <label className="field">
           <span>
@@ -261,7 +382,7 @@ export default function PostComposer({
           <button
             className="button primary"
             type="submit"
-            disabled={!images.length || busy}
+            disabled={!media.length || busy}
           >
             {post ? (
               "Salvar publicação"

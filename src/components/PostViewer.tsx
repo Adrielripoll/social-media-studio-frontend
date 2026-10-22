@@ -1,4 +1,4 @@
-import StudioImage from "./StudioImage";
+import StudioMedia from "./StudioMedia";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ChevronLeft,
@@ -45,11 +45,19 @@ export default function PostViewer({
   const [bookmarked, setBookmarked] = useState(false);
   const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const { index } = slide;
+  const singleVideo =
+    post.images.length === 1 && post.media?.[0]?.mediaType === "video";
   const previousImage =
-    slide.previousIndex === null ? undefined : post.images[slide.previousIndex];
+    slide.previousIndex === null
+      ? undefined
+      : post.media?.[slide.previousIndex]?.mediaType === "video"
+        ? post.media[slide.previousIndex].posterUrl
+        : post.images[slide.previousIndex];
 
   useEffect(() => {
-    const adjacentImages = [post.images[index - 1], post.images[index + 1]];
+    const adjacentImages = [index - 1, index + 1]
+      .filter((position) => post.media?.[position]?.mediaType !== "video")
+      .map((position) => post.images[position]);
 
     for (const source of adjacentImages) {
       if (source) {
@@ -57,7 +65,7 @@ export default function PostViewer({
         image.src = source;
       }
     }
-  }, [index, post.images]);
+  }, [index, post.images, post.media]);
 
   useEffect(() => {
     const preference = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -105,6 +113,8 @@ export default function PostViewer({
 
   useEffect(() => {
     function handleKey(event: KeyboardEvent) {
+      if (event.target instanceof Element && event.target.closest("video"))
+        return;
       if (event.key === "ArrowRight") {
         event.preventDefault();
         navigateImage("next");
@@ -124,13 +134,17 @@ export default function PostViewer({
     <Dialog
       title="Publicação"
       onClose={onClose}
-      className={"viewer-dialog viewer-" + mode}
+      className={
+        "viewer-dialog viewer-" +
+        mode +
+        (singleVideo ? " viewer-single-video" : "")
+      }
     >
       <div className="viewer-body">
         <div
           className="viewer-media"
           role="region"
-          aria-label="Imagens da publicação"
+          aria-label="Mídias da publicação"
           aria-roledescription="carrossel"
           onPointerDown={(event) => {
             swipeStart.current = null;
@@ -138,7 +152,7 @@ export default function PostViewer({
             if (
               event.pointerType !== "touch" ||
               (event.target instanceof Element &&
-                event.target.closest("button"))
+                event.target.closest("button, video"))
             ) {
               return;
             }
@@ -191,24 +205,26 @@ export default function PostViewer({
               }
             }}
           >
-            <StudioImage
+            <StudioMedia
+              media={post.media?.[index]}
+              playback
+              fallback={
+                post.images.length
+                  ? undefined
+                  : "Arquivos removidos. O texto desta publicação foi preservado."
+              }
               src={post.images[index]}
               alt={
                 post.images.length
                   ? "Imagem " + (index + 1) + " de " + post.images.length
                   : "Arquivos removidos"
               }
-              fallback={
-                post.images.length
-                  ? undefined
-                  : "Arquivos removidos. O texto desta publicação foi preservado."
-              }
             />
           </div>
           {index > 0 && (
             <button
               className="carousel-arrow prev"
-              aria-label="Imagem anterior"
+              aria-label="Mídia anterior"
               onClick={() => navigateImage("previous")}
             >
               <ChevronLeft size={22} />
@@ -217,7 +233,7 @@ export default function PostViewer({
           {index < post.images.length - 1 && (
             <button
               className="carousel-arrow next"
-              aria-label="Próxima imagem"
+              aria-label="Próxima mídia"
               onClick={() => navigateImage("next")}
             >
               <ChevronRight size={22} />
@@ -280,7 +296,7 @@ export default function PostViewer({
                 {post.images.map((_, imageIndex) => (
                   <button
                     key={imageIndex}
-                    aria-label={"Ver imagem " + (imageIndex + 1)}
+                    aria-label={"Ver mídia " + (imageIndex + 1)}
                     aria-current={imageIndex === index ? "true" : undefined}
                     className={imageIndex === index ? "active" : ""}
                     onClick={() => navigateImage(imageIndex)}

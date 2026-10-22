@@ -87,7 +87,7 @@ test("envia fotos otimizadas, preserva ordem do carrossel e recarrega imagens da
     .click();
   const dialog = page.getByRole("dialog");
   await dialog
-    .getByLabel("Selecionar imagens da publicação")
+    .getByLabel("Selecionar arquivos da publicação")
     .setInputFiles([await png(page), await png(page, "#667744")]);
   await expect(dialog.locator(".image-thumb")).toHaveCount(2);
   await dialog
@@ -167,7 +167,7 @@ test("falha de upload ou salvamento preserva o rascunho e permite repetir; confl
     .click();
   await page
     .getByRole("dialog")
-    .getByLabel("Selecionar imagens da publicação")
+    .getByLabel("Selecionar arquivos da publicação")
     .setInputFiles(await png(page));
   await expect(page.getByRole("dialog").getByRole("alert")).toContainText(
     "Falha ao enviar",
@@ -213,7 +213,7 @@ test("cancelar publicação descarta uploads não usados e excluir último feed 
     .click();
   await page
     .getByRole("dialog")
-    .getByLabel("Selecionar imagens da publicação")
+    .getByLabel("Selecionar arquivos da publicação")
     .setInputFiles(await png(page));
   await expect(page.getByRole("dialog").locator(".image-thumb")).toHaveCount(1);
   await page

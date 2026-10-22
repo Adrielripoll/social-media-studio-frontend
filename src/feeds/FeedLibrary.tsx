@@ -4,7 +4,7 @@ import FeedCardPreview from "./FeedCardPreview";
 import { useEffect, useState } from "react";
 import { LayoutGrid, Plus, RefreshCw } from "lucide-react";
 import { ApiError } from "../auth/api";
-import { createFeed, listFeeds, deleteFeed } from "./api";
+import { createFeed, listFeeds } from "./api";
 import type { FeedSummary } from "./api";
 
 export default function FeedLibrary({
@@ -28,7 +28,11 @@ export default function FeedLibrary({
       .then((value) => {
         if (!controller.signal.aborted) {
           setFeeds(
-            value.filter((feed) => !clientId || feed.clientId === clientId),
+            value.filter(
+              (feed) =>
+                !feed.pendingDeletion &&
+                (!clientId || feed.clientId === clientId),
+            ),
           );
         }
       })
@@ -88,7 +92,7 @@ export default function FeedLibrary({
         <div>
           <span className="task-eyebrow">SEU ESTÚDIO CRIATIVO</span>
           {clientId ? <h2>Feeds deste cliente</h2> : <h1>Seus feeds</h1>}
-          <p>Crie e apresente seus perfis fictícios do Instagram.</p>
+          <p>Planeje e apresente suas publicações para Instagram.</p>
         </div>
         <button
           className="button primary"
@@ -140,48 +144,25 @@ export default function FeedLibrary({
                 <LayoutGrid size={22} />
               </span>
               <div>
-                <span className="workspace-card-label">INSTAGRAM</span>
+                <span className="workspace-card-label">Para Instagram</span>
                 <h3>{feed.name}</h3>
                 {!feed.clientId && <p>Sem cliente</p>}
               </div>
-              {feed.pendingDeletion ? (
-                <button
-                  className="button secondary"
-                  disabled={busy}
-                  onClick={() => {
-                    setBusy(true);
-                    setError("");
-                    void deleteFeed(feed.id)
-                      .then(() => setReload((value) => value + 1))
-                      .catch((reason) =>
-                        setError(
-                          reason instanceof ApiError
-                            ? reason.message
-                            : "Não foi possível concluir a exclusão.",
-                        ),
-                      )
-                      .finally(() => setBusy(false));
-                  }}
-                >
-                  Concluir exclusão
-                </button>
-              ) : (
-                <a
-                  className="button secondary"
-                  href={feedEditorUrl(
-                    feed.id,
-                    returnView ??
-                      (clientId
-                        ? { kind: "client", id: clientId }
-                        : { kind: "feeds" }),
-                  )}
-                >
-                  <LayoutGrid size={16} />
-                  Abrir feed
-                </a>
-              )}
+              <a
+                className="button secondary"
+                href={feedEditorUrl(
+                  feed.id,
+                  returnView ??
+                    (clientId
+                      ? { kind: "client", id: clientId }
+                      : { kind: "feeds" }),
+                )}
+              >
+                <LayoutGrid size={16} />
+                Abrir feed
+              </a>
             </div>
-            {clientId && !feed.pendingDeletion && (
+            {clientId && (
               <FeedCardPreview feedId={feed.id} feedName={feed.name} />
             )}
           </article>

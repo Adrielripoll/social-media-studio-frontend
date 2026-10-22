@@ -1,5 +1,6 @@
+import { refreshPostMedia, isMediaPending } from "./media-refresh";
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { Feed, FeedWorkspace } from "../types";
+import type { Feed, FeedWorkspace, PostMedia } from "../types";
 import { initialWorkspace, newFeed } from "../data";
 import { loadWorkspace, saveWorkspace } from "../storage";
 import { createFeed, deleteFeed, getFeed, listFeeds, saveFeed } from "./api";
@@ -274,17 +275,44 @@ export function useStudio(demo: boolean) {
   }
   useEffect(() => {
     if (demo) return;
+    let lastRefresh = Date.now();
+    let refreshing = false;
+    const controller = new AbortController();
     const interval = setInterval(() => {
       const current = draft.current;
-      if (!current?.activeFeedId || busy || sending.current) return;
-      void getFeed(current.activeFeedId)
+      if (
+        !current?.activeFeedId ||
+        busy ||
+        sending.current ||
+        refreshing ||
+        blocked.current ||
+        generation.current !== saved.current
+      )
+        return;
+      const active = current.feeds.find(
+        (feed) => feed.id === current.activeFeedId,
+      );
+      const pending = active?.posts.some((post) =>
+        post.media?.some(isMediaPending),
+      );
+      const refreshUrls = Date.now() - lastRefresh >= 40 * 60_000;
+      if (!pending && !refreshUrls) return;
+      refreshing = true;
+      const requestGeneration = generation.current;
+      void getFeed(current.activeFeedId, controller.signal)
         .then((fresh) => {
-          if (!mounted.current || draft.current?.activeFeedId !== fresh.id)
+          if (
+            !mounted.current ||
+            generation.current !== requestGeneration ||
+            controller.signal.aborted ||
+            draft.current?.activeFeedId !== fresh.id
+          )
             return;
-          const urls = new Map(
+          if (refreshUrls) lastRefresh = Date.now();
+          const media = new Map<string, PostMedia>(
             fresh.posts.flatMap((post) =>
-              post.mediaIds!.map(
-                (id, index) => [id, post.images[index]] as const,
+              (post.media ?? []).flatMap((item) =>
+                item.id ? [[item.id, item] as const] : [],
               ),
             ),
           );
@@ -299,25 +327,28 @@ export function useStudio(demo: boolean) {
                     profile: {
                       ...feed.profile,
                       avatar:
+                        refreshUrls &&
                         feed.profile.avatarMediaId ===
-                        fresh.profile.avatarMediaId
+                          fresh.profile.avatarMediaId
                           ? fresh.profile.avatar
                           : feed.profile.avatar,
                     },
-                    posts: feed.posts.map((post) => ({
-                      ...post,
-                      images: post.images.map(
-                        (url, index) =>
-                          urls.get(post.mediaIds?.[index] ?? "") ?? url,
-                      ),
-                    })),
+                    posts: feed.posts.map((post) =>
+                      refreshPostMedia(post, media, refreshUrls),
+                    ),
                   },
             ),
           });
         })
-        .catch(() => undefined);
-    }, 40 * 60_000);
-    return () => clearInterval(interval);
+        .catch(() => undefined)
+        .finally(() => {
+          refreshing = false;
+        });
+    }, 5000);
+    return () => {
+      clearInterval(interval);
+      controller.abort();
+    };
   }, [demo, publish, busy]);
   return {
     workspace,

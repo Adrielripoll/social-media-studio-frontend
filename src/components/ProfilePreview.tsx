@@ -1,17 +1,7 @@
 import StudioImage from "./StudioImage";
+import StudioMedia from "./StudioMedia";
 import { useState } from "react";
-import {
-  Camera,
-  Home,
-  Search,
-  Compass,
-  Heart,
-  Menu,
-  Grid3X3,
-  Copy,
-  Plus,
-  ArrowUpRight,
-} from "lucide-react";
+import { Images, Grid3X3, Copy, Plus, ArrowUpRight } from "lucide-react";
 import type { Feed } from "../types";
 import { formatNumber, normalizeWebsite } from "../storage";
 
@@ -56,54 +46,27 @@ export default function ProfilePreview({
 }) {
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dropId, setDropId] = useState<string | null>(null);
-  const [following, setFollowing] = useState(false);
   const { profile, posts } = project;
   const website = normalizeWebsite(profile.website);
   return (
     <div className={"instagram-shell " + mode}>
-      {mode === "desktop" && (
-        <aside className="instagram-nav" aria-label="Interface simulada">
-          <Camera size={26} className="instagram-logo" />
-          <span title="Página inicial">
-            <Home />
-          </span>
-          <span title="Pesquisar">
-            <Search />
-          </span>
-          <span title="Explorar">
-            <Compass />
-          </span>
-          <span title="Curtidas">
-            <Heart />
-          </span>
-          <Avatar src={profile.avatar} name={profile.name} />
-          <span className="ig-nav-menu">
-            <Menu />
-          </span>
-        </aside>
-      )}
       <div className="instagram-page">
         {mode === "mobile" && (
           <div className="mobile-top">
             <strong>{profile.username || "sua.marca"}</strong>
-            <Menu size={21} />
           </div>
         )}
         <header className="profile-header">
           <div className="profile-avatar-wrap">
-            <Avatar src={profile.avatar} name={profile.name} className="profile-avatar" />
+            <Avatar
+              src={profile.avatar}
+              name={profile.name}
+              className="profile-avatar"
+            />
           </div>
           <div className="profile-info">
             <div className="profile-title">
               <h2>{profile.username || "sua.marca"}</h2>
-              {mode === "desktop" && (
-                <button
-                  className={"follow-button " + (following ? "following" : "")}
-                  onClick={() => setFollowing(!following)}
-                >
-                  {following ? "Seguindo" : "Seguir"}
-                </button>
-              )}
             </div>
             <div className="profile-stats">
               <span>
@@ -133,14 +96,6 @@ export default function ProfilePreview({
                 ))}
             </div>
           </div>
-          {mode === "mobile" && (
-            <button
-              className={"follow-button mobile-follow " + (following ? "following" : "")}
-              onClick={() => setFollowing(!following)}
-            >
-              {following ? "Seguindo" : "Seguir"}
-            </button>
-          )}
         </header>
         <div className="profile-grid-tab">
           <Grid3X3 size={15} />
@@ -151,7 +106,9 @@ export default function ProfilePreview({
             {posts.map((post, index) => (
               <button
                 key={post.id}
-                className={"grid-post " + (dropId === post.id ? "drop-target" : "")}
+                className={
+                  "grid-post " + (dropId === post.id ? "drop-target" : "")
+                }
                 aria-label={"Abrir publicação " + (index + 1)}
                 draggable={!presentation}
                 data-post-id={post.id}
@@ -181,7 +138,8 @@ export default function ProfilePreview({
                   setDropId(null);
                 }}
               >
-                <StudioImage
+                <StudioMedia
+                  media={post.media?.[0]}
                   src={post.images[0]}
                   alt={
                     post.caption
@@ -206,7 +164,7 @@ export default function ProfilePreview({
         ) : (
           <div className="empty-feed">
             <div className="empty-feed-icon">
-              <Camera size={30} />
+              <Images size={30} />
             </div>
             <h3>Seu feed começa aqui</h3>
             <p>Adicione a primeira publicação e dê vida à sua marca.</p>
@@ -216,15 +174,6 @@ export default function ProfilePreview({
                 Adicionar publicação
               </button>
             )}
-          </div>
-        )}
-        {mode === "mobile" && (
-          <div className="mobile-bottom" aria-hidden="true">
-            <Home size={22} />
-            <Search size={22} />
-            <Plus size={22} />
-            <Heart size={22} />
-            <Avatar src={profile.avatar} name={profile.name} />
           </div>
         )}
       </div>

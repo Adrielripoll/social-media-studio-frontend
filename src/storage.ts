@@ -16,7 +16,11 @@ function openDatabase() {
       };
       request.onblocked = () => {
         connection = undefined;
-        reject(new Error("Feche outras abas do simulador e tente novamente."));
+        reject(
+          new Error(
+            "Feche outras abas do planejador de feed e tente novamente.",
+          ),
+        );
       };
       request.onsuccess = () => {
         const db = request.result;

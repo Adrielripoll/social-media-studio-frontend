@@ -4,7 +4,7 @@ function account(allowed = true, used = 0, pending = 0) {
   return {
     plan: {
       code: "basic",
-      name: "Plano Básico",
+      name: "Essentials",
       storageLimitBytes: 2.5e9,
       features: { images: true, videos: false },
     },
@@ -183,7 +183,7 @@ test("navegação entre seções acompanha o histórico e funciona de 320 a 1440
   ).toBeVisible();
   await nav.getByRole("link", { name: "Assinatura" }).click();
   await expect(
-    page.getByRole("region", { name: "Assinatura do Plano Básico" }),
+    page.getByRole("region", { name: "Assinatura do Essentials" }),
   ).toBeVisible();
   await page.goBack();
   await expect(
@@ -336,7 +336,7 @@ test("mostra dados de renovação, ciclo e histórico na seção de assinatura",
     .getByRole("link", { name: "Assinatura" })
     .click();
   const region = page.getByRole("region", {
-    name: "Assinatura do Plano Básico",
+    name: "Assinatura do Essentials",
   });
   await expect(region).toContainText("15/11/2026");
   await expect(region).toContainText("15/10/2026 a 14/11/2026");

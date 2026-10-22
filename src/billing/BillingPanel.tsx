@@ -284,9 +284,9 @@ export default function BillingPanel({
       </div>
       <StorageSummary />
       <RetentionNotice />
-      <section className="billing-card" aria-label="Assinatura do Plano Básico">
+      <section className="billing-card" aria-label="Assinatura do Essentials">
         <CreditCard size={26} aria-hidden="true" />
-        <h2>{state?.account?.plan.name ?? "Plano Básico"}</h2>
+        <h2>{state?.account?.plan.name ?? "Essentials"}</h2>
         <p>
           Fotos, carrosséis e suas ferramentas de organização. Armazenamento
           {state?.account
@@ -391,7 +391,7 @@ export default function BillingPanel({
                 ? "Aguarde…"
                 : subscription?.checkoutUrl
                   ? "Continuar pagamento"
-                  : "Contratar Plano Básico"}
+                  : "Contratar Essentials"}
             </button>
           )}
           {subscription?.status === "canceled" && billing?.resumption && (

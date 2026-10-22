@@ -11,7 +11,7 @@ function summary(status = "trial_expired", allowed = false) {
     },
     plan: {
       code: "basic",
-      name: "Plano Básico",
+      name: "Essentials",
       storageLimitBytes: 2.5e9,
       features: { images: true, videos: false },
     },
@@ -50,7 +50,7 @@ test("teste expirado bloqueia ferramentas sem consultar seus dados e mantém sa�
     page.getByText("A contratação estará disponível em breve."),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Contratar Plano Básico" }),
+    page.getByRole("button", { name: "Contratar Essentials" }),
   ).toBeDisabled();
   await expect(
     page.getByRole("button", { name: "Sair", exact: true }),
@@ -88,7 +88,7 @@ test("o retorno de sucesso do checkout não libera a conta sem confirmação", a
     page.getByRole("heading", { name: "Vamos regularizar seu acesso." }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Contratar Plano Básico" }),
+    page.getByRole("button", { name: "Contratar Essentials" }),
   ).toBeDisabled();
   await expect(
     page.getByRole("navigation", { name: "Navegação do espaço de trabalho" }),
@@ -232,7 +232,7 @@ test("preço indefinido no catálogo bloqueia contratação mesmo com gateway co
     page.getByText("Preço em definição", { exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Contratar Plano Básico" }),
+    page.getByRole("button", { name: "Contratar Essentials" }),
   ).toBeDisabled();
 });
 test("recontratação exibe o preço atual do catálogo em vez do valor do contrato cancelado", async ({
@@ -526,7 +526,7 @@ test("apresenta política antes do checkout e só continua após aceite persisti
     });
   });
   await login(page);
-  await page.getByRole("button", { name: "Contratar Plano Básico" }).click();
+  await page.getByRole("button", { name: "Contratar Essentials" }).click();
   const dialog = page.getByRole("dialog", { name: "Antes de continuar" });
   await expect(dialog).toBeVisible();
   await page.screenshot({

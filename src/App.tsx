@@ -1,7 +1,7 @@
 import MotionPresence from "./components/MotionPresence";
 import { useAccount } from "./account/AccountContext";
 import { workspaceReturnUrl } from "./workspace/navigation";
-import StudioImage from "./components/StudioImage";
+import StudioMedia from "./components/StudioMedia";
 import PlatformHeader from "./components/PlatformHeader";
 import { useEffect, useRef, useState } from "react";
 import {
@@ -29,7 +29,11 @@ import {
 import type { Post, Profile, Feed } from "./types";
 import { reorderPosts } from "./data";
 import { useStudio } from "./feeds/useStudio";
-import { uploadFeedImage, deleteUnusedImage } from "./feeds/api";
+import {
+  uploadFeedImage,
+  uploadFeedMedia,
+  deleteUnusedImage,
+} from "./feeds/api";
 import { listClients } from "./workspace/api";
 import type { Client } from "./workspace/api";
 import { readImage } from "./storage";
@@ -340,10 +344,13 @@ export default function App({
             <div>
               <div className="eyebrow">
                 <span />
-                FEED STUDIO
+                SERGA STUDIO
               </div>
-              <h1>Ideias que ganham um feed.</h1>
-              <p>Um espaço para experimentar. Uma prévia para apresentar.</p>
+              <h1>Planejador de feed</h1>
+              <p>
+                Planeje e visualize como suas publicações podem aparecer no
+                Instagram.
+              </p>
             </div>
             <div className="heading-actions">
               <button
@@ -386,16 +393,13 @@ export default function App({
           </div>
         )}
         <div className="studio-layout">
-          <section className="preview-panel" aria-label="Prévia do Instagram">
+          <section className="preview-panel" aria-label="Prévia do feed">
             <div className="preview-toolbar">
               <div className="preview-label">
                 <span className="live-dot" />
                 <strong>
-                  {presentation ? project.title : "Seu feed, em tempo real"}
+                  {presentation ? project.title : "Prévia do seu feed"}
                 </strong>
-                {!presentation && (
-                  <span className="preview-subtitle">Instagram</span>
-                )}
               </div>
               <div
                 className="mode-toggle"
@@ -470,6 +474,10 @@ export default function App({
                 Clique nas publicações para explorar · Esc para voltar à edição
               </p>
             )}
+            <p className="feed-independence-notice">
+              Ferramenta independente, sem afiliação ou endosso do Instagram ou
+              da Meta.
+            </p>
           </section>
           {!presentation && (
             <aside className="editor-panel">
@@ -834,7 +842,11 @@ export default function App({
                                 "Visualizar publicação " + (index + 1)
                               }
                             >
-                              <StudioImage src={post.images[0]} alt="" />
+                              <StudioMedia
+                                media={post.media?.[0]}
+                                src={post.images[0]}
+                                alt=""
+                              />
                             </button>
                             <div className="post-list-copy">
                               <strong>
@@ -911,7 +923,7 @@ export default function App({
                   <p>
                     Experimente à vontade.
                     <br />
-                    Seu Instagram fictício, suas ideias.
+                    Seu planejamento, suas ideias.
                   </p>
                 </div>
               </fieldset>
@@ -922,7 +934,7 @@ export default function App({
           <footer className="app-footer">
             <span>Feito para dar forma às suas ideias.</span>
             <span>
-              Simulação independente ·{" "}
+              Planejamento independente ·{" "}
               {demo
                 ? "Dados salvos apenas neste navegador"
                 : "Feeds salvos na sua conta"}
@@ -1006,10 +1018,12 @@ export default function App({
         {dialog === "composer" && (
           <PostComposer
             post={editingPost}
+            feedId={demo ? undefined : project.id}
             prepareImage={
               demo
                 ? undefined
-                : (file) => uploadFeedImage(project.id, file, "post")
+                : (file, progress) =>
+                    uploadFeedMedia(project.id, file, progress)
             }
             discardMedia={
               demo

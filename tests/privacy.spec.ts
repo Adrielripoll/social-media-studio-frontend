@@ -192,7 +192,7 @@ test("email não confirmado abre modal antes de qualquer checkout", async ({
   });
   await login(page);
   await page.goto("/minha-conta?secao=assinatura");
-  await page.getByRole("button", { name: "Contratar Plano Básico" }).click();
+  await page.getByRole("button", { name: "Contratar Essentials" }).click();
   const dialog = page.getByRole("dialog", {
     name: "Verifique seu email antes de assinar",
   });

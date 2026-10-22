@@ -5,7 +5,7 @@ function account(used = 0, reserved = 0, pending = 0) {
   return {
     plan: {
       code: "basic",
-      name: "Plano Básico",
+      name: "Essentials",
       storageLimitBytes: 2.5e9,
       features: { images: true, videos: false },
     },
@@ -38,7 +38,7 @@ test("exibe plano, teste e espaço compartilhado no desktop e mobile", async ({
   ).toHaveCount(0);
   await page.goto("/minha-conta?secao=armazenamento");
   const summary = page.getByRole("region", { name: "Armazenamento da conta" });
-  await expect(summary).toContainText("Plano Básico");
+  await expect(summary).toContainText("Essentials");
   await expect(summary).toContainText("2 GB de 2,5 GB");
   await expect(summary).toContainText("500 MB disponíveis");
   await expect(summary).toContainText("80% ocupado");
@@ -104,7 +104,7 @@ test("reconsulta o consumo após upload e após a confirmação de exclusão", a
     .click();
   const dialog = page.getByRole("dialog");
   await dialog
-    .getByLabel("Selecionar imagens da publicação")
+    .getByLabel("Selecionar arquivos da publicação")
     .setInputFiles(await png(page));
   await expect.poll(() => usedBytes).toBe(1e6);
   expect(reads).toBeGreaterThan(before);
