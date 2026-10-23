@@ -267,7 +267,7 @@ export default function TaskPlanner() {
       <section className="task-today-card" aria-labelledby="today-title">
         <div className="task-card-heading">
           <div>
-            <span className="task-eyebrow">UM PASSO DE CADA VEZ</span>
+            <span className="task-eyebrow">TAREFAS DIÁRIAS</span>
             <h2 id="today-title">Suas tarefas de hoje</h2>
             <TaskDateHeading date={today} />
           </div>
@@ -289,7 +289,7 @@ export default function TaskPlanner() {
           {...actions}
           key={today}
           tasks={todayTasks}
-          visibleLimit={5}
+          visibleLimit={6}
           referenceDate={today}
           empty={
             loading

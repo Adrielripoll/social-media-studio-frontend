@@ -144,7 +144,7 @@ export default function ProfilePreview({
                   alt={
                     post.caption
                       ? post.caption.slice(0, 100)
-                      : "Imagem da publicação " + (index + 1)
+                      : "Mídia da publicação " + (index + 1)
                   }
                   draggable={false}
                 />
@@ -166,7 +166,7 @@ export default function ProfilePreview({
             <div className="empty-feed-icon">
               <Images size={30} />
             </div>
-            <h3>Seu feed começa aqui</h3>
+            <h3>Nenhuma publicação adicionada</h3>
             <p>Adicione a primeira publicação e dê vida à sua marca.</p>
             {!presentation && (
               <button className="text-button" onClick={onAddPost}>

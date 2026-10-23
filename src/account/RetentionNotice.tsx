@@ -59,7 +59,7 @@ export default function RetentionNotice({
           )}
         </span>
         <div>
-          <h2 id={titleId}>Seus arquivos, com clareza</h2>
+          <h2 id={titleId}>Retenção dos arquivos</h2>
           <p>Política de retenção do armazenamento.</p>
         </div>
       </div>

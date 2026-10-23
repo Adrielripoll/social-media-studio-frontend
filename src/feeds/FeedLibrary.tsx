@@ -121,8 +121,8 @@ export default function FeedLibrary({
           <span className="feed-library-symbol" aria-hidden="true">
             <LayoutGrid size={28} />
           </span>
-          <h3>Dê espaço à sua próxima ideia.</h3>
-          <p>Nenhum feed criado ainda.</p>
+          <h3>Você ainda não criou um feed.</h3>
+          <p>Crie um feed para organizar suas publicações.</p>
         </div>
       )}
       <div

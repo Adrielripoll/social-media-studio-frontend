@@ -202,8 +202,10 @@ export default function App({
           <div className="brand-icon">
             <Camera size={24} />
           </div>
-          <h1>Seu primeiro feed começa aqui.</h1>
-          <p>Crie um perfil fictício para explorar suas ideias.</p>
+          <h1>Crie seu primeiro feed</h1>
+          <p>
+            Crie um perfil e adicione publicações para montar sua apresentação.
+          </p>
           <form
             onSubmit={(event) => {
               event.preventDefault();
@@ -913,7 +915,9 @@ export default function App({
                     ) : (
                       <div className="empty-content">
                         <Images size={28} />
-                        <p>Seu próximo post está a um clique daqui.</p>
+                        <p>
+                          Adicione imagens e vídeos para montar uma publicação.
+                        </p>
                       </div>
                     )}
                   </div>
@@ -923,7 +927,8 @@ export default function App({
                   <p>
                     Experimente à vontade.
                     <br />
-                    Seu planejamento, suas ideias.
+                    Organize suas publicações na ordem em que deseja
+                    apresentá-las.
                   </p>
                 </div>
               </fieldset>
@@ -932,7 +937,7 @@ export default function App({
         </div>
         {!presentation && (
           <footer className="app-footer">
-            <span>Feito para dar forma às suas ideias.</span>
+            <span>Planejador de publicações do Serga Studio.</span>
             <span>
               Planejamento independente ·{" "}
               {demo
@@ -946,7 +951,7 @@ export default function App({
       <MotionPresence>
         {dialog === "newFeed" && (
           <Dialog
-            title="Um novo feed, novas ideias"
+            title="Criar feed"
             onClose={() => {
               if (!busy) setDialog(null);
             }}
@@ -1031,7 +1036,15 @@ export default function App({
                 : (ids) =>
                     Promise.allSettled(
                       ids.map((id) => deleteUnusedImage(project.id, id)),
-                    ).then(() => {})
+                    ).then((results) => {
+                      if (
+                        results.some((result) => result.status === "rejected")
+                      ) {
+                        setOperationError(
+                          "Não foi possível remover todos os arquivos temporários agora. A limpeza será retomada automaticamente.",
+                        );
+                      }
+                    })
             }
             onClose={() => setDialog(null)}
             onSave={(post) => {
@@ -1076,7 +1089,7 @@ export default function App({
             className="small-dialog"
           >
             <p className="dialog-intro">
-              A publicação e suas imagens serão removidas deste feed.
+              A publicação e seus arquivos serão removidos deste feed.
             </p>
             <div className="dialog-actions">
               <button

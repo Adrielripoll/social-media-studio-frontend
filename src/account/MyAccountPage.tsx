@@ -145,7 +145,7 @@ export default function MyAccountPage({
               ))}
             </nav>
             <p className="account-sidebar-note">
-              Seu espaço, organizado do seu jeito.
+              Gerencie seus dados, sua assinatura e seus arquivos.
             </p>
           </aside>
           <div className="account-main">

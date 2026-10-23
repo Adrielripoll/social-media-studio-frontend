@@ -27,7 +27,9 @@ test("cria dashboard independente, associa cliente, salva análise e persiste ao
     .getByRole("navigation")
     .getByRole("button", { name: "Dashboards", exact: true })
     .click();
-  await expect(page.getByText("Seus resultados começam aqui.")).toBeVisible();
+  await expect(
+    page.getByText("Você ainda não criou um dashboard."),
+  ).toBeVisible();
   await expect(page.locator("body")).toHaveClass(/dashboard-experience/);
   await page.screenshot({
     path: "test-results/dashboard-library-new.png",
@@ -112,7 +114,7 @@ test("importa seis arquivos com prévia, mostra média diária e reimporta sem d
     .getByLabel("Selecionar planilhas da Meta")
     .setInputFiles(metaFiles);
   await expect(dialog.getByRole("status")).toContainText("18 novos valores");
-  await expect(dialog).toContainText("1 dia(s) sem novos seguidores");
+  await expect(dialog).toContainText("1 dia sem novos seguidores");
   expect(state.items[0].dailyMetrics ?? []).toEqual([]);
   await dialog
     .getByRole("button", { name: "Confirmar importação", exact: true })

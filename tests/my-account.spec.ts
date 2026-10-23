@@ -50,7 +50,7 @@ test("edita perfil, normaliza celular e preserva as alterações após recarrega
   await page.getByLabel("Nome completo").fill("  Maria   Oliveira  ");
   await page.getByLabel("Celular (com DDD)").fill("(51) 98888-7777");
   await page.getByRole("button", { name: "Salvar perfil" }).click();
-  await expect(page.getByRole("status")).toContainText(
+  await expect(page.locator(".account-feedback.success")).toHaveText(
     "Perfil atualizado com sucesso.",
   );
   expect(
@@ -290,7 +290,7 @@ test("gerencia o consumo e só exibe espaço liberado após exclusão confirmada
   dialog = page.getByRole("dialog");
   await dialog.getByRole("button", { name: "Confirmar exclusão" }).click();
   await expect(
-    page.getByText("Nenhum arquivo armazenado na sua conta."),
+    page.getByText("Os arquivos das suas ferramentas aparecerão aqui."),
   ).toBeVisible();
   await expect(
     page.getByRole("region", { name: "Armazenamento da conta" }),
@@ -382,18 +382,18 @@ test("falhas de consulta de assinatura e armazenamento permitem repetir sem most
     "Não foi possível consultar seus arquivos",
   );
   await expect(
-    page.getByText("Nenhum arquivo armazenado na sua conta."),
+    page.getByText("Os arquivos das suas ferramentas aparecerão aqui."),
   ).not.toBeVisible();
   fail = false;
   await page
     .getByRole("button", { name: "Tentar novamente", exact: true })
     .click();
   await expect(
-    page.getByText("Nenhum arquivo armazenado na sua conta."),
+    page.getByText("Os arquivos das suas ferramentas aparecerão aqui."),
   ).toBeVisible();
 });
 
-test("exclusão que falha mantém a cota ocupada e permite retomar sem perder o contexto", async ({
+test("exclusão lógica mantém cota até a limpeza automática e não oferece nova exclusão", async ({
   page,
 }) => {
   await mockAuth(page);
@@ -419,6 +419,7 @@ test("exclusão que falha mantém a cota ocupada e permite retomar sem perder o 
                 usedBytes: 1e9,
                 reservedBytes: 0,
                 pendingDeletionBytes: pending ? 1e9 : 0,
+                pendingDeletion: pending,
               },
             ],
       },
@@ -426,15 +427,7 @@ test("exclusão que falha mantém a cota ocupada e permite retomar sem perder o 
     }),
   );
   await page.route(apiUrl + "/feeds/feed-1", (route) => {
-    if (!pending) {
-      pending = true;
-      return route.fulfill({
-        status: 503,
-        json: { message: "Exclusão pendente. Tente novamente." },
-        headers: corsHeaders,
-      });
-    }
-    removed = true;
+    pending = true;
     return route.fulfill({ status: 204, headers: corsHeaders });
   });
   await openProfile(page);
@@ -449,28 +442,22 @@ test("exclusão que falha mantém a cota ocupada e permite retomar sem perder o 
     .getByRole("dialog")
     .getByRole("button", { name: "Confirmar exclusão" })
     .click();
-  await expect(page.getByRole("dialog").getByRole("alert")).toContainText(
-    "Exclusão pendente",
-  );
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(
     page.getByRole("region", { name: "Armazenamento da conta" }),
   ).toContainText("1 GB de 2,5 GB");
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: "Manter feed" })
-    .click();
   await expect(
     page.getByRole("button", { name: "Excluir feed Campanha verão" }),
-  ).toContainText("Concluir exclusão");
-  await page
-    .getByRole("button", { name: "Excluir feed Campanha verão" })
-    .click();
-  await page
-    .getByRole("dialog")
-    .getByRole("button", { name: "Confirmar exclusão" })
-    .click();
+  ).toHaveCount(0);
   await expect(
-    page.getByText("Nenhum arquivo armazenado na sua conta."),
+    page.getByText(
+      "Exclusão em andamento. Os arquivos serão removidos automaticamente.",
+    ),
+  ).toBeVisible();
+  removed = true;
+  await page.getByRole("button", { name: "Atualizar arquivos" }).click();
+  await expect(
+    page.getByText("Os arquivos das suas ferramentas aparecerão aqui."),
   ).toBeVisible();
 });
 

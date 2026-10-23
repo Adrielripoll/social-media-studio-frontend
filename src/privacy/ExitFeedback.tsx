@@ -86,7 +86,7 @@ export default function ExitFeedback({
         cartão ou informações sensíveis.
         {context === "subscription_cancellation"
           ? " Podemos entrar em contato para ajudar com o problema informado enquanto sua conta existir."
-          : " Seu relato será normalizado e desvinculado da conta; detalhes identificáveis serão removidos."}
+          : " Seu relato será guardado sem vínculo com a conta. Informações que permitam identificar você serão removidas."}
       </p>
     </div>
   );

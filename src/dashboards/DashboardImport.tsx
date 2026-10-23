@@ -130,10 +130,10 @@ export default function DashboardImport({
         <div className="dashboard-import-intro">
           <FileSpreadsheet size={28} aria-hidden="true" />
           <div>
-            <h3>Do Meta Business direto para o relatório</h3>
+            <h3>Importe as métricas exportadas pela Meta</h3>
             <p>
-              Selecione uma ou várias exportações de métricas. Mantenha o título
-              e as colunas Data e Primary; não é necessário preencher um modelo.
+              Envie as planilhas exportadas pela Meta. Preserve o título e as
+              colunas Data e Primary. Você não precisa preencher um modelo.
             </p>
           </div>
         </div>
@@ -208,8 +208,10 @@ export default function DashboardImport({
                   )}
                   {file.filledZeros > 0 && (
                     <small>
-                      {file.filledZeros} dia(s) sem novos seguidores
-                      preenchido(s) com zero.
+                      {file.filledZeros === 1
+                        ? "1 dia sem novos seguidores foi preenchido com zero."
+                        : file.filledZeros +
+                          " dias sem novos seguidores foram preenchidos com zero."}
                     </small>
                   )}
                   {file.sheetNames.length > 1 && (

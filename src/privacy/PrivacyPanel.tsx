@@ -19,6 +19,9 @@ export default function PrivacyPanel() {
   const [feedback, setFeedback] = useState<ExitFeedbackValue>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [retentionError, setRetentionError] = useState(false);
+  const [retentionLoading, setRetentionLoading] = useState(true);
+  const [retentionRevision, setRetentionRevision] = useState(0);
   const [retention, setRetention] = useState<{
     months: number;
     purgeAt: string | null;
@@ -26,15 +29,22 @@ export default function PrivacyPanel() {
   } | null>(null);
   useEffect(() => {
     const controller = new AbortController();
+    setRetentionError(false);
+    setRetentionLoading(true);
     void apiRequest<{ workRetention: typeof retention }>("/account/privacy", {
       signal: controller.signal,
     })
       .then((result) => {
         if (!controller.signal.aborted) setRetention(result.workRetention);
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (!controller.signal.aborted) setRetentionError(true);
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setRetentionLoading(false);
+      });
     return () => controller.abort();
-  }, []);
+  }, [retentionRevision]);
   function close() {
     if (!busy) {
       setOpen(false);
@@ -95,17 +105,37 @@ export default function PrivacyPanel() {
           Ler a política de privacidade
         </a>
       </p>
-      {retention?.status === "retained" && retention.purgeAt && (
-        <p role="status">
-          Seu cadastro e dados de trabalho seguem a retenção de{" "}
-          {retention.months} meses e poderão ser removidos a partir de{" "}
-          {new Intl.DateTimeFormat("pt-BR", {
-            timeZone: "America/Sao_Paulo",
-          }).format(new Date(retention.purgeAt))}
-          . Os avisos podem estender esse prazo. Entrar na plataforma não
-          reinicia a contagem.
-        </p>
+      {retentionLoading && (
+        <p role="status">Consultando os prazos dos seus dados…</p>
       )}
+      {retentionError && (
+        <div className="account-feedback error" role="alert">
+          <p>
+            Não foi possível consultar os prazos de retenção dos seus dados.
+          </p>
+          <button
+            type="button"
+            className="button secondary"
+            onClick={() => setRetentionRevision((value) => value + 1)}
+          >
+            Consultar novamente
+          </button>
+        </div>
+      )}
+      {!retentionError &&
+        !retentionLoading &&
+        retention?.status === "retained" &&
+        retention.purgeAt && (
+          <p role="status">
+            Seu cadastro e dados de trabalho seguem a retenção de{" "}
+            {retention.months} meses e poderão ser removidos a partir de{" "}
+            {new Intl.DateTimeFormat("pt-BR", {
+              timeZone: "America/Sao_Paulo",
+            }).format(new Date(retention.purgeAt))}
+            . Os avisos podem estender esse prazo. Entrar na plataforma não
+            reinicia a contagem.
+          </p>
+        )}
       <p>
         Excluir a conta é diferente de cancelar a assinatura. A exclusão encerra
         o acesso, interrompe renovações e remove seus dados de trabalho e

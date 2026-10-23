@@ -15,18 +15,21 @@ export default function AuthShell({ children }: { children: ReactNode }) {
       <aside className="auth-story">
         <StudioBrand />
         <div className="auth-story-copy">
-          <span className="auth-eyebrow">SEU TRABALHO, EM UM SÓ LUGAR</span>
+          <span className="auth-eyebrow">PLANEJAMENTO PARA SOCIAL MEDIA</span>
           <h1>
-            Mais espaço
+            Seu trabalho
             <br />
-            para suas ideias.
+            mais organizado.
           </h1>
-          <p>Seu próximo capítulo como social media começa aqui.</p>
+          <p>
+            Planeje publicações, acompanhe tarefas e apresente resultados aos
+            seus clientes.
+          </p>
         </div>
         <div className="auth-scene" aria-hidden="true">
           <div className="scene-card scene-calendar">
             <CalendarDays size={21} />
-            <strong>Uma ideia de cada vez.</strong>
+            <strong>Próximas tarefas</strong>
             <div className="scene-dates">
               {Array.from({ length: 14 }, (_, i) => (
                 <span key={i} className={i === 8 ? "selected" : ""}>
@@ -40,8 +43,8 @@ export default function AuthShell({ children }: { children: ReactNode }) {
               <Check size={15} />
             </span>
             <div>
-              <strong>Dar forma às ideias</strong>
-              <small>O primeiro passo já está dado.</small>
+              <strong>Revisar publicações</strong>
+              <small>Tarefa concluída</small>
             </div>
           </div>
           <div className="scene-card scene-feed">
@@ -54,7 +57,7 @@ export default function AuthShell({ children }: { children: ReactNode }) {
           </div>
         </div>
         <p className="auth-story-footer">
-          Um espaço para organizar o que vem a seguir.
+          Tarefas e publicações organizadas por cliente.
         </p>
       </aside>
       <main className="auth-main">
@@ -63,7 +66,7 @@ export default function AuthShell({ children }: { children: ReactNode }) {
         </div>
         <div className="auth-card">{children}</div>
         <p className="auth-footer">
-          Planeje com calma. Crie com intenção.{" "}
+          Ferramentas para o trabalho de social media.{" "}
           <a href="/privacidade">Privacidade</a>
         </p>
       </main>

@@ -29,10 +29,15 @@ export default function Dialog({
     const candidates = dialog.querySelectorAll<HTMLElement>(
       '[autofocus], input:not([disabled]):not([type="hidden"]), textarea:not([disabled]), select:not([disabled])',
     );
-    const initialFocus = [...candidates].find(
-      (element) =>
-        element.getClientRects().length > 0 && !element.closest("[inert]"),
+    const preferredFocus = dialog.querySelector<HTMLElement>(
+      "[data-initial-focus], [autofocus]",
     );
+    const initialFocus =
+      preferredFocus ??
+      [...candidates].find(
+        (element) =>
+          element.getClientRects().length > 0 && !element.closest("[inert]"),
+      );
     initialFocus?.focus({ preventScroll: true });
     return () => {
       if (dialog.open) {

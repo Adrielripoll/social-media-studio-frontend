@@ -22,6 +22,10 @@ interface Media {
   id: string;
   url: string;
   purpose: string;
+  mediaType?: "image" | "video";
+  status?:
+    "uploading" | "queued" | "processing" | "processed" | "ready" | "failed";
+  posterUrl?: string;
 }
 export interface Feed {
   pendingDeletion?: boolean;

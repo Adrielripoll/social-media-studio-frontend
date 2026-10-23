@@ -44,6 +44,7 @@ async function createProject(page: Page, name = "Studio Flora") {
   await dialog.getByLabel("Nome do feed", { exact: true }).fill(name);
   await dialog.getByRole("button", { name: "Criar feed", exact: true }).click();
   await expect(page.getByRole("heading", { name, exact: true })).toBeVisible();
+  await expect(page.locator("dialog[open]")).toHaveCount(0);
 }
 
 test("demonstração, imagens locais e navegação no carrossel", async ({
@@ -138,7 +139,7 @@ test("upload, capa do carrossel, legenda, edição e persistência das imagens",
     .fill("Campanha de primavera 🌷\nUm novo começo.");
   await dialog.getByLabel("Localização").fill("Curitiba");
   await dialog
-    .getByRole("button", { name: "Mover imagem 2 para a esquerda" })
+    .getByRole("button", { name: "Mover mídia 2 para a esquerda" })
     .click();
   const cover = await dialog
     .locator(".image-thumb img")
@@ -247,6 +248,7 @@ test("visualização mobile e apresentação com saída por Escape", async ({
   ).not.toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.locator(".editor-panel")).not.toBeVisible();
+  await expect(page.locator("dialog[open]")).toHaveCount(0);
   await page.keyboard.press("Escape");
   await expect(page.locator(".editor-panel")).toBeVisible();
   await page.setViewportSize({ width: 390, height: 844 });

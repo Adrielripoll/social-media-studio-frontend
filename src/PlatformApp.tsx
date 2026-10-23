@@ -30,7 +30,7 @@ function Home() {
       <Workspace>
         <header className="studio-hero studio-page-heading">
           <div>
-            <span className="auth-eyebrow">SEU ESPAÇO CRIATIVO</span>
+            <span className="auth-eyebrow">INÍCIO</span>
             <h1>
               Bem-vindo
               {auth.identity?.name
@@ -39,7 +39,7 @@ function Home() {
               .
             </h1>
             <p className="platform-intro">
-              Organize seu dia e dê espaço às próximas ideias.
+              Veja as tarefas de hoje e planeje os próximos dias.
             </p>
           </div>
         </header>
@@ -47,7 +47,7 @@ function Home() {
         <section className="platform-demo">
           <div>
             <span className="demo-pill">PLANEJADOR DE FEED</span>
-            <h2>Dê forma às suas ideias.</h2>
+            <h2>Planeje suas publicações</h2>
             <p>
               Planeje e visualize como suas publicações podem aparecer no
               Instagram. Seus feeds ficam salvos na sua conta.
@@ -68,7 +68,7 @@ function Home() {
           </span>
           <span className="platform-connected">
             <i />
-            Acesso confirmado
+            Sessão ativa
           </span>
         </div>
       </Workspace>
@@ -105,7 +105,7 @@ function AuthContent() {
     return (
       <AuthShell>
         <span className="auth-eyebrow">VAMOS TENTAR NOVAMENTE</span>
-        <h2>Seu espaço aguarda você.</h2>
+        <h2>Não foi possível carregar sua conta.</h2>
         <p className="auth-message error" role="alert">
           {accessError}
         </p>
@@ -150,7 +150,7 @@ export default function PlatformApp() {
     return (
       <AuthShell>
         <span className="auth-eyebrow">SERGA STUDIO</span>
-        <h2>Seu espaço está sendo preparado.</h2>
+        <h2>Configuração necessária</h2>
         <p className="auth-description">
           O acesso estará disponível em breve. Enquanto isso, você pode explorar
           a demonstração.

@@ -77,7 +77,10 @@ export default function StudioMedia({
     (media.status !== "processed" || playback);
   if (pending || media.status === "failed") {
     return (
-      <span className="video-placeholder" role="status">
+      <span
+        className="video-placeholder"
+        role={media.status === "failed" ? "alert" : "status"}
+      >
         {pending ? (
           <LoaderCircle size={24} className="spin" aria-hidden="true" />
         ) : (
@@ -86,7 +89,13 @@ export default function StudioMedia({
         <span>
           {media.status === "failed"
             ? "Falha no processamento. Remova e envie novamente."
-            : "Vídeo em processamento"}
+            : media.status === "uploading"
+              ? "Enviando vídeo…"
+              : media.status === "processed"
+                ? "Salvando vídeo no feed…"
+                : media.status === "queued"
+                  ? "Vídeo na fila de processamento"
+                  : "Comprimindo vídeo…"}
         </span>
       </span>
     );

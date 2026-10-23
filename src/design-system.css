@@ -258,10 +258,12 @@ input:is([type="checkbox"], [type="radio"]):focus-visible {
   outline-offset: 3px;
   box-shadow: none;
 }
-input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):focus-visible,
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not(
+    [type="file"]
+  ):not([type="color"]):focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  background-color: var(--surface-soft);
+  background-color: var(--accent-soft);
 }
 .auth-description,
 .auth-switch,
@@ -1143,4 +1145,61 @@ select:focus-visible {
   .dialog-actions .button {
     flex: 1 1 140px;
   }
+}
+
+/* Keyboard focus stays visible without reintroducing input outlines. */
+.field:has(input:focus-visible, textarea:focus-visible, select:focus-visible)
+  > span,
+.auth-field:has(input:focus-visible) > span {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.dialog-actions {
+  flex-wrap: wrap;
+}
+
+.auth-field > span,
+.auth-input-help,
+.auth-password-help,
+.auth-validation,
+.task-calendar-week,
+.task-popover-add,
+.workspace-card-meta,
+.workspace-form small,
+.dashboard-import-files small {
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
+.account-resource-actions {
+  min-width: 0;
+}
+
+.account-resource-actions .account-resource-pending {
+  max-width: 32ch;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 600px) {
+  .dialog-actions .button {
+    min-height: 44px;
+    white-space: normal;
+  }
+}
+
+/* The existing dark logo needs a light surface over the authentication hero. */
+.auth-story .studio-brand {
+  align-self: flex-start;
+  max-width: 100%;
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface);
+  border-radius: var(--radius-control);
+}
+
+/* Upload is disabled during transfer, but its progress must remain readable. */
+.upload-area.is-uploading:disabled {
+  opacity: 1;
+  cursor: progress;
 }

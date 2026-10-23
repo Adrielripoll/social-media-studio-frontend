@@ -122,7 +122,7 @@ export default function DashboardLibrary({
           <span className="dashboard-empty-symbol">
             <BarChart3 size={32} aria-hidden="true" />
           </span>
-          <h3>Seus resultados começam aqui.</h3>
+          <h3>Você ainda não criou um dashboard.</h3>
           <p>
             Crie um dashboard e importe uma planilha XLSX ou CSV. O arquivo é
             descartado após a leitura.
@@ -135,7 +135,7 @@ export default function DashboardLibrary({
               <span>02</span>Importe seus dados
             </li>
             <li>
-              <span>03</span>Conte sua história
+              <span>03</span>Apresente os resultados
             </li>
           </ol>
         </div>

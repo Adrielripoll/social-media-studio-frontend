@@ -22,13 +22,13 @@ type Mode = "login" | "signup" | "forgot" | "reset" | "callback";
 const titles = {
   login: [
     "BEM-VINDO DE VOLTA",
-    "Entre no seu espaço.",
-    "Suas ideias estão esperando por você.",
+    "Entrar no Serga Studio",
+    "Acesse suas tarefas, feeds e relatórios.",
   ],
   signup: [
     "UM NOVO COMEÇO",
-    "Vamos criar sua conta?",
-    "Um espaço seu para organizar e apresentar ideias.",
+    "Criar conta",
+    "Cadastre seus dados para começar a usar o Serga Studio.",
   ],
   forgot: [
     "RECUPERAR ACESSO",
@@ -43,7 +43,7 @@ const titles = {
   callback: [
     "CONFIRMAÇÃO DE EMAIL",
     "Vamos continuar?",
-    "Faça login para acessar seu espaço.",
+    "Entre com seu email e senha.",
   ],
 };
 
@@ -227,7 +227,7 @@ export default function AuthPages({ mode }: { mode: Mode }) {
               ? "Enviamos as instruções para confirmar seu cadastro. Depois, entre com seu email e senha."
               : mode === "forgot"
                 ? "Se existir uma conta com esse email, você receberá um link para escolher uma nova senha."
-                : "Sua nova senha está pronta. Entre novamente para continuar."}
+                : "Senha atualizada. Entre novamente para continuar."}
           </p>
           <a className="button primary auth-submit" href="/login">
             Voltar ao login

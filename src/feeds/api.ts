@@ -1,4 +1,5 @@
 import { Upload } from "tus-js-client";
+import { videoUploadError } from "./video-upload-error";
 import type { PostMedia } from "../types";
 import { storageChanged } from "../account/AccountContext";
 import { apiRequest, ApiError } from "../auth/api";
@@ -176,12 +177,7 @@ export async function uploadFeedMedia(
         storeFingerprintForResuming: false,
         onProgress: (uploaded, total) =>
           onProgress?.(Math.round((uploaded / total) * 100)),
-        onError: () =>
-          reject(
-            new Error(
-              "Não foi possível concluir o upload do vídeo. Tente novamente.",
-            ),
-          ),
+        onError: (error) => reject(new Error(videoUploadError(error))),
         onSuccess: () => resolve(),
       });
       upload.start();

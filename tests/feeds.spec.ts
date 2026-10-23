@@ -21,7 +21,7 @@ test("simulador da conta exige login e não importa os dados antigos do navegado
   await login(page);
   await page.getByRole("link", { name: "Abrir meus feeds" }).click();
   await expect(
-    page.getByRole("heading", { name: "Seu primeiro feed começa aqui." }),
+    page.getByRole("heading", { name: "Crie seu primeiro feed" }),
   ).toBeVisible();
   await page
     .getByLabel("Nome do feed", { exact: true })
@@ -91,7 +91,7 @@ test("envia fotos otimizadas, preserva ordem do carrossel e recarrega imagens da
     .setInputFiles([await png(page), await png(page, "#667744")]);
   await expect(dialog.locator(".image-thumb")).toHaveCount(2);
   await dialog
-    .getByRole("button", { name: "Mover imagem 2 para a esquerda" })
+    .getByRole("button", { name: "Mover mídia 2 para a esquerda" })
     .click();
   const cover = await dialog
     .locator(".image-thumb img")
@@ -181,6 +181,7 @@ test("falha de upload ou salvamento preserva o rascunho e permite repetir; confl
     .getByRole("dialog")
     .getByRole("button", { name: "Cancelar", exact: true })
     .click();
+  await expect(page.locator("dialog[open]")).toHaveCount(0);
   state.failSave = true;
   await page
     .getByLabel("Nome do perfil", { exact: true })
@@ -220,6 +221,10 @@ test("cancelar publicação descarta uploads não usados e excluir último feed 
     .getByRole("dialog")
     .getByRole("button", { name: "Cancelar", exact: true })
     .click();
+  await page
+    .getByRole("button", { name: "Descartar alterações", exact: true })
+    .click();
+  await expect(page.locator("dialog[open]")).toHaveCount(0);
   await expect
     .poll(
       () =>
@@ -235,7 +240,7 @@ test("cancelar publicação descarta uploads não usados e excluir último feed 
     .getByRole("button", { name: "Excluir feed", exact: true })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Seu primeiro feed começa aqui." }),
+    page.getByRole("heading", { name: "Crie seu primeiro feed" }),
   ).toBeVisible();
   expect(state.feeds).toHaveLength(0);
 });
@@ -285,7 +290,7 @@ test("biblioteca lista feeds independentes e os do cliente; cria já associado n
   );
 });
 
-test("mantém seleção do feed ao recarregar e permite concluir uma exclusão pendente", async ({
+test("mantém seleção do feed ao recarregar e oculta uma exclusão pendente", async ({
   page,
 }) => {
   const first = feed("Primeiro"),
@@ -302,16 +307,22 @@ test("mantém seleção do feed ao recarregar e permite concluir uma exclusão p
   await expect(
     page.getByRole("heading", { name: "Segundo", exact: true }),
   ).toBeVisible();
-  await page.getByRole("link", { name: "Voltar ao espaço de trabalho" }).click();
+  await page
+    .getByRole("link", { name: "Voltar ao espaço de trabalho" })
+    .click();
   await page
     .getByRole("navigation")
     .getByRole("button", { name: "Feeds", exact: true })
     .click();
-  await page
-    .getByRole("button", { name: "Concluir exclusão", exact: true })
-    .click();
+  await expect(
+    page.getByRole("button", { name: "Concluir exclusão", exact: true }),
+  ).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Exclusão pendente", exact: true }),
   ).not.toBeVisible();
-  expect(state.feeds.map((feed) => feed.id)).toEqual([first.id, second.id]);
+  expect(state.feeds.map((feed) => feed.id)).toEqual([
+    first.id,
+    second.id,
+    pending.id,
+  ]);
 });

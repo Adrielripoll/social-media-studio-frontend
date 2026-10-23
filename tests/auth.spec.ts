@@ -76,11 +76,11 @@ test("login usa cookies HttpOnly e CSRF, restaura o perfil e permite logout", as
   ).toBeVisible();
   await page.getByRole("button", { name: "Sair", exact: true }).click();
   await expect(
-    page.getByRole("heading", { name: "Entre no seu espaço." }),
+    page.getByRole("heading", { name: "Entrar no Serga Studio" }),
   ).toBeVisible();
   await page.reload();
   await expect(
-    page.getByRole("heading", { name: "Entre no seu espaço." }),
+    page.getByRole("heading", { name: "Entrar no Serga Studio" }),
   ).toBeVisible();
 });
 
@@ -333,7 +333,7 @@ test("tokens legados são removidos do armazenamento JavaScript", async ({
   });
   await page.goto("/login");
   await expect(
-    page.getByRole("heading", { name: "Entre no seu espaço." }),
+    page.getByRole("heading", { name: "Entrar no Serga Studio" }),
   ).toBeVisible();
   expect(
     await page.evaluate(() => localStorage.getItem("social-media-studio-auth")),
@@ -389,7 +389,7 @@ test("cadastro informa quando o celular já pertence a uma conta", async ({
     "Este celular já está vinculado a uma conta.",
   );
   await expect(
-    page.getByRole("heading", { name: "Vamos criar sua conta?" }),
+    page.getByRole("heading", { name: "Criar conta" }),
   ).toBeVisible();
 });
 
@@ -483,7 +483,7 @@ test("falha na consulta inicial da sessão oferece repetir sem assumir que o usu
     page.getByRole("button", { name: "Tentar novamente", exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Entre no seu espaço." }),
+    page.getByRole("heading", { name: "Entrar no Serga Studio" }),
   ).toHaveCount(0);
   await expect(page.getByLabel("Senha", { exact: true })).toHaveCount(0);
   await page.unroute(apiUrl + "/auth/session", rejectSession);

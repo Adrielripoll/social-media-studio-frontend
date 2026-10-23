@@ -8,6 +8,7 @@ import RetentionNotice from "./RetentionNotice";
 import Dialog from "../components/Dialog";
 import { deleteFeed } from "../feeds/api";
 interface Resource {
+  pendingDeletion?: boolean;
   resourceType: string;
   resourceId: string;
   name: string;
@@ -50,12 +51,22 @@ export default function StoragePanel() {
     account?.refresh();
   }
   async function remove() {
-    if (!selected || busy || !allowed) return;
+    if (!selected || selected.pendingDeletion || busy || !allowed) return;
     setBusy(true);
     setDeleteError("");
     setNotice("");
     try {
       await deleteFeed(selected.resourceId);
+      const deletedId = selected.resourceId;
+      setResources(
+        (current) =>
+          current?.map((resource) =>
+            resource.resourceType === "feed" &&
+            resource.resourceId === deletedId
+              ? { ...resource, pendingDeletion: true }
+              : resource,
+          ) ?? null,
+      );
       setSelected(null);
       setNotice(
         "Feed excluído. A cota será atualizada após a confirmação da remoção dos arquivos.",
@@ -90,7 +101,7 @@ export default function StoragePanel() {
           <div>
             <h2>Onde seu espaço está sendo usado</h2>
             <p>
-              Abra um feed para remover imagens específicas ou exclua o feed
+              Abra um feed para remover arquivos específicos ou exclua o feed
               inteiro.
             </p>
           </div>
@@ -120,8 +131,8 @@ export default function StoragePanel() {
         {resources?.length === 0 && !error && (
           <div className="account-empty">
             <FolderOpen size={32} />
-            <h3>Espaço para suas próximas ideias.</h3>
-            <p>Nenhum arquivo armazenado na sua conta.</p>
+            <h3>Nenhum arquivo armazenado</h3>
+            <p>Os arquivos das suas ferramentas aparecerão aqui.</p>
           </div>
         )}
         {notice && (
@@ -140,7 +151,7 @@ export default function StoragePanel() {
                   <strong>{resource.name}</strong>
                   <span>
                     {resource.resourceType === "feed"
-                      ? "Feed Studio"
+                      ? "Planejador de feed"
                       : "Ferramenta"}{" "}
                     · {resource.fileCount}{" "}
                     {resource.fileCount === 1 ? "arquivo" : "arquivos"}
@@ -162,39 +173,44 @@ export default function StoragePanel() {
                   )}
                 </div>
                 <div className="account-resource-actions">
-                  {resource.resourceType === "feed" && (
-                    <>
-                      <a
-                        className="button secondary"
-                        href={
-                          allowed
-                            ? "/simulador?" +
-                              new URLSearchParams({
-                                feed: resource.resourceId,
-                                returnTo: "/minha-conta?secao=armazenamento",
-                              })
-                            : undefined
-                        }
-                        aria-disabled={!allowed}
-                      >
-                        Gerenciar imagens
-                      </a>
-                      <button
-                        className="button secondary account-danger-button"
-                        disabled={!allowed || busy}
-                        onClick={() => {
-                          setSelected(resource);
-                          setDeleteError("");
-                        }}
-                        aria-label={"Excluir feed " + resource.name}
-                      >
-                        <Trash2 size={16} />
-                        {resource.pendingDeletionBytes
-                          ? "Concluir exclusão"
-                          : "Excluir feed"}
-                      </button>
-                    </>
+                  {resource.pendingDeletion && (
+                    <span className="account-resource-pending" role="status">
+                      Exclusão em andamento. Os arquivos serão removidos
+                      automaticamente.
+                    </span>
                   )}
+                  {resource.resourceType === "feed" &&
+                    !resource.pendingDeletion && (
+                      <>
+                        <a
+                          className="button secondary"
+                          href={
+                            allowed
+                              ? "/simulador?" +
+                                new URLSearchParams({
+                                  feed: resource.resourceId,
+                                  returnTo: "/minha-conta?secao=armazenamento",
+                                })
+                              : undefined
+                          }
+                          aria-disabled={!allowed}
+                        >
+                          Gerenciar arquivos
+                        </a>
+                        <button
+                          className="button secondary account-danger-button"
+                          disabled={!allowed || busy}
+                          onClick={() => {
+                            setSelected(resource);
+                            setDeleteError("");
+                          }}
+                          aria-label={"Excluir feed " + resource.name}
+                        >
+                          <Trash2 size={16} />
+                          Excluir feed
+                        </button>
+                      </>
+                    )}
                 </div>
               </li>
             ))}
@@ -215,7 +231,7 @@ export default function StoragePanel() {
             onClose={() => setSelected(null)}
           >
             <p>
-              O feed <strong>{selected.name}</strong> e todas as suas imagens
+              O feed <strong>{selected.name}</strong> e todos os seus arquivos
               serão excluídos. Essa ação não pode ser desfeita.
             </p>
             <p>

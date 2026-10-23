@@ -356,8 +356,8 @@ export default function DashboardDetail({
         </div>
         <div className="dashboard-hero-footer">
           <span>
-            <span className="dashboard-status-dot" aria-hidden="true" /> Seus
-            dados. Sua próxima grande história.
+            <span className="dashboard-status-dot" aria-hidden="true" />
+            Métricas importadas das suas planilhas.
           </span>
           <span>
             <CalendarDays size={14} aria-hidden="true" />
@@ -765,7 +765,7 @@ export default function DashboardDetail({
       ) : (
         <div className="dashboard-empty">
           <BarChart3 size={36} aria-hidden="true" />
-          <h2>Dê contexto aos seus resultados.</h2>
+          <h2>Este dashboard ainda não tem dados.</h2>
           <p>
             Importe as planilhas XLSX ou CSV de métricas exportadas pela Meta
             para montar sua apresentação. O arquivo será descartado após a
